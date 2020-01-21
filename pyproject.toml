@@ -1,0 +1,26 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "stepwise_mol_bio"
+author = "Kale Kundert"
+author-email = "kale@thekunderts.net"
+home-page = 'https://github.com/kalekundert/stepwise_mol_bio'
+requires-python = "~=3.8"
+requires = []
+classifiers = [
+  'Programming Language :: Python :: 3',
+  'License :: OSI Approved :: MIT License',
+]
+
+
+
+[tool.flit.metadata.urls]
+'Documentation' = 'https://stepwise_mol_bio.readthedocs.io/en/latest/'
+'Version Control' = 'https://github.com/kalekundert/stepwise_mol_bio'
+'Bug Tracker' = 'https://github.com/kalekundert/stepwise_mol_bio/issues'
+'Continuous Integration' = 'https://travis-ci.org/kalekundert/stepwise_mol_bio'
+'Test Coverage' = 'https://coveralls.io/github/kalekundert/stepwise_mol_bio'
+
+
