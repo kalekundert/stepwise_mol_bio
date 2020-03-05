@@ -1,0 +1,6 @@
+- Transform purified plasmid (e.g. to miniprep more):
+
+  - 1 µL MACH1 competent cells 
+  - 0.1 µL purified plasmid (≈200 ng/µL)
+
+
