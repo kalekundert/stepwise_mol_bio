@@ -1,0 +1,2 @@
+- Transform 1 μL DNA into 10 μL MACH1 
+  chemically-competent cells.
