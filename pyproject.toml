@@ -14,7 +14,8 @@ classifiers = [
   'License :: OSI Approved :: MIT License',
 ]
 
-
+[tool.flit.entrypoints."stepwise.protocol_dirs"]
+protocols = "stepwise_mol_bio:protocol_dirs"
 
 [tool.flit.metadata.urls]
 'Documentation' = 'https://stepwise_mol_bio.readthedocs.io/en/latest/'
