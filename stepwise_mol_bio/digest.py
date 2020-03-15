@@ -4,17 +4,19 @@
 Perform restriction digests using the protocol recommended by NEB.
 
 Usage:
-    digest <templates> <enzyme> [-d <ng>] [-D <ng/µL>] [-v <µL>] [-g]
+    digest <templates> <enzymes> [-d <ng>] [-D <ng/µL>] [-v <µL>] [-g]
 
 Arguments:
     <templates>
-        The DNA to digest.  Use commas to specify multiple templates.
+        The DNA to digest.  Use commas to specify multiple templates.  The 
+        number of reactions will equal the number of templates.
 
-    <enzyme>
-        The restriction enzyme to use.  Only NEB enzymes are currently 
+    <enzymes>
+        The restriction enzymes to use.  Only NEB enzymes are currently 
         supported.  If you are using an "HF" enzyme, specify that explicitly.  
         For example, "HindIII" and "HindIII-HF" have different protocols.  
-        Enzyme names are case-insensitive.
+        Enzyme names are case-insensitive, and multiple enzymes can be 
+        specified using commas.
 
 Options:
     -d --dna <µg>               [default: 1]
@@ -46,9 +48,9 @@ from stepwise_mol_bio.utils import app
 @autoprop
 class RestrictionDigest:
 
-    def __init__(self, templates, enzyme):
+    def __init__(self, templates, enzymes):
         self.templates = templates
-        self.enzyme = enzyme
+        self.enzymes = enzymes
 
         self.dna_ug = 1
         self.dna_stock_nguL = 200
@@ -65,11 +67,10 @@ class RestrictionDigest:
                 =======  =======  =========  ========  ===
                 water                        to 50 µL  yes
                 DNA               200 ng/µL      5 µL
-                BSA        B9000   20 mg/mL   0.25 µL  yes
-                SAM        B9003      32 mM   0.25 µL  yes
-                ATP        P0756      10 mM   0.25 µL  yes
+                BSA        B9000   20 mg/mL      0 µL  yes
+                SAM        B9003      32 mM      0 µL  yes
+                ATP        P0756      10 mM      0 µL  yes
                 buffer                  10x      5 µL  yes
-                enzyme              10 U/µL      1 µL  yes
         """)
 
         # Plug in the parameters the user requested.
@@ -79,34 +80,42 @@ class RestrictionDigest:
         rxn['DNA'].name = ','.join(self.templates)
         rxn['DNA'].hold_conc.stock_conc = self.dna_stock_nguL, 'ng/µL'
         
-        rxn['enzyme'].name = self.enzyme['name']
-        rxn['enzyme'].hold_conc.stock_conc = self.enzyme['concentration'] / 1000, 'U/µL'
+        for enz in self.enzymes:
+            key = enz['name']
+            stock = enz['concentration'] / 1000
 
-        if self.is_genomic:
-            rxn['enzyme'].volume *= 2
+            # The prototype reaction has 1 µg of DNA.  NEB recommends 10 U/µg 
+            # (20 U/µg for genomic DNA), so set the initial enzyme volume 
+            # according to that.  This will be adjusted later on.
 
-        rxn['buffer'].name = self.enzyme['recommBuffer']
+            rxn[key].stock_conc = stock, 'U/µL'
+            rxn[key].volume = (20 if self.is_genomic else 10) / stock, 'µL'
+
+        rxn['buffer'].name = pick_compatible_buffer(self.enzymes)
+
+        def add_supplement(key, unit, scale=1):
+            conc = max(x['supplement'][key] for x in self.enzymes)
+
+            if not conc:
+                del rxn[key.upper()]
+            else:
+                rxn[key.upper()].hold_stock_conc.conc = conc * scale, unit
+
+        add_supplement('bsa', 'mg/mL', 1e-3)
+        add_supplement('sam', 'mM', 1e-3)
+        add_supplement('atp', 'mM')
         
-        if not self.enzyme['supplement']['bsa']:
-            del rxn['BSA']
-
-        if conc_uM := self.enzyme['supplement']['sam']:
-            rxn['SAM'].hold_stock.conc = conc_uM / 1000, 'mM'
-        else:
-            del rxn['SAM']
-
-        if conc_mM := self.enzyme['supplement']['atp']:
-            rxn['ATP'].hold_stock.conc = conc_mM, 'mM'
-        else:
-            del rxn['ATP']
-
         # Update the reaction volume.  This takes some care, because the 
         # reaction volume depends on the enzyme volume, which in turn depends 
         # on the DNA quantity.
 
         k = self.dna_ug / 1  # The prototype reaction has 1 µg DNA.
         dna_vol = k * rxn['DNA'].volume
-        enz_vol = k * rxn['enzyme'].volume
+        enz_vols = {
+                enz['name']: k * rxn[enz['name']].volume
+                for enz in self.enzymes
+        }
+        enz_vol = sum(enz_vols.values())
 
         rxn.hold_ratios.volume = max(
                 stepwise.Quantity(self.target_volume_uL, 'µL'),
@@ -117,25 +126,58 @@ class RestrictionDigest:
                 # are supplements.
                 10/9 * (dna_vol + enz_vol),
         )
+
         rxn['DNA'].volume = dna_vol
-        rxn['enzyme'].volume = enz_vol
+        for enz in self.enzymes:
+            key = enz['name']
+            rxn[key].volume = enz_vols[key]
 
         return rxn
 
     def get_protocol(self):
+        from itertools import groupby
+        from operator import itemgetter
+
         protocol = stepwise.Protocol()
         rxn = self.reaction
+        rxn_type = (
+                self.enzymes[0]['name']
+                if len(self.enzymes) == 1 else
+                'restriction'
+        )
+
+        def incubate(temp_getter, time_getter, time_formatter=lambda x: f'{x} min'):
+            incubate_params = [
+                    (k, max(time_getter(x) for x in group))
+                    for k, group in groupby(self.enzymes, temp_getter)
+            ]
+            return '\n'.join(
+                    f"- {temp}°C for {time_formatter(time)}"
+                    for temp, time in sorted(incubate_params)
+            )
+
+        digest_steps = incubate(
+                itemgetter('incubateTemp'),
+                lambda x: 15 if x['timeSaver'] else 60,
+                lambda x: '5–15 min' if x == 15 else '1 hour',
+        )
+        inactivate_steps = incubate(
+                itemgetter('heatInactivationTemp'),
+                itemgetter('heatInactivationTime'),
+        )
+
 
         protocol += f"""\
-Setup {plural(rxn.num_reactions):# {rxn['enzyme'].name} digestion/s} [1]:
+Setup {plural(rxn.num_reactions):# {rxn_type} digestion/s} [1]:
 
 {rxn}
 """
+
         protocol += f"""\
 Incubate at the following temperatures [2]:
 
-- {self.enzyme['incubateTemp']}°C for {'5–15 min' if self.enzyme['timeSaver'] else '1 hour'}.
-- {self.enzyme['heatInactivationTemp']}°C for {self.enzyme['heatInactivationTime']} min.
+{digest_steps}
+{inactivate_steps}
 """
         protocol.footnotes[1] = """\
 NEB recommends 5–10 units of enzyme per µg DNA 
@@ -149,7 +191,6 @@ The heat inactivation step is not necessary if
 the DNA will be purified before use.
 """
         return protocol
-
 
 class RestrictionDigestError(Error):
     pass
@@ -209,14 +250,49 @@ def load_neb_enzymes():
 
     return data
 
+def pick_compatible_buffer(enzymes):
+    if len(enzymes) == 1:
+        return enzymes[0]['recommBuffer']
+
+    # Don't consider `buf5`.  This is the code for buffers that are unique to a 
+    # specific enzyme, so even if two enzymes both want `buf5`, it's not the 
+    # same buffer.
+
+    buffer_names = {
+            '1': "NEBbuffer 1.1",
+            '2': "NEBbuffer 2.1",
+            '3': "NEBbuffer 3.1",
+            '4': "CutSmart Buffer",
+    }
+    buffer_scores = {
+            k: (
+                sum(not x[f'star{k}'] for x in enzymes),  # Star activity?
+                sum(x[f'buf{k}'] for x in enzymes),       # Cutting activity?
+                k == '4',                                 # Prefer CutSmart
+            )
+            for k in buffer_names
+    }
+    best_buffer = max(
+            buffer_scores,
+            key=lambda k: buffer_scores[k],
+    )
+
+    return buffer_names[best_buffer]
+
 
 if __name__ == '__main__':
     try:
         args = docopt.docopt(__doc__)
-        templates = [x.strip() for x in args['<templates>'].split(',')]
-        enzyme = load_neb_enzyme(args['<enzyme>'])
+        templates = [
+                x.strip()
+                for x in args['<templates>'].split(',')
+        ]
+        enzymes = [
+                load_neb_enzyme(x)
+                for x in args['<enzymes>'].split(',')
+        ]
 
-        digest = RestrictionDigest(templates, enzyme)
+        digest = RestrictionDigest(templates, enzymes)
         digest.dna_ug = float(args['--dna'])
         digest.dna_stock_nguL = float(args['--dna-stock'])
         digest.target_volume_uL = float(args['--target-volume'])
