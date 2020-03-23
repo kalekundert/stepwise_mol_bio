@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 """\
+Amplify a DNA template using polymerase chain reaction (PCR).
+
 Usage:
-    pcr.py <template> <fwd_primer> <rev_primer>
+    pcr <template> <fwd_primer> <rev_primer>
            <num_reactions> <annealing_temp> <extension_time> [options]
 
 Arguments:
@@ -51,208 +53,209 @@ Options:
 """
 
 import docopt
+import autoprop
 import stepwise
-from stepwise import Q
 from inform import plural
+from configurator import Config
+from stepwise import UsageError
 
-general_config = {
-        'primer_conc': '100 µM',
-}
-reagent_tables = {
-        'q5': """\
-                Reagent              Stock    Volume  MM?
-                ==============  ==========  ========  ===
-                water                       to 10 µL  yes
-                template DNA     100 pg/µL    0.2 µL
-                forward primer       10 µM    0.5 µL
-                reverse primer       10 µM    0.5 µL
-                Q5 master mix           2x    5.0 µL  yes
-                """,
+@autoprop
+class Pcr:
 
-        'ssoadv': """\
-                Reagent                   Stock    Volume  MM?
-                ====================  =========  ========  ===
-                water                            to 20 µL  yes
-                template DNA          100 pg/µL      1 µL
-                forward primer            10 µM      1 µL
-                reverse primer            10 µM      1 µL
-                SsoAdvanced supermix         2x     10 µL  yes
-                """,
-}
-thermocycler_protocols = {
-        # This needs to be in a config file somewhere...
-        'q5': {
-            'initial_denature_temp': 98,
-            'initial_denature_time': 30,
-            'denature_temp': 98,
-            'denature_time': 10,
-            'anneal_temp': 60,
-            'anneal_time': 20,
-            'extend_temp': 72,
-            'extend_time': 120,
-            'final_extend_temp': 72,
-            'final_extend_time': 120,
-            'num_cycles': 35,
-            'hold': 4,
-        },
-        'ssoadv': {
-            'initial_denature_temp': 95,
-            'initial_denature_time': 30,
-            'denature_temp': 95,
-            'denature_time': 10,
-            'anneal_temp': 60,
-            'anneal_time': 15,
-            'melt_curve_low_temp': 65,
-            'melt_curve_high_temp': 95,
-            'melt_curve_temp_step': 0.5,
-            'melt_curve_time_step': 5,
-            'num_cycles': 40,
-            'two_step': True,
-        },
-}
+    def __init__(self, template=None, primers=None, num_reactions=1):
+        self.template = template
+        self.primers = primers
+        self.num_reactions = num_reactions
 
-def make_thermocycler_steps(params):
-    def time(x):
-        try:
-            x = int(x)
-        except ValueError:
-            return x
+        self.polymerase = 'q5'
+        self.reagents = None
+        self.thermocycler_params = {}
+        self.reaction_volume_uL = 10
+        self.master_mix = ['dna']
 
-        if x < 60:
-            return f'{x}s'
-        elif x % 60:
-            return f'{x//60}m{x%60:02}'
-        else:
-            return f'{x//60} min'
+    @classmethod
+    def from_docopt(cls, *docopt_args, **docopt_kwargs):
+        args = docopt.docopt(*docopt_args, **docopt_kwargs)
 
-    def has_step(protocol, step, params=['temp', 'time']):
-        return all((f'{step}_{param}' in protocol) for param in params)
-
-    p = params
-    three_step = not p.get('two_step', False) and has_step(p, 'extend')
-
-    thermocycler_steps = [
-            f"- {p['initial_denature_temp']}°C for {time(p['initial_denature_time'])}",
-            f"- Repeat {p['num_cycles']}x:",
-            f"  - {p['denature_temp']}°C for {time(p['denature_time'])}",
-            f"  - {p['anneal_temp']}°C for {time(p['anneal_time'])}",
-    ]
-    if three_step:
-        thermocycler_steps += [
-            f"  - {p['extend_temp']}°C for {time(p['extend_time'])}",
+        pcr = cls()
+        pcr.template = args['<template>']
+        pcr.primers = args['<fwd_primer>'], args['<rev_primer>']
+        pcr.polymerase = args['--polymerase']
+        pcr.num_reactions = eval(args['<num_reactions>'])
+        pcr.reaction_volume_uL = eval(args['--reaction-volume'])
+        pcr.thermocycler_params['anneal_temp_C'] = float(args['<annealing_temp>'])
+        pcr.thermocycler_params['extend_time_s'] = float(args['<extension_time>'])
+        pcr.master_mix = [] if args['--nothing-in-master-mix'] else [
+                x.strip()
+                for x in args['--master-mix'].split(',')
         ]
+        return pcr
 
-    if has_step(p, 'final_extend'):
-        thermocycler_steps += [
-            f"- {p['final_extend_temp']}°C for {time(p['final_extend_time'])}",
+    def get_config(self):
+        config = Config(stepwise.load_config()['molbio']['pcr'].data)
+        config.merge(config['polymerases'][self.polymerase].data)
+        config.merge(self.thermocycler_params)
+        if self.reagents:
+            config.merge({'reagents': self.reagents})
+
+        return config
+
+    def get_reaction(self):
+        config = self.config
+
+        def require_reagent(pcr, reagent):
+            if reagent not in pcr:
+                raise UsageError(f"reagent table for polymerase {self.polymerase!r} missing {reagent!r}.")
+
+        pcr = stepwise.MasterMix.from_text(config.reagents)
+    
+        require_reagent(pcr, 'water')
+        require_reagent(pcr, 'template DNA')
+        require_reagent(pcr, 'forward primer')
+        require_reagent(pcr, 'reverse primer')
+        
+        pcr.num_reactions = self.num_reactions
+        pcr.hold_ratios.volume = self.reaction_volume_uL, 'µL'
+        pcr.extra_volume = '10 µL'
+
+        pcr['water'].order = 1
+
+        pcr['template DNA'].order = 2
+        pcr['template DNA'].name = self.template
+        pcr['template DNA'].master_mix = 'dna' in self.master_mix
+
+        # Setup the primers.  This is complicated because the primers might 
+        # get split into their own mix, if the volumes that would be added 
+        # to the PCR reaction are too small.
+
+        primer_mix = None
+        primer_abbrev = {
+                'forward primer': 'fwd',
+                'reverse primer': 'rev',
+        }
+        use_primer_mix = []
+
+        for p, name in zip(primer_abbrev, self.primers or (None, None)):
+            pcr[p].order = 3
+            pcr[p].name = name
+            pcr[p].hold_conc.stock_conc = config['primer_stock_uM'], 'µM'
+            pcr[p].master_mix = (
+                    primer_abbrev[p] in self.master_mix or
+                           'primers' in self.master_mix
+            )
+
+            primer_scale = pcr.scale if pcr[p].master_mix else 1
+            primer_vol = primer_scale * pcr[p].volume
+
+            if primer_vol < '0.5 µL':
+                use_primer_mix.append(p)
+
+        if use_primer_mix:
+            pcr['primer mix'].order = 4
+            pcr['primer mix'].stock_conc = '10x'
+            pcr['primer mix'].volume = pcr.volume / 10
+            pcr['primer mix'].master_mix = all(
+                    pcr[p].master_mix
+                    for p in use_primer_mix
+            )
+
+            primer_mix = stepwise.MasterMix()
+            primer_mix.volume = '10 µL'
+
+            for p in use_primer_mix:
+                primer_mix[p].stock_conc = pcr[p].stock_conc
+                primer_mix[p].volume = pcr[p].volume
+                primer_mix[p].hold_stock_conc.conc *= 10
+                del pcr[p]
+
+        return pcr, primer_mix
+
+    def get_thermocycler_protocol(self):
+        p = self.config
+
+        def time(x):
+            try:
+                x = int(x)
+            except ValueError:
+                return x
+
+            if x < 60:
+                return f'{x}s'
+            elif x % 60:
+                return f'{x//60}m{x%60:02}'
+            else:
+                return f'{x//60} min'
+
+        def has_step(p, step, params=['temp_C', 'time_s']):
+            return all((f'{step}_{param}' in p) for param in params)
+
+        def step(p, step):
+            return f"{p[f'{step}_temp_C']}°C for {time(p[f'{step}_time_s'])}"
+
+        three_step = not p.get('two_step', False) and has_step(p, 'extend')
+
+        thermocycler_steps = [
+                f"- {p['initial_denature_temp_C']}°C for {time(p['initial_denature_time_s'])}",
+                f"- Repeat {p['num_cycles']}x:",
+                f"  - {step(p, 'denature')}",
+                f"  - {step(p, 'anneal')}",
         ]
+        if three_step:
+            thermocycler_steps += [
+                f"  - {step(p, 'extend')}",
+            ]
 
-    if has_step(p, 'melt_curve', 'low_temp high_temp temp_step time_step'.split()):
-        thermocycler_steps += [
-            f"- {p['melt_curve_low_temp']}-{p['melt_curve_high_temp']}°C in {time(p['melt_curve_time_step'])} steps of {p['melt_curve_temp_step']}°C",
-        ]
+        if has_step(p, 'final_extend'):
+            thermocycler_steps += [
+                f"- {step(p, 'final_extend')}",
+            ]
 
-    if 'hold' in p:
-        thermocycler_steps += [
-            f"- {p['hold']}°C hold",
-        ]
+        if has_step(p, 'melt_curve', 'low_temp high_temp temp_step time_step'.split()):
+            thermocycler_steps += [
+                f"- {p['melt_curve_low_temp_C']}-{p['melt_curve_high_temp_C']}°C in {time(p['melt_curve_time_step_s'])} steps of {p['melt_curve_temp_step_C']}°C",
+            ]
 
-    return '\n'.join(thermocycler_steps)
+        if 'hold' in p:
+            thermocycler_steps += [
+                f"- {p['hold_temp_C']}°C hold",
+            ]
 
+        return '\n'.join(thermocycler_steps)
 
-if __name__ == '__main__':
-    args = docopt.docopt(__doc__)
-    polymerase = args['--polymerase']
-    master_mix = [] if args['--nothing-in-master-mix'] else [
-            x.strip()
-            for x in args['--master-mix'].split(',')
-    ]
+    def get_protocol(self):
+        protocol = stepwise.Protocol()
+        config = self.config
 
-    # Setup the PCR reaction:
-    pcr = stepwise.MasterMix.from_text(reagent_tables[polymerase])
-    pcr.num_reactions = eval(args['<num_reactions>'])
-    pcr.hold_ratios.volume = eval(args['--reaction-volume']), 'µL'
-    pcr.extra_volume = '10 µL'
+        pcr, primer_mix = self.reaction
+        thermocycler = self.thermocycler_protocol
 
-    pcr['water'].order = 1
-
-    pcr['template DNA'].order = 2
-    pcr['template DNA'].name = args['<template>']
-    pcr['template DNA'].master_mix = 'dna' in master_mix
-
-    use_primer_mix = []
-    primer_names = 'forward primer', 'reverse primer'
-    primer_abbrev = {
-            'forward primer': 'fwd',
-            'reverse primer': 'rev',
-    }
-
-    for p in primer_names:
-        pcr[p].order = 3
-        pcr[p].name = args[f'<{primer_abbrev[p]}_primer>']
-        pcr[p].hold_conc.stock_conc = general_config['primer_conc']
-        pcr[p].master_mix = (
-                primer_abbrev[p] in master_mix or
-                       'primers' in master_mix
-        )
-
-        primer_scale = pcr.scale if pcr[p].master_mix else 1
-        primer_vol = primer_scale * pcr[p].volume
-
-        if primer_vol < '0.5 µL':
-            use_primer_mix.append(p)
-
-    # Setup the primer mix (if needed):
-    if use_primer_mix:
-        pcr['primer mix'].order = 4
-        pcr['primer mix'].stock_conc = '10x'
-        pcr['primer mix'].volume = pcr.volume / 10
-        pcr['primer mix'].master_mix = all(
-                pcr[p].master_mix
-                for p in use_primer_mix
-        )
-
-        primers = stepwise.MasterMix()
-        primers.volume = '10 µL'
-
-        for p in use_primer_mix:
-            primers[p].name = pcr[p].name
-            primers[p].stock_conc = pcr[p].stock_conc
-            primers[p].volume = pcr[p].volume
-            primers[p].hold_stock_conc.conc *= 10
-            del pcr[p]
-
-    # Setup the thermocycler protocol:
-    thermocycler_params = thermocycler_protocols[polymerase]
-    thermocycler_params['anneal_temp'] = args['<annealing_temp>']
-    thermocycler_params['extend_time'] = args['<extension_time>']
-    thermocycler = make_thermocycler_steps(thermocycler_params)
-
-    # Make the protocol:
-    protocol = stepwise.Protocol()
-
-    if use_primer_mix:
-        protocol += f"""\
+        if primer_mix:
+            protocol += f"""\
 Prepare 10x primer mixes [1]:
 
-{primers}
+{primer_mix}
 """
 
-    protocol += f"""\
+        protocol += f"""\
 Setup {plural(pcr.num_reactions):# PCR reaction/s} and 1 negative control:
 
 {pcr}
 """
 
-    protocol += f"""\
+        protocol += f"""\
 Run the following thermocycler protocol:
 
 {thermocycler}
 """
 
-    protocol.footnotes[1] = f"""\
+        protocol.footnotes[1] = f"""\
 For resuspending lyophilized primers:
-{general_config['primer_conc']} = {1e3 / Q(general_config['primer_conc']).value:g} µL/nmol
+{config.primer_stock_uM} µM = {1e3 / config.primer_stock_uM:g} µL/nmol
 """
 
-    print(protocol)
+        return protocol
+
+if __name__ == '__main__':
+    pcr = Pcr.from_docopt(__doc__)
+    print(pcr.protocol)
+
