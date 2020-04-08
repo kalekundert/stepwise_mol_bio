@@ -55,6 +55,7 @@ Options:
 import docopt
 import autoprop
 import stepwise
+from math import sqrt
 from inform import plural
 from configurator import Config
 from stepwise import UsageError
@@ -83,7 +84,7 @@ class Pcr:
         pcr.polymerase = args['--polymerase']
         pcr.num_reactions = eval(args['<num_reactions>'])
         pcr.reaction_volume_uL = eval(args['--reaction-volume'])
-        pcr.thermocycler_params['anneal_temp_C'] = float(args['<annealing_temp>'])
+        pcr.thermocycler_params['anneal_temp_C'] = args['<annealing_temp>']
         pcr.thermocycler_params['extend_time_s'] = float(args['<extension_time>'])
         pcr.master_mix = [] if args['--nothing-in-master-mix'] else [
                 x.strip()
@@ -163,6 +164,7 @@ class Pcr:
             primer_mix.volume = '10 µL'
 
             for p in use_primer_mix:
+                primer_mix[p].name = pcr[p].name
                 primer_mix[p].stock_conc = pcr[p].stock_conc
                 primer_mix[p].volume = pcr[p].volume
                 primer_mix[p].hold_stock_conc.conc *= 10
@@ -229,15 +231,28 @@ class Pcr:
         pcr, primer_mix = self.reaction
         thermocycler = self.thermocycler_protocol
 
+        protocol.footnotes[1] = f"""\
+For resuspending lyophilized primers:
+{config.primer_stock_uM} µM = {1e3 / config.primer_stock_uM:g} µL/nmol
+"""
+        if x := pcr['template DNA'].stock_conc:
+            protocol.footnotes[2] = f"""\
+For diluting template DNA to {x}:
+Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt(DNA) µL
+"""
         if primer_mix:
             protocol += f"""\
-Prepare 10x primer mixes [1]:
+Prepare 10x primer mix [1]:
 
 {primer_mix}
 """
 
+        footnotes = list(protocol.footnotes.keys())
+        if primer_mix: footnotes.remove(1)
+        footnotes = ','.join(str(x) for x in footnotes)
+
         protocol += f"""\
-Setup {plural(pcr.num_reactions):# PCR reaction/s} and 1 negative control:
+Setup {plural(pcr.num_reactions):# PCR reaction/s} and 1 negative control{f' [{footnotes}]' if footnotes else ''}:
 
 {pcr}
 """
@@ -246,11 +261,6 @@ Setup {plural(pcr.num_reactions):# PCR reaction/s} and 1 negative control:
 Run the following thermocycler protocol:
 
 {thermocycler}
-"""
-
-        protocol.footnotes[1] = f"""\
-For resuspending lyophilized primers:
-{config.primer_stock_uM} µM = {1e3 / config.primer_stock_uM:g} µL/nmol
 """
 
         return protocol
