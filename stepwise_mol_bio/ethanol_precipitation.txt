@@ -59,7 +59,7 @@ Notes:
     pellet.  If low concentrations of DNA (<20 pg/µL) 
     or very small fragments (<100 nucleotides) are 
     being processed, more extensive centrifugation 
-    may be required. Centrifugation at 100,000g for 
+    may be required.  Centrifugation at 100,000g for 
     20-30 minutes allows the recovery of picogram 
     quantities of nucleic acid in the absence of 
     carrier.
