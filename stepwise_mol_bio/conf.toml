@@ -3,13 +3,13 @@ primer_stock_uM = 100
 
 [pcr.polymerases.q5]
 reagents = '''
-Reagent              Stock    Volume  MM?
-==============  ==========  ========  ===
-water                       to 10 µL  yes
-template DNA     100 pg/µL    0.2 µL
-forward primer       10 µM    0.5 µL
-reverse primer       10 µM    0.5 µL
-Q5 master mix           2x    5.0 µL  yes
+Reagent            Stock      Volume  MM?
+==============  ========  ==========  ===
+water                     to 10.0 µL  yes
+template DNA    20 pg/µL      1.0 µL
+forward primer     10 µM      0.5 µL
+reverse primer     10 µM      0.5 µL
+Q5 master mix         2x      5.0 µL  yes
 '''
 num_cycles = 35
 initial_denature_temp_C = 98
@@ -26,13 +26,13 @@ hold_temp_C = 4
 
 [pcr.polymerases.ssoadv]
 reagents = '''
-Reagent                   Stock    Volume  MM?
-====================  =========  ========  ===
-water                            to 20 µL  yes
-template DNA          100 pg/µL      1 µL
-forward primer            10 µM      1 µL
-reverse primer            10 µM      1 µL
-SsoAdvanced supermix         2x     10 µL  yes
+Reagent                  Stock    Volume  MM?
+====================  ========  ========  ===
+water                           to 20 µL  yes
+template DNA                        1 µL
+forward primer           10 µM      1 µL
+reverse primer           10 µM      1 µL
+SsoAdvanced supermix        2x     10 µL  yes
 '''
 num_cycles = 40
 initial_denature_temp_C = 95
