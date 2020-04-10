@@ -4,6 +4,12 @@
 """\
 Stain protein gels using SimplyBlue SafeStain (Invitrogen LC6060).
 
+SimplyBlue SafeStain is a ready-to-use, proprietary Coomassie G-250 stain that 
+is specially-formulated for rapid, sensitive detection, and safe, non-hazardous 
+disposal. This stain does not require the use of methanol or acetic acid, thus 
+eliminating the need to dispose of hazardous waste.  Proteins stained using 
+SimplyBlue SafeStain are compatible with mass spectrometry (MS) analysis.
+
 Usage:
     simplyblue [-f | -o | -q] [-r] [-a] [-g <mm>]
 
