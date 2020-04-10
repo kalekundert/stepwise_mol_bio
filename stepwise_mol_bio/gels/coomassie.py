@@ -21,25 +21,15 @@ Options:
 
 import stepwise
 import autoprop
-from inform import Error, did_you_mean
+from _stain import Stain
 
 @autoprop
-class Coomassie:
+class Coomassie(Stain):
 
     def __init__(self):
         self.stain_type = 'basic'
         self.image_type = None
         self.default_image_type = 'colorimetric'
-
-    @classmethod
-    def main(cls, *args, **kwargs):
-        try:
-            from docopt import docopt
-            args = docopt(*args, **kwargs)
-            coom = cls.from_docopt(args)
-            print(coom.protocol)
-        except Error as err:
-            err.report()
 
     @classmethod
     def from_docopt(cls, args):
@@ -52,28 +42,12 @@ class Coomassie:
             self.image_type = 'fluorescent'
         return self
 
-    def get_protocol(self):
-        return self.staining_protocol + self.imaging_protocol
-
-    def get_staining_protocol(self):
-        try:
-            return self.staining_protocols[self.stain_type]()
-        except KeyError:
-            raise Error("unknown staining protocol {self.stain_type!r}, did you mean {did_you_mean(self.stain_type, self.staining_protocols)}")
-
     def get_staining_protocols(self):
         return {
                 'basic': self.get_basic_staining,
                 'microwave': self.get_microwave_staining,
                 'quiet': self.get_quiet_staining,
         }
-
-    def get_imaging_protocol(self):
-        key = self.image_type or self.default_image_type
-        try:
-            return self.imaging_protocols[key]()
-        except KeyError:
-            raise Error("unknown imaging protocol {key!r}, did you mean {did_you_mean(key, self.imaging_protocols.keys())}")
 
     def get_imaging_protocols(self):
         return {
