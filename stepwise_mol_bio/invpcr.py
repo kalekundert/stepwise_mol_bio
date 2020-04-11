@@ -6,20 +6,19 @@ Clone a plasmid by inverse PCR.
 
 import docopt
 import autoprop
-from stepwise_mol_bio import pcr, kld
+from stepwise_mol_bio import Main, pcr, kld
 
 @autoprop
-class InversePcr:
+class InversePcr(Main):
 
     def __init__(self):
         self.pcr = pcr.Pcr()
         self.kld = kld.Kld()
 
     @classmethod
-    def from_docopt(cls, *args, **kwargs):
+    def from_docopt(cls, args):
         inv = cls()
-        inv.pcr = pcr.Pcr.from_docopt(*args, **kwargs)
-        inv.kld = kld.Kld.from_docopt(*args, **kwargs)
+        inv.pcr = pcr.Pcr.from_docopt(args)
         return inv
 
     def get_protocol(self):
@@ -32,8 +31,7 @@ def copy_pcr_usage():
 
 if __name__ == '__main__':
     usage = copy_pcr_usage()
-    invpcr = InversePcr.from_docopt(usage)
-    print(invpcr.protocol)
+    InversePcr.main(usage)
 
 
 

@@ -17,20 +17,18 @@ import docopt
 import stepwise
 import autoprop
 from inform import plural
+from stepwise_mol_bio import Main
 
 @autoprop
-class Kld:
+class Kld(Main):
 
     def __init__(self):
         self.num_reactions = 1
 
     @classmethod
-    def from_docopt(cls, *docopt_args, **docopt_kwargs):
-        args = docopt.docopt(*docopt_args, **docopt_kwargs)
-
+    def from_docopt(cls, args):
         kld = cls()
         kld.num_reactions = eval(args['<num_reactions>'])
-
         return kld
 
     def get_reaction(self):
@@ -62,5 +60,4 @@ Run {plural(self.num_reactions):# ligation reaction/s}:
         return protocol
 
 if __name__ == '__main__':
-    kld = Kld.from_docopt(__doc__)
-    print(kld.protocol)
+    Kld.main(__doc__)

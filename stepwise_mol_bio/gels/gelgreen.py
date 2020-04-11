@@ -26,6 +26,7 @@ Options:
 import stepwise
 import autoprop
 from _biotium import Biotium
+from laser_scanner import LaserScanner
 
 @autoprop
 class GelGreen(Biotium):
@@ -47,14 +48,8 @@ class GelGreen(Biotium):
         }
 
     def get_fluorescent_imaging(self):
-        p = stepwise.Protocol()
-        p += """\
-Image with a laser scanner.
-
-laser: 488 nm
-filter: 518BP22
-"""
-        return p
+        scan = LaserScanner.from_params(488, '518BP22')
+        return scan.protocol
 
 if __name__ == '__main__':
     GelGreen.main(__doc__)

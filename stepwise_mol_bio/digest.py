@@ -37,16 +37,14 @@ Options:
 """
 
 import docopt
-import json
-import requests
 import stepwise
 import autoprop
 from pathlib import Path
 from inform import Error, plural, did_you_mean
-from stepwise_mol_bio.utils import app
+from stepwise_mol_bio import Main, app
 
 @autoprop
-class RestrictionDigest:
+class RestrictionDigest(Main):
 
     def __init__(self, templates, enzymes):
         self.templates = templates
@@ -56,6 +54,22 @@ class RestrictionDigest:
         self.dna_stock_nguL = 200
         self.target_volume_uL = 10
         self.is_genomic = False
+
+    def from_docopt(cls, args):
+        templates = [
+                x.strip()
+                for x in args['<templates>'].split(',')
+        ]
+        enzymes = [
+                load_neb_enzyme(x)
+                for x in args['<enzymes>'].split(',')
+        ]
+
+        digest = cls(templates, enzymes)
+        digest.dna_ug = float(args['--dna'])
+        digest.dna_stock_nguL = float(args['--dna-stock'])
+        digest.target_volume_uL = float(args['--target-volume'])
+        digest.is_genomic = args['--genomic']
 
     def get_reaction(self):
         # Define a prototypical restriction digest reaction.  Stock 
@@ -231,6 +245,9 @@ def load_neb_enzyme(name):
         raise UnknownEnzyme(name, enzymes)
 
 def load_neb_enzymes():
+    import json
+    import requests
+
     cache = Path(app.user_cache_dir) / 'neb' / 'restriction_enzymes.json'
     cache.parent.mkdir(parents=True, exist_ok=True)
 
@@ -281,24 +298,4 @@ def pick_compatible_buffer(enzymes):
 
 
 if __name__ == '__main__':
-    try:
-        args = docopt.docopt(__doc__)
-        templates = [
-                x.strip()
-                for x in args['<templates>'].split(',')
-        ]
-        enzymes = [
-                load_neb_enzyme(x)
-                for x in args['<enzymes>'].split(',')
-        ]
-
-        digest = RestrictionDigest(templates, enzymes)
-        digest.dna_ug = float(args['--dna'])
-        digest.dna_stock_nguL = float(args['--dna-stock'])
-        digest.target_volume_uL = float(args['--target-volume'])
-        digest.is_genomic = args['--genomic']
-
-        print(digest.protocol)
-
-    except Error as err:
-        err.report()
+    RestrictionDigest.main(__doc__)
