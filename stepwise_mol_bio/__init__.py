@@ -6,8 +6,12 @@ Protocols relating to molecular biology, e.g. PCR.
 
 __version__ = '0.0.0'
 
+from ._utils import *
+from ._presets import *
+
 from pathlib import Path
 from numbers import Real
+from voluptuous import Any
 
 class Plugin:
     protocol_dir = Path(__file__).parent
@@ -15,8 +19,11 @@ class Plugin:
     config_schema = {
             'pcr': {
                 'primer_stock_uM': Real,
-                'polymerases': {
+                'default_preset': str,
+                'presets': {
                     str: {
+                        'brief': str,
+                        'inherit': str,
                         'reagents': str,
                         'num_cycles': int,
                         'initial_denature_temp_C': Real,
@@ -35,7 +42,40 @@ class Plugin:
                         'melt_curve_time_step_s': Real,
                         'hold_temp_C': Real,
                         'two_step': bool,
-                    }
-                }
-            }
+                    },
+                },
+            },
+            'gel': {
+                'presets': {
+                    str: {
+                        'brief': str,
+                        'inherit': str,
+                        'title': str,
+                        'gel_type': Any('page', 'agarose'),
+                        'gel_percent': Any(str, Real),
+                        'sample_mix': str,
+                        'sample_name': str,
+                        'sample_conc': Real,
+                        'sample_volume_uL': Real,
+                        'mix_volume_uL': Real,
+                        'mix_extra_percent': Real,
+                        'incubate_temp_C': Real,
+                        'incubate_time_min': Real,
+                        'load_volume_uL': Real,
+                        'run_volts': Real,
+                        'run_time_min': Real,
+                        'stain': str,
+                    },
+                },
+            },
+            'laser': {
+                'presets': {
+                    str: {
+                        'brief': str,
+                        'inherit': str,
+                        'laser': Any(str, Real),
+                        'filter': str,
+                    },
+                },
+            },
     }

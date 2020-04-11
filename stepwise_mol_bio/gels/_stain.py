@@ -2,28 +2,15 @@
 
 import autoprop
 from inform import Error, did_you_mean
+from stepwise_mol_bio import Main
 
 @autoprop
-class Stain:
+class Stain(Main):
     default_image_type = None
 
     def __init__(self):
         self.stain_type = None
         self.image_type = None
-
-    @classmethod
-    def main(cls, *args, **kwargs):
-        try:
-            from docopt import docopt
-            args = docopt(*args, **kwargs)
-            stain = cls.from_docopt(args)
-            print(stain.protocol)
-        except Error as err:
-            err.report()
-
-    @classmethod
-    def from_docopt(cls, args):
-        return cls()
 
     def get_protocol(self):
         return self.staining_protocol + self.imaging_protocol

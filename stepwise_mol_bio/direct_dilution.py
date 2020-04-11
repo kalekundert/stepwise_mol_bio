@@ -54,8 +54,9 @@ class DirectDilution(SerialDilution):
         self.max_dilution = 10
 
     @classmethod
-    def from_docopt(cls, *args, **kwargs):
-        self = super().from_docopt(*args, **kwargs)
+    def from_docopt(cls, args):
+        self = super().from_docopt(args)
+        self.max_dilution = float(args['--max-dilution'])
         return self
 
     def get_protocol(self):
@@ -101,10 +102,6 @@ Prepare the following dilutions:
         raise Error(f"{dilution:.1f}x dilution to make {format_quantity(target_conc, self.conc_unit)} exceeds maximum ({self.max_dilution:.1f}x).")
 
 if __name__ == '__main__':
-    try:
-        dilute = DirectDilution.from_docopt(__doc__)
-        print(dilute.protocol)
-    except Error as err:
-        err.report()
+    DirectDilution.main(__doc__)
 
 # vim: tw=53

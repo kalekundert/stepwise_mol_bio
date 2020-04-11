@@ -22,6 +22,7 @@ Options:
 import stepwise
 import autoprop
 from _stain import Stain
+from laser_scanner import LaserScanner
 
 @autoprop
 class Coomassie(Stain):
@@ -101,18 +102,8 @@ Stain gel with Coomassie.
         return stepwise.Protocol()
 
     def get_fluorescent_imaging(self):
-        p = stepwise.Protocol()
-        p += """\
-Image with a laser scanner [1]:
-
-laser: 658 nm
-filter: 710BP40
-"""
-        p.footnotes[1] = """\
-Coomassie seems to quench fluorophores like 
-FITC/GFP.  I don't know exactly why this is.
-"""
-        return p
+        scan = LaserScanner.from_params(658, '710BP40')
+        return scan.protocol
 
 if __name__ == '__main__':
     Coomassie.main(__doc__)

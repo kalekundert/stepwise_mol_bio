@@ -4,98 +4,183 @@
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
-    pcr <template> <fwd_primer> <rev_primer>
-           <num_reactions> <annealing_temp> <extension_time> [options]
+    pcr <template> <fwd_primer> <rev_primer> [<num_reactions>] [options]
 
 Arguments:
     <template>
-        The name of the template.
+        The name of the template to amplify.
 
     <fwd_primer> <rev_primer>
         The name of the primers.
 
     <num_reactions>
-        The number of reactions to set up.
-
-    <annealing_temp>
-        The annealing temperature for the PCR reaction (in °C).  I typically 
-        use NEB's online "Tm Calculator" to determine this parameter.
-
-    <extension_time>
-        The length of the extension step in seconds.  The rule of thumb is 30 
-        sec/kb, perhaps longer if you're amplifying a whole plasmid.
+        The number of reactions to set up.  The default is 1.
 
 Options:
-    -v --reaction-volume <μL>       [default: 10]
-        The volume of the PCR reaction.  The recommended volumes for Q5 are 25
-        and 50 μL.
+    -v --reaction-volume <μL>
+        The volume of the PCR reaction.
 
-    -m --master-mix <reagents>      [default: dna]
+    -m --master-mix <reagents>  [default: dna]
         Indicate which reagents should be included in the master mix.  The 
         following values are understood:
 
-        dna:        The DNA template.
-        fwd:        The forward primer.
-        rev:        The reverse primer.
-        primers:    Both primers, alias for 'fwd,rev'.
+        dna:      The DNA template.
+        fwd:      The forward primer.
+        rev:      The reverse primer.
+        primers:  Both primers, alias for 'fwd,rev'.
 
     -M --nothing-in-master-mix
         Don't include anything but water and polymerase in the master mix.  
         This is an alias for: -m ''
 
-    -p --polymerase <name>          [default: q5]
-        The name of the polymerase being used.  Different polymerases also have 
-        different thermocycler parameters, as recommended by the manufacturer.  
-        Currently, the following polymerases are supported:
+    -p --preset <name>  [default: {default_preset}]
+        The default reaction and thermocycler parameters to use.  The following 
+        sets of parameters are currently available:
 
-        q5:         Q5 High-Fidelity DNA Polymerase (NEB)
-        ssoadv:     SsoAdvanced™ Universal SYBR® Green Supermix (Biorad)
+        {presets}
+
+    -n --num-cycles <n>
+        The number of denature/anneal/extend cycles to perform, e.g. 35.
+
+    --initial-denature-temp <°C>
+        The temperature of the initial denaturation step in °C, e.g. 95.
+
+    --initial-denature-time <sec>
+        The duration of the initial denaturation step in seconds, e.g. 30.
+
+    --denature-temp <°C>
+        The temperature of the denaturation step in °C, e.g. 95.
+
+    --denature-time <sec>
+        The duration of the denaturation step in seconds, e.g. 10.
+
+    -a --anneal-temp <°C>
+        The temperature of the annealing step in °C, e.g. 60.  This is 
+        determined by the sequence of the primers.
+        
+    --anneal-time <sec>
+        The duration of the annealing step in seconds, e.g. 20.
+
+    --extend-temp <°C>
+        The temperature of the extension step in °C, e.g. 72.
+        
+    -x --extend-time <sec>
+        The duration of the extension step in seconds.  The rule of thumb is
+        30 sec/kb, perhaps longer if you're amplifying a whole plasmid.
+
+    --final-extend-temp <°C>
+        The temperature of the final extension step in °C, e.g. 72.
+
+    --final-extend-time <sec>
+        The duration of the annealing step in seconds, e.g. 120.
+
+    --hold-temp <°C>
+        The temperature in °C to hold the reaction at after it completes.
+
+    --melt-curve-low-temp <°C>
+        The temperature in °C at which to begin recording a melt curve,
+        e.g. 65.  This is only relevant for qPCR protocols.
+
+    --melt-curve-high-temp <°C>
+        The temperature in °C at which to stop recording a melt curve,
+        e.g. 95.  This is only relevant for qPCR protocols.
+
+    --melt-curve-temp-step <°C>
+        How much to increment the temperature in °C at each step in the melt 
+        curve, e.g. 0.5°C.  This is only relevant for qPCR protocols.
+
+    --melt-curve-time-step <sec>
+        The duration in seconds of each step in the melt curve, e.g. 5.  This 
+        is only relevant for qPCR protocols.
+
+    --two-step
+        Specify that the annealing and extension steps should be combined, e.g. 
+        if the primer melting temperatures are very close to the extension 
+        temperature or if the amplicon is very short.
 """
 
-import docopt
 import autoprop
 import stepwise
 from math import sqrt
-from inform import plural
-from configurator import Config
+from inform import plural, indent
 from stepwise import UsageError
+from stepwise_mol_bio import Main, Presets
+
+# Incorporate information from the config file into the usage text.
+CONFIG = stepwise.load_config()['molbio']['pcr']
+PRESETS = Presets.from_config('molbio.pcr.presets')
+__doc__ = __doc__.format(
+        default_preset=CONFIG['default_preset'],
+        presets=indent(PRESETS.format_briefs(), 8*' ', first=-1),
+)
 
 @autoprop
-class Pcr:
+class Pcr(Main):
 
-    def __init__(self, template=None, primers=None, num_reactions=1):
+    def __init__(self, template=None, primers=None, num_reactions=None):
         self.template = template
         self.primers = primers
         self.num_reactions = num_reactions
 
-        self.polymerase = 'q5'
         self.reagents = None
+        self.preset = 'q5'
         self.thermocycler_params = {}
-        self.reaction_volume_uL = 10
+        self.reaction_volume_uL = None
         self.master_mix = ['dna']
 
     @classmethod
-    def from_docopt(cls, *docopt_args, **docopt_kwargs):
-        args = docopt.docopt(*docopt_args, **docopt_kwargs)
-
+    def from_docopt(cls, args):
         pcr = cls()
         pcr.template = args['<template>']
         pcr.primers = args['<fwd_primer>'], args['<rev_primer>']
-        pcr.polymerase = args['--polymerase']
-        pcr.num_reactions = eval(args['<num_reactions>'])
-        pcr.reaction_volume_uL = eval(args['--reaction-volume'])
-        pcr.thermocycler_params['anneal_temp_C'] = args['<annealing_temp>']
-        pcr.thermocycler_params['extend_time_s'] = float(args['<extension_time>'])
+        pcr.num_reactions = eval(args['<num_reactions>'] or '1')
+        pcr.preset = args['--preset']
         pcr.master_mix = [] if args['--nothing-in-master-mix'] else [
                 x.strip()
                 for x in args['--master-mix'].split(',')
         ]
+        if x := args['--reaction-volume']:
+            pcr.reaction_volume_uL = eval(x)
+
+        thermocycler_keys = [
+                ('num-cycles', int),
+                ('initial-denature-temp', float),
+                ('initial-denature-time', float),
+                ('denature-temp', float),
+                ('denature-time', float),
+                ('anneal-temp', float),
+                ('anneal-time', float),
+                ('extend-temp', float),
+                ('extend-time', float),
+                ('final-extend-temp', float),
+                ('final-extend-time', float),
+                ('hold-temp', float),
+                ('melt-curve-low-temp', float),
+                ('melt-curve-high-temp', float),
+                ('melt-curve-temp-step', float),
+                ('melt-curve-time-step', float),
+                ('two-step', bool),
+        ]
+        for key, parser in thermocycler_keys:
+            arg_key = f'--{key}'
+            if args[arg_key] is None:
+                continue
+
+            param_parts = key.split('-')
+            param_unit = {'temp': '_C', 'time': '_s'}
+            param_key = '_'.join(param_parts) + param_unit.get(param_parts[-1], '')
+
+            pcr.thermocycler_params[param_key] = parser(args[arg_key])
+
         return pcr
 
     def get_config(self):
-        config = Config(stepwise.load_config()['molbio']['pcr'].data)
-        config.merge(config['polymerases'][self.polymerase].data)
+        from configurator import Config
+
+        config = Config(CONFIG.data)
+        config.merge(PRESETS.load(self.preset))
         config.merge(self.thermocycler_params)
+
         if self.reagents:
             config.merge({'reagents': self.reagents})
 
@@ -106,7 +191,7 @@ class Pcr:
 
         def require_reagent(pcr, reagent):
             if reagent not in pcr:
-                raise UsageError(f"reagent table for polymerase {self.polymerase!r} missing {reagent!r}.")
+                raise UsageError(f"reagent table for preset {self.preset!r} missing {reagent!r}.")
 
         pcr = stepwise.MasterMix.from_text(config.reagents)
     
@@ -114,10 +199,13 @@ class Pcr:
         require_reagent(pcr, 'template DNA')
         require_reagent(pcr, 'forward primer')
         require_reagent(pcr, 'reverse primer')
-        
-        pcr.num_reactions = self.num_reactions
-        pcr.hold_ratios.volume = self.reaction_volume_uL, 'µL'
+
         pcr.extra_volume = '10 µL'
+        
+        if self.num_reactions:
+            pcr.num_reactions = self.num_reactions
+        if self.reaction_volume_uL:
+            pcr.hold_ratios.volume = self.reaction_volume_uL, 'µL'
 
         pcr['water'].order = 1
 
@@ -175,6 +263,8 @@ class Pcr:
     def get_thermocycler_protocol(self):
         p = self.config
 
+        debug(p)
+
         def time(x):
             try:
                 x = int(x)
@@ -212,7 +302,7 @@ class Pcr:
                 f"- {step(p, 'final_extend')}",
             ]
 
-        if has_step(p, 'melt_curve', 'low_temp high_temp temp_step time_step'.split()):
+        if has_step(p, 'melt_curve', 'low_temp_C high_temp_C temp_step_C time_step_s'.split()):
             thermocycler_steps += [
                 f"- {p['melt_curve_low_temp_C']}-{p['melt_curve_high_temp_C']}°C in {time(p['melt_curve_time_step_s'])} steps of {p['melt_curve_temp_step_C']}°C",
             ]
@@ -238,7 +328,7 @@ For resuspending lyophilized primers:
         if x := pcr['template DNA'].stock_conc:
             protocol.footnotes[2] = f"""\
 For diluting template DNA to {x}:
-Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt(DNA) µL
+Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt([DNA]) µL
 """
         if primer_mix:
             protocol += f"""\
@@ -252,9 +342,11 @@ Prepare 10x primer mix [1]:
         footnotes = ','.join(str(x) for x in footnotes)
 
         protocol += f"""\
-Setup {plural(pcr.num_reactions):# PCR reaction/s} and 1 negative control{f' [{footnotes}]' if footnotes else ''}:
+Setup {plural(pcr.num_reactions):# PCR reaction/s}{f' [{footnotes}]' if footnotes else ''}:
 
 {pcr}
+
+{'- Use any extra master mix as a negative control.' if pcr.num_reactions > 1 else ''}
 """
 
         protocol += f"""\
@@ -266,6 +358,5 @@ Run the following thermocycler protocol:
         return protocol
 
 if __name__ == '__main__':
-    pcr = Pcr.from_docopt(__doc__)
-    print(pcr.protocol)
+    Pcr.main(__doc__)
 

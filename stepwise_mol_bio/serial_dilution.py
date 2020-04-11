@@ -30,14 +30,14 @@ Options:
         The substance to dilute into.
 """
 
-import docopt
 import stepwise
 import autoprop
 from inform import Error, plural
 from numbers import Real
+from stepwise_mol_bio import Main
 
 @autoprop
-class SerialDilution:
+class SerialDilution(Main):
 
     def __init__(self):
         self.volume = None
@@ -51,9 +51,8 @@ class SerialDilution:
         self.diluent = 'water'
 
     @classmethod
-    def from_docopt(cls, *args, **kwargs):
+    def from_docopt(cls, args):
         self = cls()
-        args = docopt.docopt(*args, **kwargs)
 
         self.volume, self.volume_unit = parse_quantity(args['<volume>'])
         self.conc_high, self.conc_low, self.conc_unit = parse_high_low(
@@ -130,10 +129,6 @@ def format_quantity(value, unit=None, precision=2, pad=' '):
 
 
 if __name__ == '__main__':
-    try:
-        dilute = SerialDilution.from_docopt(__doc__)
-        print(dilute.protocol)
-    except Error as err:
-        err.report()
+    SerialDilution.main(__doc__)
 
 # vim: tw=53

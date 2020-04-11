@@ -1,0 +1,51 @@
+[[test_load_preset]]
+presets = {a={x=1}}
+key = 'a'
+expected = {x=1}
+
+[[test_load_preset]]
+presets = {a={inherit='b'}, b={x=1, y=1}}
+key = 'a'
+expected = {x=1, y=1}
+
+[[test_load_preset]]
+presets = {a={inherit='b', x=2}, b={x=1, y=1}}
+key = 'a'
+expected = {x=2, y=1}
+
+[[test_load_preset]]
+presets = {a={inherit='b', y=2}, b={x=1, y=1}}
+key = 'a'
+expected = {x=1, y=2}
+
+[[test_load_preset]]
+presets = {a={inherit='b', x=2, y=2}, b={x=1, y=1}}
+key = 'a'
+expected = {x=2, y=2}
+
+[[test_load_preset]]
+presets = {a={inherit='b', z=2}, b={x=1, y=1}}
+key = 'a'
+expected = {x=1, y=1, z=2}
+
+[[test_get_dotted_key]]
+dict = {a=1}
+dotted_key = 'a'
+expected = 1
+
+[[test_get_dotted_key]]
+dict = {a=1}
+dotted_key = 'a'
+expected = 1
+
+[[test_get_dotted_key]]
+dict = {a={b=1}}
+dotted_key = 'a'
+expected = {b=1}
+
+[[test_get_dotted_key]]
+dict = {a={b=1}}
+dotted_key = 'a.b'
+expected = 1
+
+
