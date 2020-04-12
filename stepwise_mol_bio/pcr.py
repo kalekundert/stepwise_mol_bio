@@ -4,7 +4,8 @@
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
-    pcr <template> <fwd_primer> <rev_primer> [<num_reactions>] [options]
+    pcr <template> <fwd_primer> <rev_primer> [<num_reactions>] 
+        (-a <°C>) (-x <sec>) [options]
 
 Arguments:
     <template>
@@ -262,8 +263,6 @@ class Pcr(Main):
 
     def get_thermocycler_protocol(self):
         p = self.config
-
-        debug(p)
 
         def time(x):
             try:
