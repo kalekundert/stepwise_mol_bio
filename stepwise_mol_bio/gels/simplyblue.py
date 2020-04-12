@@ -87,17 +87,6 @@ Stain gel with SimplyBlue SafeStain:
 - Add enough stain to cover the gel (≈20 mL).
 - Incubate at 25°C for 1h with gentle shaking [2].
 """
-        p.footnotes[1] = """\
-Rinsing removes SDS and buffer salts, which 
-interfere with binding of the dye to the protein.
-"""
-        p.footnotes[2] = """\
-The gel can be stained for up to 3 hours, but 
-after 3 hours, sensitivity decreases.  If you need 
-to leave the gel overnight in the stain, add 2 mL 
-of 20% NaCl (w/v) in water for every 20 mL of 
-stain. This procedure will not affect sensitivity.
-"""
         if max_sensitivity:
             p.steps[0] += f"""\
 - Wash the gel with {100*k:.0f} mL water for 1h [3].
@@ -110,13 +99,17 @@ stain. This procedure will not affect sensitivity.
 - To obtain the clearest background, wash again 
   with 100 mL water for 1h [4].
 """
-            p.footnotes[4] = """\
-Sensitivity decreases if the gel is stored in 
-water for more than 1 day. The decrease in the 
-amount of free dye in the water favors 
-dissociation of the dye from the protein.  If you 
-need to store the gel in water for a few days, add 
-20 mL of 20% NaCl.
+
+        p.footnotes[1] = """\
+Rinsing removes SDS and buffer salts, which 
+interfere with binding of the dye to the protein.
+"""
+        p.footnotes[2] = """\
+The gel can be stained for up to 3 hours, but 
+after 3 hours, sensitivity decreases.  If you need 
+to leave the gel overnight in the stain, add 2 mL 
+of 20% NaCl (w/v) in water for every 20 mL of 
+stain. This procedure will not affect sensitivity.
 """
         p.footnotes[3] = """\
 The gel can be left in the water for several days 
@@ -125,6 +118,16 @@ amount of dye in the water that is in equilibrium
 with the dye bound to the protein, so proteins 
 remain blue.
 """
+        p.footnotes[4] = """\
+Sensitivity decreases if the gel is stored in 
+water for more than 1 day. The decrease in the 
+amount of free dye in the water favors 
+dissociation of the dye from the protein.  If you 
+need to store the gel in water for a few days, add 
+20 mL of 20% NaCl.
+"""
+        p.prune_footnotes()
+
         return p
 
     def get_microwave_protocol(self):
