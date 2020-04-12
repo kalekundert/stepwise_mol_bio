@@ -4,7 +4,7 @@
 Image a gel using a laser scanner.
 
 Usage:
-    laser_scanner [<preset>] [-l <laser>] [-f <filter]
+    laser_scanner [<preset>] [-l <laser>] [-f <filter>]
 
 Arguments:
     <preset>
@@ -17,7 +17,7 @@ Options:
     -l --laser <nm>
         The wavelength of laser to use.
 
-    -f --filter <str>
+    -f --filter <desc>
         The emission filter to use.
 """
 
@@ -56,6 +56,7 @@ class LaserScanner(Main):
         self = cls()
         self.params['laser'] = laser
         self.params['filter'] = filter
+        return self
 
     def get_config(self):
         preset = PRESETS.load(self.preset) if self.preset else {}
