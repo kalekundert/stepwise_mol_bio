@@ -33,8 +33,8 @@ class Biotium(Stain):
         p += f"""\
 Stain gel with {self.product}:
 
-   - Submerge gel in ≈50 mL 3x {self.product} [1].
-   - Shake gently for 30 min.
+- Submerge gel in ≈50 mL 3x {self.product} [1].
+- Shake gently for 30 min.
 """
         p.footnotes[1] = """\
 Including 100 mM NaCl in the staining solution 
