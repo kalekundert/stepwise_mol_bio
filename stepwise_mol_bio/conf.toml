@@ -72,11 +72,11 @@ stain = "coomassie"
 [gel.presets.sdsmax]
 inherit = 'sds'
 sample_mix = """
-Reagent                 Stock       Volume  MM?
-======================  =====  ===========  ===
-Bolt LDS sample buffer     4x      3.85 µL  yes
-Bolt reducing agent       10x      1.54 µL  yes
-sample                         to 15.39 µL
+Reagent                 Stock    Volume  MM?
+======================  =====  ========  ===
+Bolt LDS sample buffer     4x   3.85 µL  yes
+Bolt reducing agent       10x   1.54 µL  yes
+sample                         10.00 µL
 """
 load_volume_uL = 15.39
 

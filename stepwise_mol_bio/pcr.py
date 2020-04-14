@@ -281,7 +281,7 @@ class Pcr(Main):
             return all((f'{step}_{param}' in p) for param in params)
 
         def step(p, step):
-            return f"{p[f'{step}_temp_C']}°C for {time(p[f'{step}_time_s'])}"
+            return f"{p[f'{step}_temp_C']:g}°C for {time(p[f'{step}_time_s'])}"
 
         three_step = not p.get('two_step', False) and has_step(p, 'extend')
 
