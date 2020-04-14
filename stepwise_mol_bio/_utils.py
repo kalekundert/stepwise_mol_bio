@@ -29,6 +29,9 @@ class StepwiseMolBioError(Error):
 class ConfigError(StepwiseMolBioError):
     pass
 
+class UsageError(StepwiseMolBioError):
+    pass
+
 def hanging_indent(text, prefix):
     from textwrap import indent
     if isinstance(prefix, int):
