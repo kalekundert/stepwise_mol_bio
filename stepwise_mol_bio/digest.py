@@ -55,6 +55,7 @@ class RestrictionDigest(Main):
         self.target_volume_uL = 10
         self.is_genomic = False
 
+    @classmethod
     def from_docopt(cls, args):
         templates = [
                 x.strip()
@@ -65,11 +66,13 @@ class RestrictionDigest(Main):
                 for x in args['<enzymes>'].split(',')
         ]
 
-        digest = cls(templates, enzymes)
-        digest.dna_ug = float(args['--dna'])
-        digest.dna_stock_nguL = float(args['--dna-stock'])
-        digest.target_volume_uL = float(args['--target-volume'])
-        digest.is_genomic = args['--genomic']
+        self = cls(templates, enzymes)
+        self.dna_ug = float(args['--dna'])
+        self.dna_stock_nguL = float(args['--dna-stock'])
+        self.target_volume_uL = float(args['--target-volume'])
+        self.is_genomic = args['--genomic']
+
+        return self
 
     def get_reaction(self):
         # Define a prototypical restriction digest reaction.  Stock 
