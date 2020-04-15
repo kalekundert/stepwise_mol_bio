@@ -103,6 +103,7 @@ Options:
 import autoprop
 import stepwise
 from math import sqrt
+from numbers import Real
 from inform import plural, indent
 from stepwise import UsageError
 from stepwise_mol_bio import Main, Presets
@@ -143,23 +144,32 @@ class Pcr(Main):
         if x := args['--reaction-volume']:
             pcr.reaction_volume_uL = eval(x)
 
+        def temp(x):
+            try:
+                return float(x)
+            except ValueError:
+                return x
+
+        def time(x):
+            return float(x)
+
         thermocycler_keys = [
                 ('num-cycles', int),
-                ('initial-denature-temp', float),
-                ('initial-denature-time', float),
-                ('denature-temp', float),
-                ('denature-time', float),
-                ('anneal-temp', float),
-                ('anneal-time', float),
-                ('extend-temp', float),
-                ('extend-time', float),
-                ('final-extend-temp', float),
-                ('final-extend-time', float),
-                ('hold-temp', float),
-                ('melt-curve-low-temp', float),
-                ('melt-curve-high-temp', float),
-                ('melt-curve-temp-step', float),
-                ('melt-curve-time-step', float),
+                ('initial-denature-temp', temp),
+                ('initial-denature-time', time),
+                ('denature-temp', temp),
+                ('denature-time', time),
+                ('anneal-temp', temp),
+                ('anneal-time', time),
+                ('extend-temp', temp),
+                ('extend-time', time),
+                ('final-extend-temp', temp),
+                ('final-extend-time', time),
+                ('hold-temp', temp),
+                ('melt-curve-low-temp', temp),
+                ('melt-curve-high-temp', temp),
+                ('melt-curve-temp-step', temp),
+                ('melt-curve-time-step', time),
                 ('two-step', bool),
         ]
         for key, parser in thermocycler_keys:
@@ -264,6 +274,12 @@ class Pcr(Main):
     def get_thermocycler_protocol(self):
         p = self.config
 
+        def temp(x):
+            if isinstance(x, Real):
+                return f'{x:g}°C'
+            else:
+                return f'{x}°C'
+
         def time(x):
             try:
                 x = int(x)
@@ -281,12 +297,12 @@ class Pcr(Main):
             return all((f'{step}_{param}' in p) for param in params)
 
         def step(p, step):
-            return f"{p[f'{step}_temp_C']:g}°C for {time(p[f'{step}_time_s'])}"
+            return f"{temp(p[f'{step}_temp_C'])} for {time(p[f'{step}_time_s'])}"
 
         three_step = not p.get('two_step', False) and has_step(p, 'extend')
 
         thermocycler_steps = [
-                f"- {p['initial_denature_temp_C']}°C for {time(p['initial_denature_time_s'])}",
+                f"- {step(p, 'initial_denature')}",
                 f"- Repeat {p['num_cycles']}x:",
                 f"  - {step(p, 'denature')}",
                 f"  - {step(p, 'anneal')}",
