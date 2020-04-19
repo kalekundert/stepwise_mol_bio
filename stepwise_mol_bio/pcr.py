@@ -98,6 +98,10 @@ Options:
         Specify that the annealing and extension steps should be combined, e.g. 
         if the primer melting temperatures are very close to the extension 
         temperature or if the amplicon is very short.
+
+    --qpcr
+        Specify that this is a qPCR protocol, i.e. that fluorescence should be 
+        measured after each thermocyler cycle.
 """
 
 import autoprop
@@ -171,10 +175,11 @@ class Pcr(Main):
                 ('melt-curve-temp-step', temp),
                 ('melt-curve-time-step', time),
                 ('two-step', bool),
+                ('qpcr', bool),
         ]
         for key, parser in thermocycler_keys:
             arg_key = f'--{key}'
-            if args[arg_key] is None:
+            if args[arg_key] in (None, False):
                 continue
 
             param_parts = key.split('-')
@@ -277,8 +282,10 @@ class Pcr(Main):
         def temp(x):
             if isinstance(x, Real):
                 return f'{x:g}°C'
-            else:
+            elif x[-1].isdigit():
                 return f'{x}°C'
+            else:
+                return x
 
         def time(x):
             try:
@@ -312,6 +319,11 @@ class Pcr(Main):
                 f"  - {step(p, 'extend')}",
             ]
 
+        if p.get('qpcr'):
+            thermocycler_steps += [
+                f"  - Measure fluorescence",
+            ]
+
         if has_step(p, 'final_extend'):
             thermocycler_steps += [
                 f"- {step(p, 'final_extend')}",
@@ -320,6 +332,11 @@ class Pcr(Main):
         if has_step(p, 'melt_curve', 'low_temp_C high_temp_C temp_step_C time_step_s'.split()):
             thermocycler_steps += [
                 f"- {p['melt_curve_low_temp_C']}-{p['melt_curve_high_temp_C']}°C in {time(p['melt_curve_time_step_s'])} steps of {p['melt_curve_temp_step_C']}°C",
+            ]
+
+        if p.get('qpcr'):
+            thermocycler_steps += [
+                f"  - Measure fluorescence",
             ]
 
         if 'hold' in p:
@@ -355,9 +372,10 @@ Prepare 10x primer mix [1]:
         footnotes = list(protocol.footnotes.keys())
         if primer_mix: footnotes.remove(1)
         footnotes = ','.join(str(x) for x in footnotes)
+        title = 'qPCR' if self.config['qpcr'] else 'PCR'
 
         protocol += f"""\
-Setup {plural(pcr.num_reactions):# PCR reaction/s}{f' [{footnotes}]' if footnotes else ''}:
+Setup {plural(pcr.num_reactions):# {title} reaction/s}{f' [{footnotes}]' if footnotes else ''}:
 
 {pcr}
 

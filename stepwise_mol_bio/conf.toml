@@ -49,6 +49,7 @@ melt_curve_high_temp_C = 95
 melt_curve_temp_step_C = 0.5
 melt_curve_time_step_s = 5
 two_step = true
+qpcr = true
 
 [gel.presets.sds]
 title = "SDS PAGE"

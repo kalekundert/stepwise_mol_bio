@@ -42,6 +42,7 @@ class Plugin:
                         'melt_curve_time_step_s': Real,
                         'hold_temp_C': Real,
                         'two_step': bool,
+                        'qpcr': bool,
                     },
                 },
             },
