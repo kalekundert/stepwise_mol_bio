@@ -90,7 +90,7 @@ Perform a serial dilution [1]:
 
         protocol.footnotes[1] = f"""\
 The final concentrations will be:
-{stepwise.tabulate(conc_table, alignments='>>')}
+{stepwise.tabulate(conc_table, align='>>')}
 """
         return protocol
 
