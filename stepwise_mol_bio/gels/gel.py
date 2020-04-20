@@ -21,14 +21,40 @@ Options:
         The percentage of polyacrylamide/agarose in the gel being run.
 
     -c --sample-conc <value>
-        In units given in the preset.  Preset must have stock conc.
+        The concentration of the sample.  This will be used to scale how much 
+        sample is mixed with loading buffer, with the goal of mixing the same 
+        quantity of material specified in the preset.  In order to use this 
+        option, the preset must specify a sample concentration.  The units of 
+        that concentration will be used for this concentration.
 
     --sample-volume <µL>
+        The volume of sample to mix with loading buffer, in µL.  This will 
+        scale the concentration of the sample, if a concentration for the 
+        sample was specified.
+
     --mix-volume <µL>
+        The volume of the sample/loading buffer mix to prepare for each sample.  
+        For example, if you want to run two gels, but the preset only makes 
+        enough mix for one, use this option to make more.
+
     --mix-extra <percent>
+        How much extra sample/loading buffer mix to make.
+
     --incubate-temp <°C>
+        What temperature to incubate the sample/loading buffer at before 
+        loading it onto the gel.  The incubation step will be skipped if 
+        neither `--incubate-temp` nor `--incubate-time` are specified (either 
+        on the command-line or via the preset).
+
     --incubate-time <min>
+        How long to incubate the sample/loading buffer at the specified 
+        temperature before loading it onto the gel.  The incubation step will 
+        be skipped if neither `--incubate-temp` nor `--incubate-time` are 
+        specified (either on the command-line or via the preset).
+
     -v --load-volume <µL>
+        The volume of the sample/loading buffer mix to load onto the gel.
+
     --run-volts <V>
     -r --run-time <min>
     -s --stain <command>
@@ -131,7 +157,7 @@ class Gel(Main):
                 mix['sample'].hold_conc.volume = y, 'µL'
 
             if y := c.get('mix_volume_uL'):
-                mix.volume = y, 'µL'
+                mix.hold_ratios.volume = y, 'µL'
 
             incubate_step = ""
 
