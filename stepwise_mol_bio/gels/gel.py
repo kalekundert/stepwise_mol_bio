@@ -20,6 +20,9 @@ Options:
     -p --percent <int>
         The percentage of polyacrylamide/agarose in the gel being run.
 
+    -a --additive <str>
+        An extra component to include in the gel itself, e.g. 1x EtBr.
+
     -c --sample-conc <value>
         The concentration of the sample.  This will be used to scale how much 
         sample is mixed with loading buffer, with the goal of mixing the same 
@@ -27,10 +30,10 @@ Options:
         option, the preset must specify a sample concentration.  The units of 
         that concentration will be used for this concentration.
 
-    --sample-volume <µL>
-        The volume of sample to mix with loading buffer, in µL.  This will 
-        scale the concentration of the sample, if a concentration for the 
-        sample was specified.
+    -v --sample-volume <µL>
+        The volume of sample to mix with loading buffer, in µL.  This does not 
+        scale the concentration, and may increase or decrease the amount of 
+        sample loaded relative to what's specified in the preset.
 
     --mix-volume <µL>
         The volume of the sample/loading buffer mix to prepare for each sample.  
@@ -52,13 +55,22 @@ Options:
         be skipped if neither `--incubate-temp` nor `--incubate-time` are 
         specified (either on the command-line or via the preset).
 
-    -v --load-volume <µL>
+    -l --load-volume <µL>
         The volume of the sample/loading buffer mix to load onto the gel.
 
     --run-volts <V>
+        The voltage to run the gel at.
+
     -r --run-time <min>
+        How long to run the gel, in minutes.
+
     -s --stain <command>
+        The name (and arguments) of a protocol describing how to stain the gel.  
+        For example, this could be 'gelred' or 'coomassie -f'.
+        
     -S --no-stain
+        Leave off the staining step of the protocol.
+        
 """
 
 import stepwise
@@ -68,7 +80,7 @@ from stepwise_mol_bio import Main, Presets, ConfigError
 
 # Incorporate information from the config file into the usage text.
 PRESETS = Presets.from_config('molbio.gel.presets')
-PRESETS_DOC  = PRESETS.format_briefs("{gel_percent}% {title}")
+PRESETS_DOC  = PRESETS.format_briefs("{gel_percent}% {gel_type}")
 __doc__ = __doc__.format(
         presets=indent(PRESETS_DOC, 8*' ', first=-1),
 )
@@ -94,6 +106,7 @@ class Gel(Main):
 
         keys = [
                 ('--percent', 'gel_percent', str),
+                ('--additive', 'gel_additive', str),
                 ('--sample-conc', 'sample_conc', float),
                 ('--sample-volume', 'sample_volume_uL', float),
                 ('--mix-volume', 'mix_volume_uL', float),
@@ -154,7 +167,7 @@ class Gel(Main):
                 mix['sample'].hold_conc.stock_conc = y, stock_conc.unit
 
             if y := c.get('sample_volume_uL'):
-                mix['sample'].hold_conc.volume = y, 'µL'
+                mix['sample'].volume = y, 'µL'
 
             if y := c.get('mix_volume_uL'):
                 mix.hold_ratios.volume = y, 'µL'
@@ -162,7 +175,7 @@ class Gel(Main):
             incubate_step = ""
 
             p += f"""\
-Prepare samples for {c['title']}:
+Prepare samples for {c.get('title', 'electrophoresis')}:
 
 {mix}
 """
@@ -173,10 +186,11 @@ Prepare samples for {c['title']}:
 - Incubate at {temp_C}°C for {time_min} min.
 """
             
+        additive = f" with {c['gel_additive']}" if c.get('gel_additive') else ''
         p += f"""\
-Run the gel:
+Run a gel:
 
-- Use a {c['gel_percent']}% {c['title']} gel.
+- Use a {c['gel_percent']}% {c['gel_type']} gel{additive}.
 - Load {c['load_volume_uL']} µL of each sample.
 - Run at {c['run_volts']}V for {c['run_time_min']} min.
         """

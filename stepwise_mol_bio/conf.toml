@@ -53,7 +53,7 @@ qpcr = true
 
 [gel.presets.sds]
 title = "SDS PAGE"
-gel_type = "page"
+gel_type = "SDS PAGE"
 gel_percent = "4−12"
 sample_mix = """
 Reagent                     Stock      Volume  MM?
@@ -83,7 +83,7 @@ load_volume_uL = 15.39
 
 [gel.presets.native]
 title = "native PAGE"
-gel_type = "page"
+gel_type = "native PAGE"
 gel_percent = "3−12"
 sample_mix = """
 Reagent             Stock      Volume  MM?
@@ -110,7 +110,7 @@ sample                        1.25 µL
 
 [gel.presets.urea]
 title = "TBE/urea PAGE"
-gel_type = "page"
+gel_type = "TBE/urea PAGE"
 gel_percent = 6
 sample_mix = """
 Reagent             Stock    Volume  MM?
@@ -125,6 +125,28 @@ load_volume_uL = 10
 run_volts = 180
 run_time_min = 40
 stain = "gelred"
+
+[gel.presets.agarose1]
+gel_type = "agarose"
+gel_percent = 1
+sample_mix = """
+Reagent             Stock  Volume  MM?
+==============  =========  ======  ===
+loading buffer         6x    1 µL  yes
+sample                       5 µL
+"""
+load_volume_uL = 5
+run_volts = 100
+run_time_min = 60
+stain = ''
+
+[gel.presets.agarose15]
+inherit = 'agarose1'
+gel_percent = 1.5
+
+[gel.presets.agarose2]
+inherit = 'agarose1'
+gel_percent = 2
 
 [laser.presets.blue]
 laser = 488
