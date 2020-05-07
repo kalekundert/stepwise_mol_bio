@@ -372,7 +372,7 @@ Prepare 10x primer mix [1]:
         footnotes = list(protocol.footnotes.keys())
         if primer_mix: footnotes.remove(1)
         footnotes = ','.join(str(x) for x in footnotes)
-        title = 'qPCR' if self.config['qpcr'] else 'PCR'
+        title = 'qPCR' if self.config.get('qpcr') else 'PCR'
 
         protocol += f"""\
 Setup {plural(pcr.num_reactions):# {title} reaction/s}{f' [{footnotes}]' if footnotes else ''}:
