@@ -4,7 +4,8 @@
 Perform a serial dilution.
 
 Usage:
-    serial_dilution <volume> <high> <low> <steps> [options]
+    serial_dilution <volume> <high> <low> <steps> [-m <name>] [-d <name>]
+    serial_dilution <volume> <high> <steps> -f <factor> [-m <name>] [-d <name>]
 
 Arguments:
     <volume>
@@ -23,10 +24,14 @@ Arguments:
         The number of dilutions to make, including <high> and <low>.
 
 Options:
-    -m --material NAME  [default: material]
+    -f --factor <x>
+        How big of a dilution to make at each step of the protocol.  With this 
+        flag, the <low> argument no longer needs to be specified.
+
+    -m --material <name>    [default: material]
         The substance being diluted.
 
-    -d --diluent NAME   [default: water]
+    -d --diluent <name>     [default: water]
         The substance to dilute into.
 """
 
@@ -43,8 +48,9 @@ class SerialDilution(Main):
         self.volume = None
         self.volume_unit = None
         self.conc_high = None
-        self.conc_low = None
+        self._conc_low = None
         self.conc_unit = None
+        self._dilution_factor = None
         self.steps = None
 
         self.material = 'material'
@@ -55,11 +61,16 @@ class SerialDilution(Main):
         self = cls()
 
         self.volume, self.volume_unit = parse_quantity(args['<volume>'])
-        self.conc_high, self.conc_low, self.conc_unit = parse_high_low(
-                args['<high>'],
-                args['<low>'],
-        )
         self.steps = int(args['<steps>'])
+
+        if x := args['--factor']:
+            self.conc_high, self.conc_unit = parse_quantity(args['<high>'])
+            self.dilution_factor = 1 / float(x)
+        else:
+            self.conc_high, self.conc_low, self.conc_unit = parse_high_low(
+                    args['<high>'],
+                    args['<low>'],
+            )
 
         self.material = args['--material']
         self.diluent = args['--diluent']
@@ -85,7 +96,8 @@ Perform a serial dilution [1]:
 
 - Put {initial_volume:.2f} μL {material_str} in the first tube.
 - Add {self.volume:.2f} μL {self.diluent} in the {plural(self.steps - 1):# remaining tube/s}.
-- Transfer {transfer:.2f} μL between each tube.
+- Transfer {transfer:.2f} μL between each tube to make
+  {1/factor:.2g}-fold dilutions.
 """
 
         protocol.footnotes[1] = f"""\
@@ -94,8 +106,20 @@ The final concentrations will be:
 """
         return protocol
 
+    def get_conc_low(self):
+        return self._conc_low or self.conc_high * self.factor**(self.steps)
+
+    def set_conc_low(self, x):
+        self._conc_low = x
+        self._dilution_factor = None
+
     def get_dilution_factor(self):
-        return (self.conc_low / self.conc_high)**(1 / (self.steps - 1))
+        return self._dilution_factor or \
+                (self.conc_low / self.conc_high)**(1 / (self.steps - 1))
+
+    def set_dilution_factor(self, x):
+        self._dilution_factor = x
+        self._conc_low = None
 
     def get_concentrations(self):
         factor = self.dilution_factor
