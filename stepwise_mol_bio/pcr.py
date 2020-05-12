@@ -4,43 +4,42 @@
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
-    pcr <template> <fwd_primer> <rev_primer> [<num_reactions>] 
-        (-a <°C>) (-x <sec>) [options]
+    pcr <template> <fwd_primer> <rev_primer> (-a <°C>) (-x <sec>) [options]
 
 Arguments:
     <template>
-        The name of the template to amplify.
+        The name of the template(s) to amplify.
 
     <fwd_primer> <rev_primer>
         The name of the primers.
 
-    <num_reactions>
-        The number of reactions to set up.  The default is 1.
-
 Options:
+    -n --num-reactions <int>        [default: {pcr.num_reactions}]
+        The number of reactions to set up.
+
     -v --reaction-volume <μL>
         The volume of the PCR reaction.
 
-    -m --master-mix <reagents>  [default: dna]
+    -m --master-mix <reagents>      [default: {master_mix}]
         Indicate which reagents should be included in the master mix.  The 
         following values are understood:
 
         dna:      The DNA template.
         fwd:      The forward primer.
         rev:      The reverse primer.
-        primers:  Both primers, alias for 'fwd,rev'.
+        primers:  Both primers; alias for 'fwd,rev'.
 
     -M --nothing-in-master-mix
         Don't include anything but water and polymerase in the master mix.  
         This is an alias for: -m ''
 
-    -p --preset <name>  [default: {default_preset}]
+    -p --preset <name>              [default: {pcr.preset}]
         The default reaction and thermocycler parameters to use.  The following 
         sets of parameters are currently available:
 
         {presets}
 
-    -n --num-cycles <n>
+    -y --num-cycles <n>
         The number of denature/anneal/extend cycles to perform, e.g. 35.
 
     --initial-denature-temp <°C>
@@ -112,41 +111,36 @@ from inform import plural, indent
 from stepwise import UsageError
 from stepwise_mol_bio import Main, Presets
 
-# Incorporate information from the config file into the usage text.
 CONFIG = stepwise.load_config()['molbio']['pcr']
 PRESETS = Presets.from_config('molbio.pcr.presets')
-__doc__ = __doc__.format(
-        default_preset=CONFIG['default_preset'],
-        presets=indent(PRESETS.format_briefs(), 8*' ', first=-1),
-)
 
 @autoprop
 class Pcr(Main):
+    preset = CONFIG['default_preset']
+    master_mix = {'dna'}
+    num_reactions = 1
+    reaction_volume_uL = None
 
-    def __init__(self, template=None, primers=None, num_reactions=None):
+    def __init__(self, template=None, primers=None):
         self.template = template
         self.primers = primers
-        self.num_reactions = num_reactions
 
         self.reagents = None
-        self.preset = 'q5'
         self.thermocycler_params = {}
-        self.reaction_volume_uL = None
-        self.master_mix = ['dna']
 
     @classmethod
     def from_docopt(cls, args):
         pcr = cls()
         pcr.template = args['<template>']
         pcr.primers = args['<fwd_primer>'], args['<rev_primer>']
-        pcr.num_reactions = eval(args['<num_reactions>'] or '1')
+        pcr.num_reactions = int(eval(args['--num-reactions']))
         pcr.preset = args['--preset']
         pcr.master_mix = [] if args['--nothing-in-master-mix'] else [
                 x.strip()
                 for x in args['--master-mix'].split(',')
         ]
         if x := args['--reaction-volume']:
-            pcr.reaction_volume_uL = eval(x)
+            pcr.reaction_volume_uL = float(eval(x))
 
         def temp(x):
             try:
@@ -389,6 +383,12 @@ Run the following thermocycler protocol:
 """
 
         return protocol
+
+__doc__ = __doc__.format(
+        pcr=Pcr,
+        master_mix=','.join(Pcr.master_mix),
+        presets=indent(PRESETS.format_briefs(), 8*' ', first=-1),
+)
 
 if __name__ == '__main__':
     Pcr.main(__doc__)

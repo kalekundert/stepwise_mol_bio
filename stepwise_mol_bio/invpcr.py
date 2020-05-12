@@ -13,7 +13,7 @@ class InversePcr(Main):
 
     def __init__(self):
         self.pcr = pcr.Pcr()
-        self.kld = kld.Kld()
+        self.kld = kld.Kld('PCR product')
 
     @classmethod
     def from_docopt(cls, args):

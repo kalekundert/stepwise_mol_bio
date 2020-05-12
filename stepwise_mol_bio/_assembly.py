@@ -30,14 +30,35 @@ FRAGMENT_DOC = """\
         
             [<name>:]<conc>[:<length>]"""
 
+OPTION_DOC = """\
+    -n --num-reactions <int>        [default: {0.num_reactions}]
+        The number of reactions to setup.
+
+    -m, --master-mix <bb,ins>       [default: {0.master_mix_str}]
+        Indicate which fragments should be included in the master mix.  Valid 
+        fragments are "bb" (for the backbone), "ins" (for all the inserts), 
+        "1" (for the first insert), "2", "3", etc.
+
+    -v, --reaction-volume <µL>      [default: {0.volume_uL}]
+        The volume of the complete assembly reaction.  You might want larger 
+        reaction volumes if your DNA is dilute, or if you have a large number 
+        of inserts.
+
+    -x, --excess-insert <ratio>     [default: {0.excess_insert}]
+        The molar-excess of each insert relative to the backbone.  Values 
+        between 1-10 (e.g. 1-10x excess) are typical."""
+
 class Assembly(Main):
+    num_reactions = 1
+    volume_uL = 5
+    master_mix = frozenset()
+    master_mix_str = ','.join(master_mix)
+    target_pmol_per_frag = 0.06
+    min_pmol_per_frag = 0.02
+    excess_insert = 2
 
     def __init__(self):
         self.fragments = []
-        self.num_reactions = 1
-        self.reaction_volume_uL = 10
-        self.dna_volume_uL = None
-        self.master_mix = set()
 
     @classmethod
     def from_docopt(cls, args):
@@ -48,37 +69,34 @@ class Assembly(Main):
                 *args['<inserts>'],
         ])
         self.num_reactions = int(eval(args['--num-reactions']))
-        self.reaction_volume_uL = float(args['--reaction-volume'])
-        self.dna_volume_uL = float(x) if (x := args['--dna-volume']) else None
         self.master_mix = set(args['--master-mix'].split(','))
+        self.volume_uL = float(args['--reaction-volume'])
+        self.excess_insert = float(args['--excess-insert'])
 
         return self
     
-    def pick_dna_volume_uL(self, free_volume_uL):
-        if not self.dna_volume_uL:
-            return free_volume_uL
-        
-        if free_volume_uL < self.dna_volume_uL:
-            raise UsageError(f"Cannot fit {self.dna_volume_uL} µL of DNA in a {free_volume_uL} µL reaction.")
+    def _add_fragments_to_reaction(self, rxn):
+        calc_fragment_volumes(
+                self.fragments,
+                target_pmol=self.target_pmol_per_frag,
+                min_pmol=self.min_pmol_per_frag,
+                max_vol_uL=rxn.free_volume.value,
+                excess_insert=self.excess_insert,
+        )
 
-        return self.dna_volume_uL
+        for i, frag in enumerate(self.fragments):
+            rxn[frag.name].volume = frag.vol_uL, 'µL'
+            rxn[frag.name].stock_conc = frag.conc.value, frag.conc.unit
+            rxn[frag.name].master_mix = self._is_frag_in_master_mix(i)
+            rxn[frag.name].order = 1
 
-    def pick_frag_volume_uL(self, frag):
-        """
-        If possible, use the recommended amount of DNA.  Otherwise, issue a 
-        warning and use as much DNA as possible.
-        """
-        target_pmol, min_pmol = self.recommended_pmol_per_frag
-        target_uL = uL_from_pmol(target_pmol, frag.conc.value)
-        best_uL = min(frag.vol_uL, target_uL)
-        best_pmol = pmol_from_uL(best_uL, frag.conc.value)
+        rxn.hold_ratios.volume = self.volume_uL, 'µL'
+        rxn.num_reactions = self.num_reactions
+        rxn.extra_min_volume = '0.5 µL'
 
-        if best_pmol < min_pmol:
-            warn(f"using {best_pmol:.3f} pmol of {frag.name}, {min_pmol:.3f} pmol recommended.")
+        return rxn
 
-        return best_uL
-
-    def is_frag_in_master_mix(self, i):
+    def _is_frag_in_master_mix(self, i):
         if i == 0:
             return 'bb' in self.master_mix
         else:
@@ -97,7 +115,7 @@ class Concentration:
 
 def parse_fragments(frag_strs):
     """
-    Parse fragments from a comma- and colon-separated string, i.e. that could 
+    Parse fragments from colon-separated strings, i.e. that could 
     be specified on the command-line.
 
     See the usage text for a description of the syntax of this string.
@@ -135,7 +153,12 @@ def parse_fragments(frag_strs):
                 frag_conc = conc_from_str(fields[1])
 
         elif len(fields) == 1:
-            frag_conc = conc_from_str(fields[0])
+            try:
+                frag_conc = conc_from_str(fields[0])
+
+            except ValueError:
+                frag_name = fields[0]
+                frag_conc = conc_from_str('PCR')
 
         else:
             raise UsageError("cannot parse fragment '{fragment_str}'")
@@ -150,36 +173,38 @@ def parse_fragments(frag_strs):
 
     return fragments
 
-def calc_fragment_volumes(frags, vol_uL, excess_insert=1):
+def calc_fragment_volumes(
+        frags,
+        target_pmol,
+        min_pmol,
+        max_vol_uL,
+        excess_insert=1,
+):
     import numpy as np
 
-    num_fragments = n = len(frags)
-    num_equations = m = n + 1
+    # Calculate the ideal amount of each fragment.
+    for i, frag in enumerate(frags):
+        excess = 1 if i == 0 else excess_insert
+        frag.vol_uL = uL_from_pmol(excess * target_pmol, frag.conc_nM)
 
-    # Construct the system of linear equations to 
-    # solve for the amount of each fragment to add 
-    # to the reaction.
+    # Make sure the maximum volume is not exceeded.
+    total_vol_uL = sum(x.vol_uL for x in frags)
+    if max_vol_uL < total_vol_uL:
+        k = max_vol_uL / total_vol_uL
+        for frag in frags:
+            frag.vol_uL *= k
 
-    A = np.zeros((m, m))
-
-    for i, f in enumerate(frags):
-        A[i,i] = f.conc_nM
-
-    A[:,n] =  excess_insert
-    A[0,n] =  1
-    A[n,:] =  1
-    A[n,n] =  0
-
-    B = np.zeros((m, 1))
-    B[n] = vol_uL
-
-    x = np.linalg.solve(A, B)
-
-    for i, f in enumerate(frags):
-        f.vol_uL = x[i,0]
+    # Warn if any fragment is below the minimum.
+    for frag in frags:
+        best_pmol = pmol_from_uL(frag.vol_uL, frag.conc_nM)
+        if best_pmol < min_pmol:
+            warn(f"using {best_pmol:.3f} pmol of {frag.name}, {min_pmol:.3f} pmol recommended.")
 
 def default_fragment_name(i):
     return "Backbone" if i == 0 else f"Insert #{i}"
+
+def format_docstring(cls, doc):
+    return doc.format(cls, **globals()).format(cls)
 
 def conc_from_str(x):
     import re

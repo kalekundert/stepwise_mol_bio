@@ -80,14 +80,14 @@ class RestrictionDigest(Main):
         # numbers.
 
         rxn = stepwise.MasterMix.from_text("""\
-                Reagent  Catalog      Stock    Volume  MM?
-                =======  =======  =========  ========  ===
-                water                        to 50 µL  yes
-                DNA               200 ng/µL      5 µL
-                BSA        B9000   20 mg/mL      0 µL  yes
-                SAM        B9003      32 mM      0 µL  yes
-                ATP        P0756      10 mM      0 µL  yes
-                buffer                  10x      5 µL  yes
+        Reagent  Catalog      Stock    Volume  MM?
+        =======  =======  =========  ========  ===
+        water                        to 50 µL  yes
+        DNA               200 ng/µL      5 µL
+        BSA        B9000   20 mg/mL      0 µL  yes
+        SAM        B9003      32 mM      0 µL  yes
+        ATP        P0756      10 mM      0 µL  yes
+        buffer                  10x      5 µL  yes
         """)
 
         # Plug in the parameters the user requested.
