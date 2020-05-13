@@ -97,7 +97,7 @@ Perform a serial dilution [1]:
 - Put {initial_volume:.2f} μL {material_str} in the first tube.
 - Add {self.volume:.2f} μL {self.diluent} in the {plural(self.steps - 1):# remaining tube/s}.
 - Transfer {transfer:.2f} μL between each tube to make
-  {1/factor:.2g}-fold dilutions.
+  {self.steps} {1/factor:.2g}-fold dilutions.
 """
 
         protocol.footnotes[1] = f"""\
