@@ -23,7 +23,9 @@ class InversePcr(Main):
 
     def get_protocol(self):
         self.kld.num_reactions = self.pcr.num_reactions
-        return self.pcr.protocol + self.kld.protocol
+        p = self.pcr.protocol + self.kld.protocol
+        p += "Transform 2 µL."
+        return p
 
 def copy_pcr_usage():
     i = pcr.__doc__.find('Usage:')
