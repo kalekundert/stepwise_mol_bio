@@ -31,6 +31,7 @@ tests = [
   'pytest',
   'pytest-cov',
   'coveralls',
+  'toml',
 ]
 docs = [
   'sphinx',
