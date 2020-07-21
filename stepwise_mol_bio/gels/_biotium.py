@@ -9,7 +9,7 @@ Usage:
 
 import stepwise
 import autoprop
-from _stain import Stain
+from stepwise_mol_bio.gels._stain import Stain
 
 @autoprop
 class Biotium(Stain):

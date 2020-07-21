@@ -13,6 +13,8 @@ class Main:
             from docopt import docopt
             args = docopt(*args, **kwargs)
             self = cls.from_docopt(args)
+            if self is None:
+                raise RuntimeError(f"{cls.from_docopt.__qualname__}(): missing return value")
             print(self.protocol)
         except Error as err:
             err.report()

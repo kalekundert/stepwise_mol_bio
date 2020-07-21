@@ -88,15 +88,13 @@ __doc__ = __doc__.format(
 @autoprop
 class Gel(Main):
 
-    def __init__(self):
-        self.preset = ""
-        self.params = {}
-        self.num_samples = None
+    def __init__(self, preset="", num_samples=None):
+        self.preset = preset
+        self.params = {'num_samples': num_samples} if num_samples else {}
 
     @classmethod
     def from_docopt(cls, args):
-        gel = cls()
-        gel.preset = args['<preset>']
+        gel = cls(args['<preset>'])
 
         try:
             gel.params['num_samples'] = int(args['<samples>'])
