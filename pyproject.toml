@@ -14,7 +14,7 @@ requires = [
   'autoprop',
   'configurator',
   'docopt',
-  'inform',
+  'inform>=1.21',
   'numpy',
   'pytest',
   'requests',
