@@ -259,7 +259,7 @@ class Pcr(Main):
             )
 
             primer_mix = stepwise.MasterMix()
-            primer_mix.volume = '10 µL'
+            primer_mix.volume = pcr.volume
 
             for p in use_primer_mix:
                 primer_mix[p].name = pcr[p].name
@@ -267,6 +267,8 @@ class Pcr(Main):
                 primer_mix[p].volume = pcr[p].volume
                 primer_mix[p].hold_stock_conc.conc *= 10
                 del pcr[p]
+
+            primer_mix.hold_ratios.volume = '10 µL'
 
         return pcr, primer_mix
 
