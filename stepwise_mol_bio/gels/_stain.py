@@ -10,10 +10,13 @@ class Stain(Main):
 
     def __init__(self):
         self.stain_type = None
-        self.image_type = None
+        self.image_type = self.default_image_type
 
     def get_protocol(self):
-        return self.staining_protocol + self.imaging_protocol
+        p = self.staining_protocol
+        if self.image_type:
+            p += self.imaging_protocol
+        return p
 
     def get_staining_protocol(self):
         try:
@@ -25,7 +28,7 @@ class Stain(Main):
         raise NotImplementedError
 
     def get_imaging_protocol(self):
-        key = self.image_type or self.default_image_type or ''
+        key = self.image_type
         try:
             return self.imaging_protocols[key]()
         except KeyError:

@@ -17,9 +17,13 @@ efficiently removed from DNA by phenol/chloroform extraction and ethanol
 precipitation.
 
 Usage:
-    gelred [-a]
+    gelred [-I] [-a]
 
 Options:
+    -I --no-imaging
+        Don't include the imaging step in the protocol (e.g. so you can provide 
+        a customized alternative).
+
     -a --attach-pdf
         Attach the manufacturer's protocol to this one, so that both will be 
         printed out by `stepwise go`.

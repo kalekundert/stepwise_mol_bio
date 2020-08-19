@@ -26,6 +26,8 @@ class Biotium(Stain):
     def from_docopt(cls, args):
         self = super().from_docopt(args)
         self.attach_pdf = args['--attach-pdf']
+        if args['--no-imaging']:
+            self.image_type = None
         return self
 
     def get_staining_protocol(self):

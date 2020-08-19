@@ -11,13 +11,17 @@ transilluminator or a gel reader equipped with visible light excitation (such
 as a 488 nm laser-based gel scanner or a Dark Reader).  
 
 Usage:
-    gelgreen [-r] [-a]
+    gelgreen [-r] [-I] [-a]
 
 Options:
     -r --fluorescent
         Image the gel using a 488 nm fluorescence laser scanner, rather than
         a UV transilluminator.
         
+    -I --no-imaging
+        Don't include the imaging step in the protocol (e.g. so you can provide 
+        a customized alternative).
+
     -a --attach-pdf
         Attach the manufacturer's protocol to this one, so that both will be 
         printed out by `stepwise go`.
