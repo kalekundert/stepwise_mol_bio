@@ -110,10 +110,10 @@ class Gel(Main):
                 ('--mix-volume', 'mix_volume_uL', float),
                 ('--mix-extra', 'mix_extra_percent', float),
                 ('--incubate-temp', 'incubate_temp_C', float),
-                ('--incubate-time', 'incubate_time_min', float),
+                ('--incubate-time', 'incubate_time_min', int),
                 ('--load-volume', 'load_volume_uL', float),
                 ('--run-volts', 'run_volts', float),
-                ('--run-time', 'run_time_min', float),
+                ('--run-time', 'run_time_min', int),
                 ('--stain', 'stain', str),
         ]
         for arg_key, param_key, parser in keys:
