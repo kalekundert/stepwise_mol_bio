@@ -58,6 +58,12 @@ Options:
         The temperature of the annealing step in °C, e.g. 60.  This is 
         determined by the sequence of the primers.
         
+    -g --anneal-temp-gradient <range>
+        The range of annealing temperatures that should be tried in a gradient 
+        PCR reaction.  The range will be centered at the indicated annealing 
+        temperature, and the protocol will indicate the corresponding high and 
+        low temperatures.
+
     --anneal-time <sec>
         The duration of the annealing step in seconds, e.g. 20.
 
@@ -105,7 +111,7 @@ Options:
 
 import autoprop
 import stepwise
-from math import sqrt
+from math import sqrt, ceil
 from numbers import Real
 from inform import plural, indent
 from stepwise import UsageError
@@ -158,6 +164,7 @@ class Pcr(Main):
                 ('denature-temp', temp),
                 ('denature-time', time),
                 ('anneal-temp', temp),
+                ('anneal-temp-gradient', float),
                 ('anneal-time', time),
                 ('extend-temp', temp),
                 ('extend-time', time),
@@ -300,7 +307,16 @@ class Pcr(Main):
             return all((f'{step}_{param}' in p) for param in params)
 
         def step(p, step):
-            return f"{temp(p[f'{step}_temp_C'])} for {time(p[f'{step}_time_s'])}"
+            if f'{step}_temp_gradient' not in p:
+                t = p[f'{step}_temp_C']
+            else:
+                t_mid = p[f'{step}_temp_C']
+                t_range = p[f'{step}_temp_gradient']
+                t_low = round(t_mid - t_range / 2)
+                t_high = round(t_low + t_range)
+                t = f'{t_low}-{t_high}'
+
+            return f"{temp(t)} for {time(p[f'{step}_time_s'])}"
 
         three_step = not p.get('two_step', False) and has_step(p, 'extend')
 
@@ -375,8 +391,9 @@ Setup {plural(pcr.num_reactions):# {title} reaction/s}{f' [{footnotes}]' if foot
 
 {pcr}
 
+{f'- Split each reaction into {ceil(pcr.volume.value / 50)} tubes.' if pcr.volume > '50 µL' else ''}
 {'- Use any extra master mix as a negative control.' if pcr.num_reactions > 1 else ''}
-"""
+""".replace('\n\n\n', '\n\n')
 
         protocol += f"""\
 Run the following thermocycler protocol:
