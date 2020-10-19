@@ -90,7 +90,7 @@ Stain gel with SimplyBlue SafeStain:
         if max_sensitivity:
             p.steps[0] += f"""\
 - Wash the gel with {100*k:.0f} mL water for 1h [3].
-- Add {20*k:.0f} mL 20% NaCl to the above wash.
+- Add {20*k:.0f} mL 5M NaCl to the above wash.
 - Continue washing for 2-16h.
 """
         else: 
@@ -108,8 +108,8 @@ interfere with binding of the dye to the protein.
 The gel can be stained for up to 3 hours, but 
 after 3 hours, sensitivity decreases.  If you need 
 to leave the gel overnight in the stain, add 2 mL 
-of 20% NaCl (w/v) in water for every 20 mL of 
-stain. This procedure will not affect sensitivity.
+of 5M NaCl in water for every 20 mL of stain. This 
+procedure will not affect sensitivity.
 """
         p.footnotes[3] = """\
 The gel can be left in the water for several days 
@@ -124,7 +124,7 @@ water for more than 1 day. The decrease in the
 amount of free dye in the water favors 
 dissociation of the dye from the protein.  If you 
 need to store the gel in water for a few days, add 
-20 mL of 20% NaCl.
+20 mL of 5M NaCl.
 """
         p.prune_footnotes()
 
@@ -145,7 +145,7 @@ Stain gel with SimplyBlue SafeStain:
 - Microwave until almost boiling (45-60s).
 - Shake gently for {t} min [1].
 - Wash the gel with 100 mL water for 10 min [2].
-- Add 20 mL 20% NaCl and wash for 5 min [3].
+- Add 20 mL 5M NaCl and wash for 5 min [3].
 
 """
         p.footnotes[1] = """\
