@@ -4,7 +4,8 @@
 Perform restriction digests using the protocol recommended by NEB.
 
 Usage:
-    digest <templates> <enzymes> [-d <ng>] [-D <ng/µL>] [-v <µL>] [-g]
+    digest <templates> <enzymes> [-d <ng>] [-D <ng/µL>] [-v <µL>] [-n <rxns>]
+        [-g]
 
 Arguments:
     <templates>
@@ -31,6 +32,10 @@ Options:
         (which is determined by the amount of DNA to digest, see --dna) is less 
         than 10% of the total reaction volume, as recommended by NEB.
 
+    -n --num-reactions <int>
+        The number of reactions to setup.  By default, this is inferred from 
+        the number of templates.
+
     -g --genomic
         Indicate that genomic DNA is being digested.  This will double the 
         amount of enzyme used, as recommended by NEB.
@@ -53,6 +58,7 @@ class RestrictionDigest(Main):
         self.dna_ug = 1
         self.dna_stock_nguL = 200
         self.target_volume_uL = 10
+        self.num_reactions = None
         self.is_genomic = False
 
     @classmethod
@@ -71,6 +77,9 @@ class RestrictionDigest(Main):
         self.dna_stock_nguL = float(args['--dna-stock'])
         self.target_volume_uL = float(args['--target-volume'])
         self.is_genomic = args['--genomic']
+
+        if x := args['--num-reactions']:
+            self.num_reactions = int(x)
 
         return self
 
@@ -92,7 +101,7 @@ class RestrictionDigest(Main):
 
         # Plug in the parameters the user requested.
 
-        rxn.num_reactions = len(self.templates)
+        rxn.num_reactions = self.num_reactions or len(self.templates)
 
         rxn['DNA'].name = ','.join(self.templates)
         rxn['DNA'].hold_conc.stock_conc = self.dna_stock_nguL, 'ng/µL'
@@ -107,6 +116,7 @@ class RestrictionDigest(Main):
 
             rxn[key].stock_conc = stock, 'U/µL'
             rxn[key].volume = (20 if self.is_genomic else 10) / stock, 'µL'
+            rxn[key].master_mix = True
 
         rxn['buffer'].name = pick_compatible_buffer(self.enzymes)
 
