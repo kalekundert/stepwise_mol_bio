@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.4.0 (2020-10-20)
+### Feature
+* Add a phenol-chloroform extraction protocol ([`fe632e1`](https://github.com/kalekundert/stepwise_mol_bio/commit/fe632e1c1bcfac0ab33841f9cc381e6ead0556e9))
+
 ## v1.3.0 (2020-10-19)
 ### Feature
 * Add the aliquot protocol ([`b79b206`](https://github.com/kalekundert/stepwise_mol_bio/commit/b79b2066eee246beeb4fd4868623b74445465ee1))
