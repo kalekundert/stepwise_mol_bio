@@ -1,0 +1,29 @@
+- Purify DNA via phenol-chloroform extraction:
+
+  - Dilute or divide your sample as necessary to 
+    ensure that each tube has between 100-700 µL [1].
+
+  - Repeat twice:
+
+    - Add an equal volume of phenol:chloroform:isoamyl 
+      alcohol (pH ≈8 for DNA) to the tube
+
+    - Vortex vigorously to mix the phases.
+     
+    - Spin in a microfuge at top speed for 1-2 min to 
+      separate the phases.
+     
+    - Transfer the aqueous (upper) phase to a new tube, 
+      being careful not to transfer any of the protein 
+      at the phase interface.
+   
+  - Extract the sample with an equal volume of 
+    chloroform:isoamyl alcohol to remove the phenol.
+
+Footnotes:
+
+[1] It is difficult to do the extraction with volumes 
+    smaller than 100 µL. The sample can be 
+    concentrated again after precipitation.
+
+# vim: tw=53
