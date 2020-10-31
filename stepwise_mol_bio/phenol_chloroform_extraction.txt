@@ -5,8 +5,8 @@
 
   - Repeat twice:
 
-    - Add an equal volume of phenol:chloroform:isoamyl 
-      alcohol (pH ≈8 for DNA) to the tube
+    - Add an equal volume of phenol:chloroform:isoamyl
+      alcohol (pH≈8 for DNA) to the tube.
 
     - Vortex vigorously to mix the phases.
      
