@@ -275,9 +275,9 @@ class EthanolPrecipitation(Main):
         p = stepwise.Protocol()
 
         if self.names:
-            s = stepwise.Step(f"Purify {','.join(names)} by ethanol precipitation [1]:")
+            s = stepwise.Step(f"Purify {','.join(names)} by ethanol precipitation [1,2]:")
         else:
-            s = stepwise.Step("Perform an ethanol precipitation [1]:")
+            s = stepwise.Step("Perform an ethanol precipitation [1,2]:")
 
         p += s
 
@@ -296,12 +296,12 @@ class EthanolPrecipitation(Main):
             incubation_time = "overnight" if t == 'overnight' else f"for {t}"
             s += f"""\
                     Incubate at {self.incubation_temp_C}°C {incubation_time} 
-                    [2]."""
+                    [3]."""
 
         s += f"""\
                 Centrifuge {self.centrifugation_speed}, 
                 {self.centrifugation_time_min} min, 
-                {self.centrifugation_temp_C}°C [3].  Remove the supernatant, 
+                {self.centrifugation_temp_C}°C.  Remove the supernatant, 
                 but save it in case the precipitation needs to be repeated."""
 
         if self.wash:
@@ -315,22 +315,23 @@ class EthanolPrecipitation(Main):
                 evaporated [4]."""
 
         s += f"""\
-                Resuspend the pellet in {f'{self.buffer_volume_uL} µL' or
-                'any volume'} of {self.buffer} [5]."""
+                Resuspend the pellet in {f'{self.buffer_volume_uL} µL' if 
+                self.buffer_volume_uL else 'any volume'} of {self.buffer} 
+                [5]."""
 
         p.footnotes[1] = textwrap.dedent("""\
                 Li2020: 10.2144/btn-2019-0109
                 Sambrook2006: 10.1101/pdb.prot4456
         """)
         p.footnotes[2] = stepwise.Footnote("""\
-                DNA can be stored indefinitely in ethanolic solutions at either 
-                0°C or −20°C.
-        """)
-        p.footnotes[3] = stepwise.Footnote("""\
                 This protocol was optimized for 100 ng/µL nucleic acid.  If 
                 your sample is substantially more dilute, it may be necessary 
-                to compensate by increasing the centrifugation time and/or 
-                speed.
+                to compensate by increasing the incubation time, the 
+                centrifugation time, or the centrifugation speed.
+        """)
+        p.footnotes[3] = stepwise.Footnote("""\
+                DNA can be stored indefinitely in ethanolic solutions at either 
+                0°C or −20°C.
         """)
         p.footnotes[4] = stepwise.Footnote("""\
                 Do not dry pellets of nucleic acid in a lyophilizer, as this 
