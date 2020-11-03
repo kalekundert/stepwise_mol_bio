@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.4.1 (2020-10-20)
+### Fix
+* Put the phenol-chloroform protocol in the right directory ([`934c07d`](https://github.com/kalekundert/stepwise_mol_bio/commit/934c07daaf56d5ea8a96100e1b3d08d84b6ddca0))
+
 ## v1.4.0 (2020-10-20)
 ### Feature
 * Add a phenol-chloroform extraction protocol ([`fe632e1`](https://github.com/kalekundert/stepwise_mol_bio/commit/fe632e1c1bcfac0ab33841f9cc381e6ead0556e9))
