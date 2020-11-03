@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v1.5.0 (2020-11-03)
+### Feature
+* Use fresh 70% ethanol ([`eb44a92`](https://github.com/kalekundert/stepwise_mol_bio/commit/eb44a92cc6f947a87343cee03cf8116e531e7897))
+* Implement ethanol precipitation protocol from Li2020 ([`a6e79ff`](https://github.com/kalekundert/stepwise_mol_bio/commit/a6e79ffb2ea9683a8df40f3558f71e0363caaa1b))
+
+### Fix
+* Reorganize footnotes for ethanol precipitation ([`68a24b9`](https://github.com/kalekundert/stepwise_mol_bio/commit/68a24b9c046847be04657e643e859297932c21be))
+
 ## v1.4.1 (2020-10-20)
 ### Fix
 * Put the phenol-chloroform protocol in the right directory ([`934c07d`](https://github.com/kalekundert/stepwise_mol_bio/commit/934c07daaf56d5ea8a96100e1b3d08d84b6ddca0))
