@@ -306,18 +306,23 @@ class EthanolPrecipitation(Main):
 
         if self.wash:
             s += f"""\
-                    Add 800 µL 70% ethanol."""
+                    Add 800 µL recently-prepared 70% ethanol [4]."""
             s += f"""\
                     Centrifuge {self.centrifugation_speed}, 2 min, 
                     {self.centrifugation_temp_C}°C and discard supernatant."""
         s += """\
+                Centrifuge {self.centrifugation_speed}, 30 s, 
+                {centrifugation_temp_C}°C and discard any remaining 
+                supernatant.
+        """
+        s += """\
                 Leave the tube open at room temperature until ethanol has 
-                evaporated [4]."""
+                evaporated [5]."""
 
         s += f"""\
                 Resuspend the pellet in {f'{self.buffer_volume_uL} µL' if 
                 self.buffer_volume_uL else 'any volume'} of {self.buffer} 
-                [5]."""
+                [6]."""
 
         p.footnotes[1] = textwrap.dedent("""\
                 Li2020: 10.2144/btn-2019-0109
@@ -333,7 +338,13 @@ class EthanolPrecipitation(Main):
                 DNA can be stored indefinitely in ethanolic solutions at either 
                 0°C or −20°C.
         """)
-        p.footnotes[4] = stepwise.Footnote("""\
+        p.protocols[4] = stepwise.Footnote("""\
+                Ethanol evaporates more quickly than water, so a solution that 
+                was 70% ethanol several months ago may be significantly more 
+                aqueous now.  If you are unsure, 100 µL of 70% EtOH should 
+                weight 88.6 mg.
+        """)
+        p.footnotes[5] = stepwise.Footnote("""\
                 Do not dry pellets of nucleic acid in a lyophilizer, as this 
                 causes denaturation of small (<400-nucleotide) fragments of DNA 
                 and greatly reduces the recovery of larger fragments of DNA. 
@@ -342,7 +353,7 @@ class EthanolPrecipitation(Main):
                 be incubated for 2-3 minutes at 45°C in a heating block to 
                 allow any traces of ethanol to evaporate.
         """)
-        p.footnotes[5] = stepwise.Footnote("""\
+        p.footnotes[6] = stepwise.Footnote("""\
                 Up to 50% of the DNA is smeared on the wall of the tube. To 
                 recover all of the DNA, push a bead of fluid backward and 
                 forward over the appropriate quadrant of wall with a pipette 
