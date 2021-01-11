@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.6.0 (2021-01-11)
+### Feature
+* Migrate to appcli ([`342f863`](https://github.com/kalekundert/stepwise_mol_bio/commit/342f8637cac8b5ac1d36ac0d9f1f19c6db883cc6))
+
 ## v1.5.0 (2020-11-03)
 ### Feature
 * Use fresh 70% ethanol ([`eb44a92`](https://github.com/kalekundert/stepwise_mol_bio/commit/eb44a92cc6f947a87343cee03cf8116e531e7897))
