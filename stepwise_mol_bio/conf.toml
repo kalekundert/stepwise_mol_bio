@@ -51,7 +51,8 @@ melt_curve_time_step_s = 5
 two_step = true
 qpcr = true
 
-[gel.presets.sds]
+[gel.presets.bolt]
+brief = "Bolt SDS PAGE (Invitrogen)"
 title = "SDS PAGE"
 gel_type = "SDS PAGE"
 gel_percent = "4−12"
@@ -70,8 +71,9 @@ run_volts = 165
 run_time_min = 42
 stain = "coomassie"
 
-[gel.presets.sdsmax]
-inherit = 'sds'
+[gel.presets.boltmax]
+brief = "Bolt SDS PAGE (Invitrogen) without diluting the sample"
+inherit = 'bolt'
 sample_mix = """
 Reagent                 Stock    Volume  MM?
 ======================  =====  ========  ===
@@ -82,6 +84,7 @@ sample                         10.00 µL
 load_volume_uL = 15.39
 
 [gel.presets.native]
+brief = "Native PAGE"
 title = "native PAGE"
 gel_type = "native PAGE"
 gel_percent = "3−12"
@@ -98,6 +101,7 @@ run_time_min = 115
 stain = "coomassie"
 
 [gel.presets.nativeblue]
+brief = "Native PAGE with Coomassie"
 inherit = "native"
 sample_mix = """
 Reagent             Stock      Volume  MM?
@@ -109,6 +113,7 @@ sample                        1.25 µL
 """
 
 [gel.presets.urea]
+brief = "TBE/urea PAGE"
 title = "TBE/urea PAGE"
 gel_type = "TBE/urea PAGE"
 gel_percent = 6
@@ -127,6 +132,7 @@ run_time_min = 40
 stain = "gelred"
 
 [gel.presets.agarose1]
+brief = "1.0% agarose"
 gel_type = "agarose"
 gel_percent = 1
 sample_mix = """
@@ -141,10 +147,12 @@ run_time_min = 60
 stain = ''
 
 [gel.presets.agarose15]
+brief = "1.5% agarose"
 inherit = 'agarose1'
 gel_percent = 1.5
 
 [gel.presets.agarose2]
+brief = "2.0% agarose"
 inherit = 'agarose1'
 gel_percent = 2
 
@@ -163,3 +171,6 @@ filter = '710BP40'
 [laser.presets.nir]
 laser = 784
 filter = '832BP37'
+
+[ethanol_precipitation]
+preset = 'plasmid'

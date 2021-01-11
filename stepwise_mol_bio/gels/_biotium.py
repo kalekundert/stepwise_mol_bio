@@ -1,34 +1,26 @@
 #!/usr/bin/env python3
 
-"""\
-Stain nucleic acid gels using GelGreen.
-
-Usage:
-    gelred
-"""
-
-import stepwise
-import autoprop
+import stepwise, appcli, autoprop
+from appcli import Key, DocoptConfig
 from stepwise_mol_bio.gels._stain import Stain
 
 @autoprop
 class Biotium(Stain):
+    __config__ = [
+            DocoptConfig(),
+    ]
+
     product = None
     uv_wavelength = None
     attachment = None
-    default_image_type = 'uv'
-
-    def __init__(self):
-        super().__init__()
-        self.attach_pdf = False
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
-        self.attach_pdf = args['--attach-pdf']
-        if args['--no-imaging']:
-            self.image_type = None
-        return self
+    image_type = appcli.param(
+            Key(DocoptConfig, '--no-imaging', cast=lambda x: None),
+            default='uv',
+    )
+    attach_pdf = appcli.param(
+            Key(DocoptConfig, '--attach-pdf'),
+            default=False,
+    )
 
     def get_staining_protocol(self):
         p = stepwise.Protocol()

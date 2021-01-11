@@ -49,6 +49,11 @@ docs = [
 [tool.flit.entrypoints."stepwise.protocols"]
 molbio = "stepwise_mol_bio:Plugin"
 
+[tool.flit.entrypoints."po4.syntheses"]
+PCR = "stepwise_mol_bio.pcr:Po4Synthesis"
+
+[tool.flit.entrypoints."po4.cleanups"]
+
 [tool.semantic_release]
 version_variable = 'stepwise_mol_bio/__init__.py:__version__'
 build_command = 'python -m pip install flit && flit build'

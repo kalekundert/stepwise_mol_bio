@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise
+import appcli
+import autoprop
+from inform import plural
+from _assembly import Assembly
+
+@autoprop
+class Gibson(Assembly):
+    """\
 Perform a Gibson assembly reaction, using the NEB master mix (E2611).
 
 Usage:
@@ -12,14 +20,6 @@ Arguments:
 Options:
 {OPTION_DOC}
 """
-
-import stepwise
-import autoprop
-from inform import plural
-from _assembly import Assembly, format_docstring
-
-@autoprop
-class Gibson(Assembly):
 
     def get_reaction(self):
         rxn = stepwise.MasterMix()
@@ -53,9 +53,10 @@ https://preview.tinyurl.com/ychbvkra
 """
         return p
 
-__doc__ = format_docstring(Gibson, __doc__)
+    def get_usage(self):
+        return format_docstring(self, self.__doc__)
 
 if __name__ == '__main__':
-    Gibson.main(__doc__)
+    Gibson.main()
 
 # vim: tw=50

@@ -1,6 +1,25 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise
+import appcli
+import autoprop
+import textwrap
+from inform import plural
+from fractions import Fraction
+from operator import not_
+from appcli import Key, DocoptConfig
+from stepwise import StepwiseConfig, PresetConfig
+from stepwise_mol_bio import Main
+
+def by_solvent(obj, x):
+    if isinstance(x, dict):
+        return x[obj.solvent.lower()]
+    else:
+        return x
+
+@autoprop
+class EthanolPrecipitation(Main):
+    """\
 Purify and concentrate nucleic acids by ethanol precipitation.
 
 This protocol is primarily based on [Li2020].
@@ -13,7 +32,7 @@ Arguments:
         The names of the constructs to precipitate.
 
 Options:
-    -p --preset <name>                    [default: plasmid]
+    -p --preset <name>                    [default: ${app.preset}]
         There are four versions of the protocol, each optimized for a different 
         nucleic acid species.  Use this option to specify which version to use.  
         The names are case-insensitive:
@@ -32,7 +51,7 @@ Options:
         microrna:
             Optimized with 20 nt single-stranded RNA.
 
-    -s --solvent <name>                     [default: etoh]
+    -s --solvent <name>
         The organic solvent to use for the precipitation.  The names are 
         case-insensitive.
 
@@ -55,8 +74,8 @@ Options:
         determined by the protocol, but you can specify a different choice 
         (e.g. based on what you have on hand).  The names are case-insensitive:
 
-        na: Sodium acetate (NaAc)
-        mg: Magnesium chloride (MgCl₂)
+        na: ${app.cations['na']['conc']} ${app.cations['na']['name']}
+        mg: ${app.cations['mg']['conc']} ${app.cations['mg']['name']}
 
         Other cations were tested in [Li2020], but either NaAc or MgCl₂ was the 
         best in every condition.
@@ -67,7 +86,7 @@ Options:
         different choice (e.g. based on what you have on hand).  The names are 
         case-insensitive:
 
-        lpa: linear polyacrylamide
+        lpa: ${app.carriers['lpa']['name']}
             Not known to interfere with any downstream application.  Not 
             derived from a biological source, so very unlikely to have any 
             nucleic acid contamination.
@@ -79,15 +98,15 @@ Options:
             contaminating nucleic acids.  You can purchase glycogen crosslinked 
             to a blue dye, which makes the pellet even easier to see.
 
-        tRNA: yeast tRNA
+        trna: ${app.carriers['trna']['name']}
             Interferes with the quantification of the nucleic acid by Nanodrop, 
             which is problematic for many applications.
 
-    -b --buffer <name>                      [default: water]
+    -b --buffer <name>                      [default: ${app.buffer}]
         The aqueous buffer to resuspend the preciptated nucleic acid in.
 
     -v --buffer-volume <µL>
-        The volume of resuspension buffer to use, in µL
+        The volume of resuspension buffer to use, in µL.
 
     -I --no-incubation
         Exclude the incubation step.
@@ -107,15 +126,12 @@ References:
     microcentrifuge tubes.  Cold Spring Harb Protoc (2006).
 """
 
-import stepwise
-import autoprop
-import textwrap
-from inform import plural
-from fractions import Fraction
-from stepwise_mol_bio import Main
+    __config__ = [
+            DocoptConfig(),
+            PresetConfig(),
+            StepwiseConfig('molbio.ethanol_precipitation'),
+    ]
 
-@autoprop
-class EthanolPrecipitation(Main):
     presets = {
             'plasmid': {
                 'solvent': 'etoh',
@@ -247,35 +263,73 @@ class EthanolPrecipitation(Main):
             },
     }
 
-    def __init__(self, preset):
-        self.preset = preset
-        self.names = None
-        self._solvent = None
-        self._cation = None
-        self._carrier = None
-        self.buffer = None
-        self.buffer_volume_uL = None
-        self.incubation = True
-        self.wash = True
+    preset = appcli.param(
+            Key(DocoptConfig, '--preset'),
+            Key(StepwiseConfig, 'preset'),
+            ignore=None,
+    )
+    names = appcli.param(
+            Key(DocoptConfig, '<names>'),
+            default=None,
+    )
+    solvent = appcli.param(
+            Key(DocoptConfig, '--solvent'),
+            Key(PresetConfig, 'solvent'),
+    )
+    solvent_volume = appcli.param(
+            Key(PresetConfig, 'solvent_volume'),
+            get=by_solvent,
+    )
+    buffer = appcli.param(
+            Key(DocoptConfig, '--buffer'),
+            default='water',
+    )
+    buffer_volume_uL = appcli.param(
+            Key(DocoptConfig, '--buffer'),
+            default=None,
+    )
+    cation = appcli.param(
+            Key(DocoptConfig, '--cation'),
+            Key(PresetConfig, 'cation'),
+            get=by_solvent,
+    )
+    carrier = appcli.param(
+            Key(DocoptConfig, '--carrier'),
+            Key(PresetConfig, 'carrier'),
+            get=by_solvent,
+    )
+    incubation = appcli.param(
+            Key(DocoptConfig, '--no-incubation', cast=not_),
+            default=True,
+    )
+    incubation_time = appcli.param(
+            Key(PresetConfig, 'incubation_time'),
+    )
+    incubation_temp_C = appcli.param(
+            Key(PresetConfig, 'incubation_temp_C'),
+    )
+    wash = appcli.param(
+            Key(DocoptConfig, '--no-wash', cast=not_),
+            default=True,
+    )
+    centrifugation_time_min = appcli.param(
+            Key(PresetConfig, 'centrifugation_time_min'),
+    )
+    centrifugation_temp_C = appcli.param(
+            Key(PresetConfig, 'centrifugation_temp_C'),
+    )
+    centrifugation_speed = appcli.param(
+            Key(PresetConfig, 'centrifugation_speed'),
+    )
 
-    @classmethod
-    def from_docopt(cls, args):
-        self = cls(args['--preset'])
-        self.names = args['<names>']
-        self.solvent = args['--solvent']
-        self.cation = args['--cation']
-        self.carrier = args['--carrier']
-        self.wash = not args['--no-wash']
-        self.buffer = args['--buffer']
-        self.buffer_volume_uL = args['--buffer-volume']
-        return self
+    def __init__(self, preset=None):
+        self.preset = preset
 
     def get_protocol(self):
-        d = self.defaults
         p = stepwise.Protocol()
 
         if self.names:
-            s = stepwise.Step(f"Purify {','.join(names)} by ethanol precipitation [1,2]:")
+            s = stepwise.Step(f"Purify {','.join(self.names)} by ethanol precipitation [1,2]:")
         else:
             s = stepwise.Step("Perform an ethanol precipitation [1,2]:")
 
@@ -309,13 +363,13 @@ class EthanolPrecipitation(Main):
                     Add 800 µL recently-prepared 70% ethanol [4]."""
             s += f"""\
                     Centrifuge {self.centrifugation_speed}, 2 min, 
-                    {self.centrifugation_temp_C}°C and discard supernatant."""
-        s += """\
+                    {self.centrifugation_temp_C}°C.  Discard supernatant."""
+        s += f"""\
                 Centrifuge {self.centrifugation_speed}, 30 s, 
-                {centrifugation_temp_C}°C and discard any remaining 
+                {self.centrifugation_temp_C}°C.  Discard any remaining 
                 supernatant.
         """
-        s += """\
+        s += f"""\
                 Leave the tube open at room temperature until ethanol has 
                 evaporated [5]."""
 
@@ -338,11 +392,11 @@ class EthanolPrecipitation(Main):
                 DNA can be stored indefinitely in ethanolic solutions at either 
                 0°C or −20°C.
         """)
-        p.protocols[4] = stepwise.Footnote("""\
+        p.footnotes[4] = stepwise.Footnote("""\
                 Ethanol evaporates more quickly than water, so a solution that 
                 was 70% ethanol several months ago may be significantly more 
                 aqueous now.  If you are unsure, 100 µL of 70% EtOH should 
-                weight 88.6 mg.
+                weigh 88.6 mg.
         """)
         p.footnotes[5] = stepwise.Footnote("""\
                 Do not dry pellets of nucleic acid in a lyophilizer, as this 
@@ -363,26 +417,8 @@ class EthanolPrecipitation(Main):
         p.prune_footnotes()
         return p
 
-    def get_defaults(self):
-        return self.presets[self.preset]
-
-    def get_solvent(self):
-        return (self._solvent or self.defaults['solvent']).lower()
-
-    def set_solvent(self, solvent):
-        self._solvent = solvent
-
     def get_solvent_name(self):
         return self.solvents[self.solvent]['name']
-
-    def get_solvent_volume(self):
-        return self.defaults['solvent_volume'][self.solvent]
-
-    def get_cation(self):
-        return (self._cation or self.defaults['cation'][self.solvent]).lower()
-
-    def set_cation(self, cation):
-        self._cation = cation
 
     def get_cation_name(self):
         return self.cations[self.cation]['name']
@@ -390,32 +426,11 @@ class EthanolPrecipitation(Main):
     def get_cation_conc(self):
         return self.cations[self.cation]['conc']
 
-    def get_carrier(self):
-        return (self._carrier or self.defaults['carrier'][self.solvent]).lower()
-
-    def set_carrier(self, carrier):
-        self._carrier = carrier
-
     def get_carrier_name(self):
         return self.carriers[self.carrier]['name']
 
     def get_carrier_conc(self):
         return self.carriers[self.carrier]['conc']
 
-    def get_incubation_temp_C(self):
-        return self.defaults['incubation_temp_C']
-
-    def get_incubation_time(self):
-        return self.defaults['incubation_time']
-
-    def get_centrifugation_speed(self):
-        return self.defaults['centrifugation_speed']
-
-    def get_centrifugation_time_min(self):
-        return self.defaults['centrifugation_time_min']
-
-    def get_centrifugation_temp_C(self):
-        return self.defaults['centrifugation_temp_C']
-
 if __name__ == '__main__':
-    EthanolPrecipitation.main(__doc__)
+    EthanolPrecipitation.main()

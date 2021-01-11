@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise
+import appcli
+import autoprop
+from inform import plural
+from stepwise_mol_bio import UsageError
+from stepwise_mol_bio.digest import NebRestrictionEnzymeDatabase
+from _assembly import Assembly
+
+@autoprop
+class GoldenGate(Assembly):
+    """\
 Perform a Golden Gate assembly reaction.
 
 Usage:
@@ -22,24 +32,15 @@ Options:
         The default is to use a single generic name.
 """
 
-import stepwise
-import autoprop
-from inform import plural
-from stepwise_mol_bio import UsageError
-from stepwise_mol_bio.digest import load_neb_enzyme
-from _assembly import Assembly, format_docstring
+    enzymes = appcli.param(
+            '--enzymes',
+            cast=lambda x: x.split(','),
+            default=['BsaI-HFv2'],
+    )
 
-@autoprop
-class GoldenGate(Assembly):
-    enzymes = ['BsaI-HFv2']
-    enzymes_str = ','.join(enzymes)
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
-        if x := args['--enzymes']:
-            self.enzymes = x.split(',')
-        return self
+    def get_enzymes_str(self):
+        # This is why __doc__ should be a Jinja template...
+        return ','.join(self.enzymes)
 
     def get_reaction(self):
         rxn = stepwise.MasterMix()
@@ -57,8 +58,10 @@ class GoldenGate(Assembly):
         rxn['T4 DNA ligase'].master_mix = True
         rxn['T4 DNA ligase'].order = 3
 
+        enzyme_db = NebRestrictionEnzymeDatabase()
+
         for enzyme in self.enzymes:
-            stock = load_neb_enzyme(enzyme)['concentration'] / 1000
+            stock = enzyme_db[enzyme]['concentration'] / 1000
             rxn[enzyme].volume = enz_uL, 'µL'
             rxn[enzyme].stock_conc = stock, 'U/µL'
             rxn[enzyme].master_mix = True
@@ -119,10 +122,8 @@ https://preview.tinyurl.com/yaa5mqz5
 """
         return p
 
-__doc__ = format_docstring(GoldenGate, __doc__)
-
 if __name__ == '__main__':
-    GoldenGate.main(__doc__)
+    GoldenGate.main()
 
 # vim: tw=50
 

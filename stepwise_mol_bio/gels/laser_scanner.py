@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from inform import indent, plural
+from appcli import DocoptConfig
+from stepwise import StepwiseConfig, PresetConfig, UsageError
+from stepwise_mol_bio import Main, ConfigError, merge_dicts
+
+@autoprop
+class LaserScanner(Main):
+    """\
 Image a gel using a laser scanner.
 
 Usage:
     laser_scanner <optics>...
 
+<%! from stepwise_mol_bio import hanging_indent %>\
 Arguments:
     <optics>
         A laser/filter combination to use.  The most convenient way to specify 
         such a combination is to give the name of a preset.  The following 
         presets are currently available: 
 
-        {presets}
+        ${hanging_indent(app.preset_briefs, 8*' ')}
 
         You can define new presets by adding blocks like the following to your 
         stepwise configuration file:
@@ -26,32 +35,33 @@ Arguments:
 
             <laser>/<filter>
 """
+    __config__ = [
+            DocoptConfig(),
+            PresetConfig(),
+            StepwiseConfig('molbio.laser'),
+    ]
 
-import stepwise
-import autoprop
-from inform import indent, plural
-from stepwise_mol_bio import Main, Presets, ConfigError, UsageError
+    presets = appcli.param(
+            appcli.Key(StepwiseConfig, 'presets'),
+            pick=merge_dicts,
+    )
+    preset_briefs = appcli.config_attr()
+    preset_brief_template = '{laser} nm'
 
-PRESETS = Presets.from_config('molbio.laser.presets')
-PRESETS_DOC = PRESETS.format_briefs('{laser} nm')
-__doc__ = __doc__.format(
-        presets=indent(PRESETS_DOC, 8*' ', first=-1),
-)
+    # This attribute is a list of:
+    # - name of preset (str)
+    # - laser/filter (str)
+    # - {laser: filter} (dict)
+    optics = appcli.param(
+            appcli.Key(DocoptConfig, '<optics>'),
+            default_factory=list,
+    )
 
-@autoprop
-class LaserScanner(Main):
-
-    def __init__(self, preset=None):
-        self.optics = []
+    def __init__(self, *optics):
+        self.optics = list(optics)
 
     @classmethod
-    def from_docopt(cls, args):
-        self = cls()
-        self.optics = args['<optics>']
-        return self
-
-    @classmethod
-    def from_params(cls, laser, filter):
+    def from_laser_filter_pair(cls, laser, filter):
         self = cls()
         self.optics.append({
             'laser': laser,
@@ -60,7 +70,7 @@ class LaserScanner(Main):
         return self
 
     def get_protocol(self):
-        optics = [parse_optics(x) for x in self.optics]
+        optics = [self.parse_optics(x) for x in self.optics]
         lasers = [f"{plural(optics):laser/s}:"] + [f"{x['laser']} nm" for x in optics]
         filters = [f"{plural(optics):filter/s}:"] + [x['filter'] for x in optics]
 
@@ -72,19 +82,18 @@ Image with a laser scanner:
 """
         return p
 
-def parse_optics(optics):
-    if isinstance(optics, dict):
-        return optics
+    def parse_optics(self, optics):
+        if isinstance(optics, dict):
+            return optics
 
-    try:
-        return PRESETS.load(optics)
-    except ConfigError:
-        try: 
-            laser, filter = optics.split('/')
-            return {'laser': laser, 'filter': filter}
-        except ValueError as err:
-            raise UsageError(f"expected a preset or '<laser>/<filter>', got {optics!r}") from None
-
+        try:
+            return self.presets[optics]
+        except ConfigError:
+            try: 
+                laser, filter = optics.split('/')
+                return {'laser': laser, 'filter': filter}
+            except ValueError as err:
+                raise UsageError(f"expected a preset or '<laser>/<filter>', got {optics!r}") from None
 
 if __name__ == '__main__':
-    LaserScanner.main(__doc__)
+    LaserScanner.main()

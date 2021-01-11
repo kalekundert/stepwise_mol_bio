@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from stepwise_mol_bio import Main
+
+@autoprop
+class Aliquot(Main):
+    """\
 Make aliquots
 
 Usage:
@@ -15,21 +20,15 @@ Arguments:
         The concentration of the aliquots, if this is not made clear in 
         previous steps.  No unit is implied, so you should specify one.
 """
-
-import stepwise, docopt, autoprop
-from inform import plural
-from stepwise_mol_bio import Main
-
-@autoprop
-class Aliquot(Main):
+    __config__ = [
+            appcli.DocoptConfig(),
+    ]
+    volume = appcli.param('<volume>')
+    conc = appcli.param('<conc>', default=None, ignore=None)
 
     def __init__(self, volume, conc=None):
         self.volume = volume
         self.conc = conc
-
-    @classmethod
-    def from_docopt(cls, args):
-        return cls(args['<volume>'], args['<conc>'])
 
     def get_protocol(self):
         p = stepwise.Protocol()
@@ -42,4 +41,4 @@ class Aliquot(Main):
         return p
 
 if __name__ == '__main__':
-    Aliquot.main(__doc__)
+    Aliquot.main()

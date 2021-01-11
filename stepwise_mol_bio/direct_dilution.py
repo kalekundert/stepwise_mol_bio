@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 
-"""\
-Dilute the given reagent in such a way that serial dilutions are avoided.
+import stepwise, appcli, autoprop
+from inform import Error
+from stepwise_mol_bio.serial_dilution import SerialDilution, format_quantity
+
+@autoprop
+class DirectDilution(SerialDilution):
+    """\
+Dilute the given reagent in such a way that serial dilutions are minimized.
 
 While serial dilutions are easy to perform, they have some disadvantages: 
 First, they can be inaccurate, because errors made at any step are propagated 
 to all other steps.  Second, they can waste material, because they produce more 
 of the lowest dilution than is needed.  If either of these disadvantages are a 
-concern, this protocol can be used to create the same dilution with fewer 
-serial steps.
+concern, use this protocol to create the same dilution with fewer serial steps.
 
 Usage:
-    direct_dilution <volume> <high> <low> <steps> [options]
+    direct_dilution <volume> <high> to <low> <steps> [options]
+    direct_dilution <volume> <high> / <factor> <steps> [options]
+    direct_dilution <volume> <low> x <factor> <steps> [options]
 
 Arguments:
     <volume>
@@ -26,38 +33,24 @@ Arguments:
         The ending concentration for the dilution.  A unit may be optionally 
         given, in which case it will be included in the protocol.
 
+    <factor>
+        How big of a dilution to make at each step of the protocol.
+
     <steps>
         The number of dilutions to make, including <high> and <low>.
 
 Options:
-    -m --material NAME  [default: material]
+    -m --material NAME          [default: ${app.material}]
         The substance being diluted.
 
-    -d --diluent NAME   [default: water]
+    -d --diluent NAME           [default: ${app.diluent}]
         The substance to dilute into.
 
-    -x --max-dilution FOLD  [default: 10]
+    -x --max-dilution FOLD      [default: ${app.max_dilution}]
         Specify the biggest dilution that can be made at any step, as larger 
         dilutions are prone to be less accurate.
 """
-
-import stepwise
-import autoprop
-from inform import Error
-from stepwise_mol_bio.serial_dilution import SerialDilution, format_quantity
-
-@autoprop
-class DirectDilution(SerialDilution):
-
-    def __init__(self):
-        super().__init__()
-        self.max_dilution = 10
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
-        self.max_dilution = float(args['--max-dilution'])
-        return self
+    max_dilution = appcli.param('--max-dilution', cast=float, default=10)
 
     def get_protocol(self):
         header = [
@@ -67,11 +60,12 @@ class DirectDilution(SerialDilution):
                 format_quantity(self.diluent, f'[{self.volume_unit}]', pad='\n'),
         ]
         rows = []
-
         volumes = {}
+        stock_concs = self._pick_stock_concs()
+
         for target_conc in reversed(self.concentrations):
             target_volume = self.volume + volumes.get(target_conc, 0)
-            stock_conc = self._pick_stock_conc(target_conc)
+            stock_conc = stock_concs[target_conc]
             stock_volume = target_volume * target_conc / stock_conc
 
             volumes[stock_conc] = volumes.get(stock_conc, 0) + stock_volume
@@ -86,22 +80,30 @@ class DirectDilution(SerialDilution):
         protocol += f"""\
 Prepare the following dilutions:
 
-{stepwise.tabulate(rows, header, alignments='>>>>')}
+{stepwise.tabulate(rows, header, align='>>>>')}
 """
         return protocol
 
-    def _pick_stock_conc(self, target_conc):
-        stock_concs = {x for x in self.concentrations if x > target_conc}
-        stock_concs.add(self.conc_high)
+    def _pick_stock_concs(self):
+        stock_concs = {}
+        stock_conc = self.conc_high
+        prev_target_conc = None
 
-        for stock_conc in sorted(stock_concs, reverse=True):
+        for target_conc in self.concentrations:
             dilution = stock_conc / target_conc
-            if dilution <= self.max_dilution:
-                return stock_conc
+            if dilution > self.max_dilution:
+                stock_conc = prev_target_conc
 
-        raise Error(f"{dilution:.1f}x dilution to make {format_quantity(target_conc, self.conc_unit)} exceeds maximum ({self.max_dilution:.1f}x).")
+            dilution = stock_conc / target_conc
+            if dilution > self.max_dilution:
+                raise Error(f"{dilution:.1g}x dilution to make {format_quantity(target_conc, self.conc_unit)} exceeds maximum ({self.max_dilution:.1g}x)")
+
+            stock_concs[target_conc] = stock_conc
+            prev_target_conc = target_conc
+
+        return stock_concs
 
 if __name__ == '__main__':
-    DirectDilution.main(__doc__)
+    DirectDilution.main()
 
 # vim: tw=53

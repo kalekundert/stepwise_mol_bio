@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import appcli
 import autoprop
 from inform import warn
+from appcli import Key, DocoptConfig
 from dataclasses import dataclass
 from stepwise_mol_bio import Main, UsageError
 
@@ -31,50 +33,64 @@ FRAGMENT_DOC = """\
             [<name>:]<conc>[:<length>]"""
 
 OPTION_DOC = """\
-    -n --num-reactions <int>        [default: {0.num_reactions}]
+    -n --num-reactions <int>        [default: ${app.num_reactions}]
         The number of reactions to setup.
 
-    -m, --master-mix <bb,ins>       [default: {0.master_mix_str}]
+    -m, --master-mix <bb,ins>       [default: ${app.master_mix_str}]
         Indicate which fragments should be included in the master mix.  Valid 
         fragments are "bb" (for the backbone), "ins" (for all the inserts), 
         "1" (for the first insert), "2", "3", etc.
 
-    -v, --reaction-volume <µL>      [default: {0.volume_uL}]
+    -v, --reaction-volume <µL>      [default: ${app.volume_uL}]
         The volume of the complete assembly reaction.  You might want larger 
         reaction volumes if your DNA is dilute, or if you have a large number 
         of inserts.
 
-    -x, --excess-insert <ratio>     [default: {0.excess_insert}]
+    -x, --excess-insert <ratio>     [default: ${app.excess_insert}]
         The molar-excess of each insert relative to the backbone.  Values 
         between 1-10 (e.g. 1-10x excess) are typical."""
 
 class Assembly(Main):
-    num_reactions = 1
-    volume_uL = 5
-    master_mix = frozenset()
-    master_mix_str = ','.join(master_mix)
+    __config__ = [
+            DocoptConfig(
+                usage_getter=lambda self: self._get_docopt_usage(),
+            ),
+    ]
+
+    fragments = appcli.param(
+            lambda d: parse_fragments([d['<backbone>'], *d['<inserts>']]),
+    )
+    num_reactions = appcli.param(
+            Key(DocoptConfig, '--num-reactions'),
+            cast=int,
+            default=1,
+    )
+    volume_uL = appcli.param(
+            Key(DocoptConfig, '--reaction-volume'),
+            cast=float,
+            default=5,
+    )
+    master_mix = appcli.param(
+            Key(DocoptConfig, '--master-mix'),
+            cast=lambda x: frozenset(x.split(',')),
+            default=frozenset(),
+    )
+    excess_insert = appcli.param(
+            Key(DocoptConfig, '--excess-insert'),
+            cast=float,
+            default=2,
+    )
+
     target_pmol_per_frag = 0.06
     min_pmol_per_frag = 0.02
-    excess_insert = 2
 
-    def __init__(self):
-        self.fragments = []
+    @property
+    def master_mix_str(self):
+        return ','.join(self.master_mix)
 
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
+    def _get_docopt_usage(self):
+        return self.__doc__.format(self, **globals())
 
-        self.fragments = parse_fragments([
-                args['<backbone>'],
-                *args['<inserts>'],
-        ])
-        self.num_reactions = int(eval(args['--num-reactions']))
-        self.master_mix = set(args['--master-mix'].split(','))
-        self.volume_uL = float(args['--reaction-volume'])
-        self.excess_insert = float(args['--excess-insert'])
-
-        return self
-    
     def _add_fragments_to_reaction(self, rxn):
         calc_fragment_volumes(
                 self.fragments,
@@ -164,7 +180,7 @@ def parse_fragments(frag_strs):
             raise UsageError("cannot parse fragment '{fragment_str}'")
 
         if frag_conc.unit == 'ng/µL' and frag_size is None:
-            raise UsageError(f"'{frag_str}' specifies a concentration in ng/µL, so the size of the fragment must also be specified (e.g. '{frag_str},<size>')")
+            raise UsageError(f"'{frag_str}' specifies a concentration in ng/µL, so the size of the fragment must also be specified (e.g. '{frag_str}:<size>')")
 
         frag_nM = nM_from_conc(frag_conc, frag_size)
         frag = Fragment(frag_name, frag_nM)
@@ -201,10 +217,7 @@ def calc_fragment_volumes(
             warn(f"using {best_pmol:.3f} pmol of {frag.name}, {min_pmol:.3f} pmol recommended.")
 
 def default_fragment_name(i):
-    return "Backbone" if i == 0 else f"Insert #{i}"
-
-def format_docstring(cls, doc):
-    return doc.format(cls, **globals()).format(cls)
+    return "backbone" if i == 0 else f"insert #{i}"
 
 def conc_from_str(x):
     import re

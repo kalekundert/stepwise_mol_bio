@@ -1,6 +1,27 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from math import sqrt, ceil
+from numbers import Real
+from inform import plural, indent
+from appcli import Key, DocoptConfig
+from stepwise import UsageError, StepwiseConfig, PresetConfig
+from stepwise_mol_bio import Main, hanging_indent, merge_dicts, comma_set
+from more_itertools import first_true
+from copy import deepcopy
+
+def temp(x):
+    try:
+        return float(x)
+    except ValueError:
+        return x
+
+def time(x):
+    return float(x)
+
+@autoprop
+class Pcr(Main):
+    """\
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
@@ -13,14 +34,21 @@ Arguments:
     <fwd_primer> <rev_primer>
         The name of the primers.
 
+<%! from stepwise_mol_bio import hanging_indent %>\
 Options:
-    -n --num-reactions <int>        [default: {pcr.num_reactions}]
+    -p --preset <name>              [default: ${app.preset}]
+        The default reaction and thermocycler parameters to use.  The following 
+        sets of parameters are currently available:
+
+        ${hanging_indent(app.preset_briefs, 8*' ')}
+
+    -n --num-reactions <int>        [default: ${app.num_reactions}]
         The number of reactions to set up.
 
     -v --reaction-volume <μL>
         The volume of the PCR reaction.
 
-    -m --master-mix <reagents>      [default: {master_mix}]
+    -m --master-mix <reagents>      [default: ${','.join(app.master_mix)}]
         Indicate which reagents should be included in the master mix.  The 
         following values are understood:
 
@@ -33,11 +61,9 @@ Options:
         Don't include anything but water and polymerase in the master mix.  
         This is an alias for: -m ''
 
-    -p --preset <name>              [default: {pcr.preset}]
-        The default reaction and thermocycler parameters to use.  The following 
-        sets of parameters are currently available:
-
-        {presets}
+    --primer-stock <µM>             [default: ${app.primer_stock_uM}]
+        The stock concentration of the primers in µM.  Both primers must have 
+        the same concentration.
 
     -y --num-cycles <n>
         The number of denature/anneal/extend cycles to perform, e.g. 35.
@@ -109,108 +135,176 @@ Options:
         measured after each thermocyler cycle.
 """
 
-import autoprop
-import stepwise
-from math import sqrt, ceil
-from numbers import Real
-from inform import plural, indent
-from stepwise import UsageError
-from stepwise_mol_bio import Main, Presets
+    __config__ = [
+            DocoptConfig(usage_getter=lambda self: self.format_usage()),
+            PresetConfig(),
+            StepwiseConfig('molbio.pcr'),
+    ]
+    usage = appcli.config_attr()
+    preset_briefs = appcli.config_attr()
 
-CONFIG = stepwise.load_config()['molbio']['pcr']
-PRESETS = Presets.from_config('molbio.pcr.presets')
+    presets = appcli.param(
+            Key(StepwiseConfig, 'presets'),
+            pick=merge_dicts,
+    )
+    preset = appcli.param(
+            Key(DocoptConfig, '--preset'),
+            Key(StepwiseConfig, 'default_preset'),
+    )
+    template = appcli.param(
+            Key(DocoptConfig, '<template>'),
+    )
+    fwd_primer = appcli.param(
+            Key(DocoptConfig, '<fwd_primer>'),
+    )
+    rev_primer = appcli.param(
+            Key(DocoptConfig, '<rev_primer>'),
+    )
+    primer_stock_uM = appcli.param(
+            Key(DocoptConfig, '--primer-stock'),
+            Key(PresetConfig, 'primer_stock_uM'),
+            Key(StepwiseConfig, 'primer_stock_uM'),
+            cast=float,
+    )
+    num_reactions = appcli.param(
+            Key(DocoptConfig, '--num-reactions'),
+            cast=lambda x: int(eval(x)),
+            default=1,
+    )
+    reaction_volume_uL = appcli.param(
+            Key(DocoptConfig, '--reaction-volume'),
+            Key(PresetConfig, 'reaction_volume_uL'),
+            cast=lambda x: float(eval(x)),
+            default=None,
+    )
+    master_mix = appcli.param(
+            Key(DocoptConfig, '--nothing-in-master-mix', cast=lambda x: set()),
+            Key(DocoptConfig, '--master-mix', cast=comma_set),
+            Key(StepwiseConfig, 'master_mix', cast=comma_set),
+            default={'dna'},
+    )
+    base_reaction = appcli.param(
+            Key(PresetConfig, 'reagents'),
+            cast=stepwise.MasterMix.from_text,
+    )
+    num_cycles = appcli.param(
+            Key(DocoptConfig, '--num-cycles'),
+            Key(PresetConfig, 'num_cycles'),
+            cast=int,
+    )
+    initial_denature_temp_C = appcli.param(
+            Key(DocoptConfig, '--initial-denature-temp'),
+            Key(PresetConfig, 'initial_denature_temp_C'),
+            cast=temp,
+    )
+    initial_denature_time_s = appcli.param(
+            Key(DocoptConfig, '--initial-denature-time'),
+            Key(PresetConfig, 'initial_denature_time_s'),
+            cast=time,
+    )
+    denature_temp_C = appcli.param(
+            Key(DocoptConfig, '--denature-temp'),
+            Key(PresetConfig, 'denature_temp_C'),
+            cast=temp,
+    )
+    denature_time_s = appcli.param(
+            Key(DocoptConfig, '--denature-time'),
+            Key(PresetConfig, 'denature_time_s'),
+            cast=time,
+    )
+    anneal_temp_C = appcli.param(
+            Key(DocoptConfig, '--anneal-temp'),
+            Key(PresetConfig, 'anneal_temp_C'),
+            cast=temp,
+    )
+    anneal_temp_gradient_C = appcli.param(
+            Key(DocoptConfig, '--anneal-temp-gradient'),
+            Key(PresetConfig, 'anneal_temp_gradient_C'),
+            cast=float,
+    )
+    anneal_time_s = appcli.param(
+            Key(DocoptConfig, '--anneal-time'),
+            Key(PresetConfig, 'anneal_time_s'),
+            cast=time,
+    )
+    extend_temp_C = appcli.param(
+            Key(DocoptConfig, '--extend-temp'),
+            Key(PresetConfig, 'extend_temp_C'),
+            cast=temp,
+    )
+    extend_time_s = appcli.param(
+            Key(DocoptConfig, '--extend-time'),
+            Key(PresetConfig, 'extend_time_s'),
+            cast=time,
+    )
+    final_extend_temp_C = appcli.param(
+            Key(DocoptConfig, '--final-extend-temp'),
+            Key(PresetConfig, 'final_extend_temp_C'),
+            cast=temp,
+    )
+    final_extend_time_s = appcli.param(
+            Key(DocoptConfig, '--final-extend-time'),
+            Key(PresetConfig, 'final_extend_time_s'),
+            cast=time,
+    )
+    hold_temp_C = appcli.param(
+            Key(DocoptConfig, '--hold-temp'),
+            Key(PresetConfig, 'hold_temp_C'),
+            cast=temp,
+            default=None,
+    )
+    melt_curve_low_temp_C = appcli.param(
+            Key(DocoptConfig, '--melt-curve-low-temp'),
+            Key(PresetConfig, 'melt_curve_low_temp_C'),
+            cast=temp,
+    )
+    melt_curve_high_temp_C = appcli.param(
+            Key(DocoptConfig, '--melt-curve-high-temp'),
+            Key(PresetConfig, 'melt_curve_high_temp_C'),
+            cast=temp,
+    )
+    melt_curve_temp_step_C = appcli.param(
+            Key(DocoptConfig, '--melt-curve-temp-step'),
+            Key(PresetConfig, 'melt_curve_temp_step_C'),
+            cast=temp,
+    )
+    melt_curve_time_step_C = appcli.param(
+            Key(DocoptConfig, '--melt-curve-time-step'),
+            Key(PresetConfig, 'melt_curve_time_step_C'),
+            cast=temp,
+    )
+    two_step = appcli.param(
+            Key(DocoptConfig, '--two-step'),
+            Key(PresetConfig, 'two_step'),
+            pick=first_true,
+            default=False,
+    )
+    qpcr = appcli.param(
+            Key(DocoptConfig, '--qpcr'),
+            Key(PresetConfig, 'qpcr'),
+            pick=first_true,
+            default=False,
+    )
 
-@autoprop
-class Pcr(Main):
-    preset = CONFIG['default_preset']
-    master_mix = {'dna'}
-    num_reactions = 1
-    reaction_volume_uL = None
-
-    def __init__(self, template=None, primers=None):
+    def __init__(self, template, primers):
         self.template = template
         self.primers = primers
 
-        self.reagents = None
-        self.thermocycler_params = {}
+    def format_usage(self):
+        return self.__doc__
 
-    @classmethod
-    def from_docopt(cls, args):
-        pcr = cls()
-        pcr.template = args['<template>']
-        pcr.primers = args['<fwd_primer>'], args['<rev_primer>']
-        pcr.num_reactions = int(eval(args['--num-reactions']))
-        pcr.preset = args['--preset']
-        pcr.master_mix = [] if args['--nothing-in-master-mix'] else [
-                x.strip()
-                for x in args['--master-mix'].split(',')
-        ]
-        if x := args['--reaction-volume']:
-            pcr.reaction_volume_uL = float(eval(x))
+    def get_primers(self):
+        return self.fwd_primer, self.rev_primer
 
-        def temp(x):
-            try:
-                return float(x)
-            except ValueError:
-                return x
-
-        def time(x):
-            return float(x)
-
-        thermocycler_keys = [
-                ('num-cycles', int),
-                ('initial-denature-temp', temp),
-                ('initial-denature-time', time),
-                ('denature-temp', temp),
-                ('denature-time', time),
-                ('anneal-temp', temp),
-                ('anneal-temp-gradient', float),
-                ('anneal-time', time),
-                ('extend-temp', temp),
-                ('extend-time', time),
-                ('final-extend-temp', temp),
-                ('final-extend-time', time),
-                ('hold-temp', temp),
-                ('melt-curve-low-temp', temp),
-                ('melt-curve-high-temp', temp),
-                ('melt-curve-temp-step', temp),
-                ('melt-curve-time-step', time),
-                ('two-step', bool),
-                ('qpcr', bool),
-        ]
-        for key, parser in thermocycler_keys:
-            arg_key = f'--{key}'
-            if args[arg_key] in (None, False):
-                continue
-
-            param_parts = key.split('-')
-            param_unit = {'temp': '_C', 'time': '_s'}
-            param_key = '_'.join(param_parts) + param_unit.get(param_parts[-1], '')
-
-            pcr.thermocycler_params[param_key] = parser(args[arg_key])
-
-        return pcr
-
-    def get_config(self):
-        from configurator import Config
-
-        config = Config(CONFIG.data)
-        config.merge(PRESETS.load(self.preset))
-        config.merge(self.thermocycler_params)
-
-        if self.reagents:
-            config.merge({'reagents': self.reagents})
-
-        return config
+    def set_primers(self, primers):
+        self.fwd_primer, self.rev_primer = primers
 
     def get_reaction(self):
-        config = self.config
-
         def require_reagent(pcr, reagent):
             if reagent not in pcr:
                 raise UsageError(f"reagent table for preset {self.preset!r} missing {reagent!r}.")
 
-        pcr = stepwise.MasterMix.from_text(config.reagents)
+        pcr = deepcopy(self.base_reaction)
     
         require_reagent(pcr, 'water')
         require_reagent(pcr, 'template DNA')
@@ -244,7 +338,7 @@ class Pcr(Main):
         for p, name in zip(primer_abbrev, self.primers or (None, None)):
             pcr[p].order = 3
             pcr[p].name = name
-            pcr[p].hold_conc.stock_conc = config['primer_stock_uM'], 'µM'
+            pcr[p].hold_conc.stock_conc = self.primer_stock_uM, 'µM'
             pcr[p].master_mix = (
                     primer_abbrev[p] in self.master_mix or
                            'primers' in self.master_mix
@@ -280,7 +374,6 @@ class Pcr(Main):
         return pcr, primer_mix
 
     def get_thermocycler_protocol(self):
-        p = self.config
 
         def temp(x):
             if isinstance(x, Real):
@@ -303,71 +396,73 @@ class Pcr(Main):
             else:
                 return f'{x//60} min'
 
-        def has_step(p, step, params=['temp_C', 'time_s']):
-            return all((f'{step}_{param}' in p) for param in params)
+        def has_step(step, params=['temp_C', 'time_s']):
+            return all(
+                hasattr(self, f'{step}_{param}')
+                for param in params
+            )
 
-        def step(p, step):
-            if f'{step}_temp_gradient' not in p:
-                t = p[f'{step}_temp_C']
+        def step(step):
+            if not hasattr(self, f'{step}_temp_gradient_C'):
+                t = getattr(self, f'{step}_temp_C')
             else:
-                t_mid = p[f'{step}_temp_C']
-                t_range = p[f'{step}_temp_gradient']
+                t_mid = getattr(self, f'{step}_temp_C')
+                t_range = getattr(self, f'{step}_temp_gradient_C')
                 t_low = round(t_mid - t_range / 2)
                 t_high = round(t_low + t_range)
                 t = f'{t_low}-{t_high}'
 
-            return f"{temp(t)} for {time(p[f'{step}_time_s'])}"
+            return f"{temp(t)} for {time(getattr(self, f'{step}_time_s'))}"
 
-        three_step = not p.get('two_step', False) and has_step(p, 'extend')
+        three_step = not self.two_step and has_step('extend')
 
         thermocycler_steps = [
-                f"- {step(p, 'initial_denature')}",
-                f"- Repeat {p['num_cycles']}x:",
-                f"  - {step(p, 'denature')}",
-                f"  - {step(p, 'anneal')}",
+                f"- {step('initial_denature')}",
+                f"- Repeat {getattr(self, 'num_cycles')}x:",
+                f"  - {step('denature')}",
+                f"  - {step('anneal')}",
         ]
         if three_step:
             thermocycler_steps += [
-                f"  - {step(p, 'extend')}",
+                f"  - {step('extend')}",
             ]
 
-        if p.get('qpcr'):
+        if self.qpcr:
             thermocycler_steps += [
                 f"  - Measure fluorescence",
             ]
 
-        if has_step(p, 'final_extend'):
+        if has_step('final_extend'):
             thermocycler_steps += [
-                f"- {step(p, 'final_extend')}",
+                f"- {step('final_extend')}",
             ]
 
-        if has_step(p, 'melt_curve', 'low_temp_C high_temp_C temp_step_C time_step_s'.split()):
+        if has_step('melt_curve', 'low_temp_C high_temp_C temp_step_C time_step_s'.split()):
             thermocycler_steps += [
-                f"- {p['melt_curve_low_temp_C']}-{p['melt_curve_high_temp_C']}°C in {time(p['melt_curve_time_step_s'])} steps of {p['melt_curve_temp_step_C']}°C",
+                f"- {self.melt_curve_low_temp_C}-{self.melt_curve_high_temp_C}°C in {time(self.melt_curve_time_step_s)} steps of {self.melt_curve_temp_step_C}°C",
             ]
 
-        if p.get('qpcr'):
+        if self.qpcr:
             thermocycler_steps += [
                 f"  - Measure fluorescence",
             ]
 
-        if 'hold' in p:
+        if self.hold_temp_C:
             thermocycler_steps += [
-                f"- {p['hold_temp_C']}°C hold",
+                f"- {temp(self.hold_temp_C)} hold",
             ]
 
         return '\n'.join(thermocycler_steps)
 
     def get_protocol(self):
         protocol = stepwise.Protocol()
-        config = self.config
 
         pcr, primer_mix = self.reaction
         thermocycler = self.thermocycler_protocol
 
         protocol.footnotes[1] = f"""\
 For resuspending lyophilized primers:
-{config.primer_stock_uM} µM = {1e3 / config.primer_stock_uM:g} µL/nmol
+{self.primer_stock_uM} µM = {1e3 / self.primer_stock_uM:g} µL/nmol
 """
         if x := pcr['template DNA'].stock_conc:
             protocol.footnotes[2] = f"""\
@@ -384,7 +479,7 @@ Prepare 10x primer mix [1]:
         footnotes = list(protocol.footnotes.keys())
         if primer_mix: footnotes.remove(1)
         footnotes = ','.join(str(x) for x in footnotes)
-        title = 'qPCR' if self.config.get('qpcr') else 'PCR'
+        title = 'qPCR' if self.qpcr else 'PCR'
 
         protocol += f"""\
 Setup {plural(pcr.num_reactions):# {title} reaction/s}{f' [{footnotes}]' if footnotes else ''}:
@@ -403,12 +498,6 @@ Run the following thermocycler protocol:
 
         return protocol
 
-__doc__ = __doc__.format(
-        pcr=Pcr,
-        master_mix=','.join(Pcr.master_mix),
-        presets=indent(PRESETS.format_briefs(), 8*' ', first=-1),
-)
-
 if __name__ == '__main__':
-    Pcr.main(__doc__)
+    Pcr.main()
 

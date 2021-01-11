@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from stepwise_mol_bio import Main, app_dirs, comma_list
+from inform import Error, plural, did_you_mean
+from pathlib import Path
+
+@autoprop
+class RestrictionDigest(Main):
+    """\
 Perform restriction digests using the protocol recommended by NEB.
 
 Usage:
@@ -20,13 +27,13 @@ Arguments:
         specified using commas.
 
 Options:
-    -d --dna <µg>               [default: 1]
+    -d --dna <µg>               [default: ${app.dna_ug}]
         The amount of DNA to digest, in µg.
 
-    -D --dna-stock <ng/µL>      [default: 200]
+    -D --dna-stock <ng/µL>      [default: ${app.dna_stock_nguL}]
         The stock concentration of the DNA template, in ng/µL.
 
-    -v --target-volume <µL>     [default: 10]
+    -v --target-volume <µL>     [default: ${app.target_volume_uL}]
         The ideal volume for the digestion reaction.  Note that the actual 
         reaction volume may be increased to ensure that the volume of enzyme 
         (which is determined by the amount of DNA to digest, see --dna) is less 
@@ -40,48 +47,58 @@ Options:
         Indicate that genomic DNA is being digested.  This will double the 
         amount of enzyme used, as recommended by NEB.
 """
+    __config__ = [
+            appcli.DocoptConfig(),
+            stepwise.StepwiseConfig('molbio.digest'),
+    ]
+    templates = appcli.param(
+            '<templates>', ...,
+            cast=comma_list,
+    )
+    enzyme_names = appcli.param(
+            '<enzymes>', ...,
+            cast=comma_list,
+    )
+    dna_ug = appcli.param(
+            '--dna', 'dna_ug',
+            cast=float,
+            default=1,
+    )
+    dna_stock_nguL = appcli.param(
+            '--dna-stock', 'dna_stock_nguL',
+            cast=float,
+            default=200,
+    )
+    target_volume_uL = appcli.param(
+            '--target-volume', 'target_volume_uL', 
+            cast=float,
+            default=10,
+    )
+    explicit_num_reactions = appcli.param(
+            '--num-reactions', ..., 
+            cast=int,
+            default=0,
+    )
+    is_genomic = appcli.param(
+            '--genomic', ...,
+            default=False,
+    )
 
-import docopt
-import stepwise
-import autoprop
-from pathlib import Path
-from inform import Error, plural, did_you_mean
-from stepwise_mol_bio import Main, app
+    def __bareinit__(self):
+        self._enzyme_db = NebRestrictionEnzymeDatabase()
 
-@autoprop
-class RestrictionDigest(Main):
-
-    def __init__(self, templates, enzymes):
+    def __init__(self, templates, enzyme_names):
         self.templates = templates
-        self.enzymes = enzymes
+        self.enzyme_names = enzyme_names
 
-        self.dna_ug = 1
-        self.dna_stock_nguL = 200
-        self.target_volume_uL = 10
-        self.num_reactions = None
-        self.is_genomic = False
+    def get_num_reactions(self):
+        return self.explicit_num_reactions or len(self.templates)
 
-    @classmethod
-    def from_docopt(cls, args):
-        templates = [
-                x.strip()
-                for x in args['<templates>'].split(',')
-        ]
-        enzymes = [
-                load_neb_enzyme(x)
-                for x in args['<enzymes>'].split(',')
-        ]
+    def set_num_reactions(self, n):
+        self.explicit_num_reactions = n
 
-        self = cls(templates, enzymes)
-        self.dna_ug = float(args['--dna'])
-        self.dna_stock_nguL = float(args['--dna-stock'])
-        self.target_volume_uL = float(args['--target-volume'])
-        self.is_genomic = args['--genomic']
-
-        if x := args['--num-reactions']:
-            self.num_reactions = int(x)
-
-        return self
+    def get_enzymes(self):
+        return [self._enzyme_db[x] for x in self.enzyme_names]
 
     def get_reaction(self):
         # Define a prototypical restriction digest reaction.  Stock 
@@ -101,7 +118,7 @@ class RestrictionDigest(Main):
 
         # Plug in the parameters the user requested.
 
-        rxn.num_reactions = self.num_reactions or len(self.templates)
+        rxn.num_reactions = self.num_reactions
 
         rxn['DNA'].name = ','.join(self.templates)
         rxn['DNA'].hold_conc.stock_conc = self.dna_stock_nguL, 'ng/µL'
@@ -160,7 +177,6 @@ class RestrictionDigest(Main):
             rxn[key].volume = enz_vols[key]
 
         return rxn
-
     def get_protocol(self):
         from itertools import groupby
         from operator import itemgetter
@@ -219,6 +235,39 @@ the DNA will be purified before use.
 """
         return protocol
 
+class NebRestrictionEnzymeDatabase:
+
+    def __init__(self):
+        import json
+        import requests
+
+        cache = Path(app_dirs.user_cache_dir) / 'neb' / 'restriction_enzymes.json'
+        cache.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            url = 'http://nebcloner.neb.com/data/reprop.json'
+            data = requests.get(url).json()
+
+            with cache.open('w') as f:
+                json.dump(data, f)
+
+        except requests.exceptions.ConnectionError:
+            if not cache.exists():
+                raise NoEnzymeData(url)
+
+            with cache.open() as f:
+                data = json.load(f)
+
+        self.enzyme_names = list(data.keys())
+        self.enzyme_params = {k.lower(): v for k, v in data.items()}
+
+    def __getitem__(self, name):
+        try:
+            return self.enzyme_params[name.lower()]
+        except KeyError:
+            raise UnknownEnzyme(name, self.enzyme_names)
+
+
 class RestrictionDigestError(Error):
     pass
 
@@ -241,44 +290,12 @@ class UnknownEnzyme(RestrictionDigestError):
     template = "No such enzyme {enzyme_name!r}.  Did you mean {did_you_mean!r}?"
     wrap = True
 
-    def __init__(self, enzyme_name, enzymes):
+    def __init__(self, enzyme_name, enzyme_names):
         super().__init__(
                 enzyme_name=enzyme_name,
-                enzymes=enzymes,
-                did_you_mean=did_you_mean(enzyme_name, enzymes),
+                enzyme_names=enzyme_names,
+                did_you_mean=did_you_mean(enzyme_name, enzyme_names),
         )
-
-def load_neb_enzyme(name):
-    enzymes = load_neb_enzymes()
-    enzymes_lower = {k.lower(): v for k, v in enzymes.items()}
-
-    try:
-        return enzymes_lower[name.lower()]
-    except KeyError:
-        raise UnknownEnzyme(name, enzymes)
-
-def load_neb_enzymes():
-    import json
-    import requests
-
-    cache = Path(app.user_cache_dir) / 'neb' / 'restriction_enzymes.json'
-    cache.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        url = 'http://nebcloner.neb.com/data/reprop.json'
-        data = requests.get(url).json()
-
-        with cache.open('w') as f:
-            json.dump(data, f)
-
-    except requests.exceptions.ConnectionError:
-        if not cache.exists():
-            raise NoEnzymeData(url)
-
-        with cache.open() as f:
-            data = json.load(f)
-
-    return data
 
 def pick_compatible_buffer(enzymes):
     if len(enzymes) == 1:
@@ -311,4 +328,4 @@ def pick_compatible_buffer(enzymes):
 
 
 if __name__ == '__main__':
-    RestrictionDigest.main(__doc__)
+    RestrictionDigest.main()

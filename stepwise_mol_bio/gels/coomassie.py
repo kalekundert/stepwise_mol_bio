@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise
+import appcli
+import autoprop
+from _stain import Stain
+from appcli import Key, DocoptConfig
+from laser_scanner import LaserScanner
+
+@autoprop
+class Coomassie(Stain):
+    """\
 Stain protein gels using Coomassie R-250.
 
 Usage:
@@ -18,30 +27,19 @@ Options:
         Image the gel using a near-IR fluorescence laser scanner, rather than
         a colorimetric gel imager.
 """
+    __config__ = [
+            DocoptConfig(),
+    ]
 
-import stepwise
-import autoprop
-from _stain import Stain
-from laser_scanner import LaserScanner
-
-@autoprop
-class Coomassie(Stain):
-
-    def __init__(self):
-        self.stain_type = 'basic'
-        self.image_type = None
-        self.default_image_type = 'colorimetric'
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = cls()
-        if args['--fast']:
-            self.stain_type = 'microwave'
-        if args['--quiet']:
-            self.stain_type = 'quiet'
-        if args['--fluorescent']:
-            self.image_type = 'fluorescent'
-        return self
+    stain_type = appcli.param(
+            Key(DocoptConfig, '--fast', cast=lambda x: 'microwave'),
+            Key(DocoptConfig, '--quiet', cast=lambda x: 'quiet'),
+            default='basic',
+    )
+    image_type = appcli.param(
+            Key(DocoptConfig, '--fluorescent', cast=lambda x: 'fluorescent'),
+            default='colorimetric',
+    )
 
     def get_staining_protocols(self):
         return {
@@ -102,9 +100,9 @@ Stain gel with Coomassie.
         return stepwise.Protocol()
 
     def get_fluorescent_imaging(self):
-        scan = LaserScanner.from_params(658, '710BP40')
+        scan = LaserScanner.from_laser_filter_pair(658, '710BP40')
         return scan.protocol
 
 if __name__ == '__main__':
-    Coomassie.main(__doc__)
+    Coomassie.main()
 

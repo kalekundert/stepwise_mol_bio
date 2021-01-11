@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from appcli import Key, DocoptConfig
+from stepwise_mol_bio import Main, UsageError
+from stepwise_mol_bio.gels.gel import Gel
+from operator import not_
+from inform import plural
+
+@autoprop
+class Ivt(Main):
+    """\
 Display a protocol for synthesizing in vitro transcribed (IVT) RNA using the
 NEB HiScribe kit (E2040).
 
@@ -12,10 +21,10 @@ Arguments:
         The names to the DNA templates to transcribe.
 
 Options:
-    -d --dna-ng-uL CONC  [default: {Ivt.dna_ng_uL}]
+    -d --dna-ng-uL CONC  [default: ${app.dna_ng_uL}]
         The concentration of the template DNA (in ng/µL).
 
-    -D --dna-ng AMOUNT    [default: {Ivt.dna_ng}]
+    -D --dna-ng AMOUNT    [default: ${app.dna_ng}]
         How much template DNA to use (in ng).  NEB recommends 1 µg.  Lower 
         amounts will give proportionately lower yield, but will otherwise work 
         fine.  If the template is not concentrated enough to reach the given 
@@ -35,68 +44,73 @@ Options:
         How long to incubate the transcription reaction.  The default is 2h for 
         long transcripts and 4h for short transcripts (--short).
 
-    -x --extra PERCENT      [default: {Ivt.extra_percent}]
+    -x --extra PERCENT      [default: ${app.extra_percent}]
         How much extra master mix to create.
 
     -R --no-rntp-mix
         Indicate that each you're not using a rNTP mix and that you need to add 
         each rNTP individually to the reaction.
 
-    -c --cleanup METHOD     [default: {Ivt.cleanup}]
+    -c --cleanup METHOD     [default: ${app.cleanup}]
         Choose the method for removing free nucleotides from the RNA:
-        'none': Carry on the crude reaction mix.
-        'zymo': Zymo spin kits.
-        'ammonium': Ammonium acetate precipitation.
+
+        none: Carry on the crude reaction mix.
+        zymo: Zymo spin kits.
+        ammonium: Ammonium acetate precipitation.
 
     -G --no-gel
         Don't include the gel electrophoresis step.
 """
+    __config__ = [
+            DocoptConfig(),
+    ]
 
-import stepwise, docopt, autoprop
-from stepwise_mol_bio import Main, UsageError
-from stepwise_mol_bio.gels.gel import Gel
-from inform import plural
-
-@autoprop
-class Ivt(Main):
-    cleanup = 'zymo'
-    dna_ng_uL = 500
-    dna_ng = 1000
-    incubate_h = None
-    rntp_mix = True
-    gel = True
-    extra_percent = 10
+    templates = appcli.param(
+            Key(DocoptConfig, '<templates>'),
+    )
+    _dna_uL = appcli.param(
+            Key(DocoptConfig, '--dna-uL'),
+            cast=float,
+            default=None,
+    )
+    _dna_ng = appcli.param(
+            Key(DocoptConfig, '--dna-ng'),
+            cast=float,
+            default=1000,
+    )
+    dna_ng_uL = appcli.param(
+            Key(DocoptConfig, '--dna-ng-uL'),
+            cast=float,
+            default=500,
+    )
+    cleanup = appcli.param(
+            Key(DocoptConfig, '--cleanup'),
+            default='zymo',
+    )
+    short = appcli.param(
+            Key(DocoptConfig, '--short'),
+            default=False,
+    )
+    incubation_h = appcli.param(
+            Key(DocoptConfig, '--incubate'),
+            default=None,
+    )
+    rntp_mix = appcli.param(
+            Key(DocoptConfig, '--no-rntp-mix', cast=not_),
+            default=True,
+    )
+    gel = appcli.param(
+            Key(DocoptConfig, '--no-gel', cast=not_),
+            default=True,
+    )
+    extra_percent = appcli.param(
+            Key(DocoptConfig, '--extra-percent'),
+            cast=float,
+            default=10,
+    )
 
     def __init__(self, templates):
         self.templates = templates
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = cls(args['<templates>'])
-        self.cleanup = args['--cleanup']
-        self.short = args['--short']
-        self.incubation_h = args['--incubate']
-        self.rntp_mix = not args['--no-rntp-mix']
-        self.gel = not args['--no-gel']
-        self.extra_percent = float(args['--extra'])
-
-        if args['--dna-uL']:
-            self.dna_uL = float(args['--dna-uL'])
-            self.dna_ng_uL = float(args['--dna-ng-uL'])
-            self.dna_err_params = {
-                    'desired_dna': f'{self.dna_uL} µL',
-                    'max_dna': lambda x: f'{x} µL',
-            }
-        else:
-            self.dna_ng = float(args['--dna-ng'])
-            self.dna_ng_uL = float(args['--dna-ng-uL'])
-            self.dna_uL = self.dna_ng / self.dna_ng_uL
-            self.dna_err_params = {
-                    'desired_dna': f'{self.dna_ng} ng',
-                    'max_dna': lambda x: f'{x * self.dna_ng_uL} ng',
-            }
-
-        return self
 
     def get_reaction(self):
         ivt = stepwise.MasterMix("""\
@@ -146,7 +160,8 @@ class Ivt(Main):
             ivt['DNA template'].volume = self.dna_uL, 'µL'
         else:
             ivt['DNA template'].volume = self.dna_ng / self.dna_ng_uL, 'µL'
-
+        
+        ivt.fix_volumes('DNA template', 'nuclease-free water')
         return ivt
 
     def get_protocol(self):
@@ -206,26 +221,47 @@ ammonium acetate precipitation:
         else:
             raise UsageError(f"unknown RNA clean-up method: '{self.cleanup}'")
 
-        ## Nanodrop concentration
-        p += """\
-Nanodrop to determine the RNA concentration.
-"""
-        ## Aliquot
-        p += """\
-Dilute (if desired) enough RNA to make several 
-10 μM aliquots and to run a gel.  Keep any left- 
-over RNA undiluted.  Flash-freeze in liquid N₂
-and store at -80°C.
-"""
-        ## Gel electrophoresis
-        if self.gel:
-            p += Gel('urea', len(self.templates)).protocol
-
+#        ## Nanodrop concentration
+#        p += """\
+#Nanodrop to determine the RNA concentration.
+#"""
+#        ## Aliquot
+#        p += """\
+#Dilute (if desired) enough RNA to make several 
+#10 μM aliquots and to run a gel.  Keep any left- 
+#over RNA undiluted.  Flash-freeze in liquid N₂
+#and store at -80°C.
+#"""
+#        ## Gel electrophoresis
+#        if self.gel:
+#            p += Gel('urea', len(self.templates)).protocol
+#
         return p
 
-__doc__ = __doc__.format(**locals())
+    def get_dna_uL(self):
+        return self._dna_uL
+
+    def get_dna_ng(self):
+        return self._dna_ng
+
+    def set_dna_uL(self, dna_uL):
+        self._dna_uL = dna_uL
+        self._dna_ng = self.dna_ng_uL / dna_uL
+
+    def set_dna_ng(self, dna_ng):
+        self._dna_ng = dna_ng
+        self._dna_uL = dna_ng / self.dna_ng_uL
+
+    @appcli.on_load
+    def _load_dna_quantity(self):
+        if self._dna_uL:
+            self.set_dna_uL(self._dna_uL)
+        else:
+            self.set_dna_ng(self._dna_ng)
+
+
 
 if __name__ == '__main__':
-    Ivt.main(__doc__)
+    Ivt.main()
 
 # vim: tw=50

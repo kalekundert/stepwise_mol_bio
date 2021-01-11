@@ -1,41 +1,40 @@
 #!/usr/bin/env python3
 # vim: tw=50
 
-"""\
-Circularize a linear DNA molecule using T4 DNA ligase, e.g. to reform a plasmid 
-after inverse PCR.
-
-Usage:
-    kld <substrate> [-n <int>]
-
-Arguments:
-    <substrate>
-        The name of the DNA molecule to circularize.
-
-Options:
-    -n --num-reactions <int>        [default: {0.num_reactions}]
-        The number of reactions to set up.
-
-"""
-
-import docopt
-import stepwise
-import autoprop
+import stepwise, appcli, autoprop
 from inform import plural
 from stepwise_mol_bio import Main
 
 @autoprop
 class Kld(Main):
-    num_reactions = 1
+    """\
+Circularize a linear DNA molecule using T4 DNA ligase, e.g. to reform a plasmid 
+after inverse PCR.
 
-    def __init__(self, substrate):
-        self.substrate = substrate
+Usage:
+    kld <dna> [-n <int>]
 
-    @classmethod
-    def from_docopt(cls, args):
-        self = cls(args['<substrate>'])
-        self.num_reactions = int(eval(args['--num-reactions']))
-        return self
+Arguments:
+    <dna>
+        The name of the DNA molecule to circularize.
+
+Options:
+    -n --num-reactions <int>        [default: ${app.num_reactions}]
+        The number of reactions to set up.
+"""
+    __config__ = [
+            appcli.DocoptConfig(),
+    ]
+
+    dna = appcli.param('<dna>')
+    num_reactions = appcli.param(
+            '--num-reactions',
+            cast=lambda x: int(eval(x)),
+            default=1,
+    )
+
+    def __init__(self, dna):
+        self.dna = dna
 
     def get_reaction(self):
         kld = stepwise.MasterMix.from_text('''\
@@ -51,7 +50,7 @@ class Kld(Main):
 
         kld.num_reactions = self.num_reactions
         kld.extra_percent = 15
-        kld['DNA'].name = self.substrate
+        kld['DNA'].name = self.dna
 
         return kld
 
@@ -66,7 +65,5 @@ Run {plural(self.num_reactions):# ligation reaction/s}:
 """
         return protocol
 
-__doc__ = __doc__.format(Kld)
-
 if __name__ == '__main__':
-    Kld.main(__doc__)
+    Kld.main()

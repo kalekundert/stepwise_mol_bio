@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from inform import plural
+from stepwise_mol_bio import Main, comma_set
+
+@autoprop
+class Anneal(Main):
+    """\
 Anneal linker-N and mRNA prior to ligation.
 
 Usage:
@@ -11,52 +17,40 @@ Arguments:
         The names of the two oligos to anneal.
 
 Options:
-    -n --num-rxns <num_rxns>            [default: {0.num_reactions}]
+    -n --num-rxns <num_rxns>            [default: ${app.num_reactions}]
         The number of reactions to set up.
 
-    -v --volume <µL>                    [default: {0.volume_uL}]
+    -v --volume <µL>                    [default: ${app.volume_uL}]
         The volume of each annealing reaction in µL.
 
-    -c --oligo-conc <µM>                [default: {0.oligo_conc_uM}]
+    -c --oligo-conc <µM>                [default: ${app.oligo_conc_uM}]
         The final concentration of each oligo in the reaction, in µM.  This 
         will also be the concentration of the annealed duplex, if the reaction 
         goes to completion.
 
-    -C --oligo-stock <µM>                [default: {0.oligo_stock_uM}]
+    -C --oligo-stock <µM>               [default: ${app.oligo_stock_uM}]
         The stock concentrations of the oligos, in µM.
 
-    -m --master-mix <reagents>          [default: {1}]
+    -m --master-mix <reagents>          [default: ${','.join(app.master_mix)}]
         The reagents to include in the master mix.  The following reagents are 
         understood: '1' (the first oligo), '2' (the second oligo), or the name 
         of either oligo specified on the command line. To specify both 
         reagents, separate the two names with a comma.
 """
-
-import stepwise, docopt, autoprop
-from inform import plural
-from stepwise_mol_bio import Main
-
-@autoprop
-class Anneal(Main):
-    num_reactions = 1
-    volume_uL = 4
-    oligo_conc_uM = 45
-    oligo_stock_uM = 100
-    master_mix = set()
+    __config__ = [
+            appcli.DocoptConfig(),
+    ]
+    oligo_1 = appcli.param('<oligo_1>')
+    oligo_2 = appcli.param('<oligo_2>')
+    num_reactions = appcli.param('--num-rxns', default=1, cast=int)
+    volume_uL = appcli.param('--volume', default=4, cast=float)
+    oligo_conc_uM = appcli.param('--oligo-conc', default=45, cast=float)
+    oligo_stock_uM = appcli.param('--oligo-stock', default=100, cast=float)
+    master_mix = appcli.param('--master-mix', default={'1'}, cast=comma_set)
 
     def __init__(self, oligo_1, oligo_2):
         self.oligo_1 = oligo_1
         self.oligo_2 = oligo_2
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = cls(args['<oligo_1>'], args['<oligo_2>'])
-        self.num_reactions = int(args['--num-rxns'])
-        self.volume = float(args['--volume'])
-        self.oligo_conc_uM = float(args['--oligo-conc'])
-        self.oligo_stock_uM = float(args['--oligo-stock'])
-        self.master_mix = {*args['--master-mix'].split(',')}
-        return self
 
     def get_reaction(self):
         rxn = stepwise.MasterMix.from_text("""\
@@ -98,7 +92,5 @@ Perform the {plural(n):annealing reaction/s}:
 """
         return protocol
 
-__doc__ = __doc__.format(Anneal, ','.join(Anneal.master_mix))
-
 if __name__ == '__main__':
-    Anneal.main(__doc__)
+    Anneal.main()

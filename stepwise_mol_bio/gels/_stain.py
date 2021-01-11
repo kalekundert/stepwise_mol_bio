@@ -6,11 +6,6 @@ from stepwise_mol_bio import Main
 
 @autoprop
 class Stain(Main):
-    default_image_type = None
-
-    def __init__(self):
-        self.stain_type = None
-        self.image_type = self.default_image_type
 
     def get_protocol(self):
         p = self.staining_protocol

@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 # vim: tw=50
 
-"""\
+import stepwise, appcli, autoprop
+from inform import plural
+from _assembly import Assembly
+
+@autoprop
+class Ligate(Assembly):
+    """\
 Assemble restrictions digested DNA fragments using T4 DNA ligase.
 
 Usage:
@@ -19,20 +25,15 @@ Options:
         oligos, PCR products).
 """
 
-import docopt, stepwise, autoprop
-from inform import plural
-from _assembly import Assembly, format_docstring
-
-@autoprop
-class Ligate(Assembly):
-    excess_insert = 3
-    use_kinase = False
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
-        self.use_kinase = args['--kinase']
-        return self
+    excess_insert = appcli.param(
+            '--excess-insert',
+            cast=float,
+            default=3,
+    )
+    use_kinase = appcli.param(
+            '--kinase',
+            default=False,
+    )
 
     def get_reaction(self):
         rxn = stepwise.MasterMix.from_text('''\
@@ -69,7 +70,5 @@ https://preview.tinyurl.com/y7gxfv5m
 """
         return p
 
-__doc__ = format_docstring(Ligate, __doc__)
-
 if __name__ == '__main__':
-    Ligate.main(__doc__)
+    Ligate.main()

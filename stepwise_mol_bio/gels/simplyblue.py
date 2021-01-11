@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 # vim: tw=50
 
-"""\
+import stepwise, appcli, autoprop
+from appcli import Key, DocoptConfig
+from coomassie import Coomassie
+
+@autoprop
+class SimplyBlue(Coomassie):
+    """\
 Stain protein gels using SimplyBlue SafeStain (Invitrogen LC6060).
 
 SimplyBlue SafeStain is a ready-to-use, proprietary Coomassie G-250 stain that 
@@ -38,29 +44,27 @@ Options:
         require more stain/destain or longer incubate times.
 """
 
-import stepwise
-import autoprop
-from coomassie import Coomassie
-
-@autoprop
-class SimplyBlue(Coomassie):
+    stain_type = appcli.param(
+            Key(DocoptConfig, '--fast', cast=lambda x: 'microwave'),
+            Key(DocoptConfig, '--quiet', cast=lambda x: 'quiet'),
+            Key(DocoptConfig, '--optimized', cast=lambda x: 'optimal'),
+            default='basic',
+    )
+    gel_thickness_mm = appcli.param(
+            '--gel-thickness',
+            cast=float,
+            default=1.0,
+    )
+    attach_pdf = appcli.param(
+            '--attach-pdf',
+            default=False,
+    )
 
     def __init__(self):
         super().__init__()
         self.default_imaging_protocol = 'fluorescent'
         self.gel_thickness_mm = 1.0
         self.attach_pdf = False
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
-        self.gel_thickness_mm = float(args['--gel-thickness'])
-        self.attach_pdf = args['--attach-pdf']
-
-        if args['--optimized']:
-            self.stain_type = 'optimal'
-
-        return self
 
     def get_staining_protocols(self):
         return {
@@ -173,5 +177,5 @@ Stain gel with SimplyBlue SafeStain.
         return p
 
 if __name__ == '__main__':
-    SimplyBlue.main(__doc__)
+    SimplyBlue.main()
 

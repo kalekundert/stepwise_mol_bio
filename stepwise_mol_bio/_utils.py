@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 
+import sys
+import appcli
 from appdirs import AppDirs
 from inform import Error
+from pathlib import Path
 
-app = AppDirs("stepwise_mol_bio")
+app_dirs = AppDirs("stepwise_mol_bio")
 
-class Main:
+class Main(appcli.App):
+    usage_io = sys.stderr
 
     @classmethod
-    def main(cls, *args, **kwargs):
+    def main(cls):
+        self = cls.from_params()
+        self.load()
+        
         try:
-            from docopt import docopt
-            args = docopt(*args, **kwargs)
-            self = cls.from_docopt(args)
-            if self is None:
-                raise RuntimeError(f"{cls.from_docopt.__qualname__}(): missing return value")
-            print(self.protocol)
+            self.protocol.print()
         except Error as err:
             err.report()
 
-    @classmethod
-    def from_docopt(cls, args):
-        return cls()
+    def load(self):
+        appcli.load(self)
 
 
 
@@ -34,9 +35,29 @@ class ConfigError(StepwiseMolBioError):
 class UsageError(StepwiseMolBioError):
     pass
 
+def try_except(expr, exc, failure, success=None):
+    try:
+        x = expr()
+    except exc:
+        return failure()
+    else:
+        return success() if success else x
+
 def hanging_indent(text, prefix):
     from textwrap import indent
     if isinstance(prefix, int):
         prefix = ' ' * prefix
     return indent(text, prefix)[len(prefix):]
+
+def merge_dicts(dicts):
+    result = {}
+    for dict in reversed(list(dicts)):
+        result.update(dict)
+    return result
+
+def comma_list(x):
+    return [x.strip() for x in x.split(',')]
+
+def comma_set(x):
+    return {x.strip() for x in x.split(',')}
 

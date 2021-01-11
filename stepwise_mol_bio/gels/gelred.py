@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-"""\
+from _biotium import Biotium
+
+class GelRed(Biotium):
+    """\
 Stain nucleic acid gels using GelRed.
 
 GelRed is a sensitive, stable and environmentally safe fluorescent nucleic acid 
@@ -29,14 +32,9 @@ Options:
         printed out by `stepwise go`.
 """
 
-import stepwise
-import autoprop
-from _biotium import Biotium
-
-class GelRed(Biotium):
     product = 'GelRed'
     uv_wavelength = '302'
     attachment = 'biotium_gelgreen.pdf'
 
 if __name__ == '__main__':
-    GelRed.main(__doc__)
+    GelRed.main()

@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-"""\
+import stepwise, appcli, autoprop
+from appcli import Key, DocoptConfig
+from _biotium import Biotium
+from laser_scanner import LaserScanner
+
+@autoprop
+class GelGreen(Biotium):
+    """\
 Stain nucleic acids using GelGreen.
 
 GelGreen is a sensitive, stable and environmentally safe green fluorescent 
@@ -27,23 +34,14 @@ Options:
         printed out by `stepwise go`.
 """
 
-import stepwise
-import autoprop
-from _biotium import Biotium
-from laser_scanner import LaserScanner
-
-@autoprop
-class GelGreen(Biotium):
     product = 'GelGreen'
     uv_wavelength = '254'
     attachment = 'biotium_gelgreen.pdf'
-
-    @classmethod
-    def from_docopt(cls, args):
-        self = super().from_docopt(args)
-        if args['--fluorescent']:
-            self.image_type = 'fluor'
-        return self
+    image_type = appcli.param(
+            Key(DocoptConfig, '--fluorescent', cast=lambda x: 'fluor'),
+            Key(DocoptConfig, '--no-imaging', cast=lambda x: None),
+            default='uv',
+    )
 
     def get_imaging_protocols(self):
         return {
@@ -52,8 +50,8 @@ class GelGreen(Biotium):
         }
 
     def get_fluorescent_imaging(self):
-        scan = LaserScanner.from_params(488, '518BP22')
+        scan = LaserScanner.from_laser_filter_pair(488, '518BP22')
         return scan.protocol
 
 if __name__ == '__main__':
-    GelGreen.main(__doc__)
+    GelGreen.main()
