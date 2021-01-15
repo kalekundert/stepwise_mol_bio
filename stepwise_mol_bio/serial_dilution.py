@@ -74,10 +74,10 @@ Options:
         transfer = self.volume * (f := self.inv_factor) / (1 - f)
         initial_volume = self.volume + transfer
 
-        conc_high_str = format_quantity(self.conc_high, self.conc_unit)
+        conc_high_str = format_quantity(self.conc_high, self.conc_unit, '.2g')
         material_str = f'{conc_high_str} {self.material}'.lstrip()
         conc_table = [
-                [i, format_quantity(conc, self.conc_unit)]
+                [i, format_quantity(conc, self.conc_unit, 'e')]
                 for i, conc in enumerate(self.concentrations, 1)
         ]
 
@@ -191,10 +191,10 @@ def parse_high_low(high_str, low_str):
 
     return high, low, units.pop() if units else None
 
-def format_quantity(value, unit=None, precision=2, pad=' '):
+def format_quantity(value, unit=None, format='.2f', pad=' '):
     from numbers import Real
     if isinstance(value, Real):
-        value = f'{value:.{precision}f}'
+        value = f'{value:{format}}'
     return f'{value}{pad}{unit}' if unit else value
 
 
