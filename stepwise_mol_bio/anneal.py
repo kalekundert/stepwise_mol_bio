@@ -3,6 +3,16 @@
 import stepwise, appcli, autoprop
 from inform import plural
 from stepwise_mol_bio import Main, comma_set
+from collections.abc import Sequence
+
+def float_pair(x):
+    if ',' in x:
+        return tuple(map(float, x.split(',', maxsplit=1)))
+    else:
+        return float(x)
+
+def pair(x, i):
+    return x[i] if isinstance(x, Sequence) else x
 
 @autoprop
 class Anneal(Main):
@@ -23,13 +33,14 @@ Options:
     -v --volume <µL>                    [default: ${app.volume_uL}]
         The volume of each annealing reaction in µL.
 
-    -c --oligo-conc <µM>                [default: ${app.oligo_conc_uM}]
+    -c --oligo-conc <µM>
         The final concentration of each oligo in the reaction, in µM.  This 
         will also be the concentration of the annealed duplex, if the reaction 
-        goes to completion.
+        goes to completion.  The default is to use as much oligo as possible.
 
-    -C --oligo-stock <µM>               [default: ${app.oligo_stock_uM}]
-        The stock concentrations of the oligos, in µM.
+    -C --oligo-stock <µM[,µM]>          [default: ${app.oligo_stock_uM}]
+        The stock concentrations of the oligos, in µM.  You can optionally use 
+        a comma to specify different stock concentrations for the two oligos.
 
     -m --master-mix <reagents>          [default: ${','.join(app.master_mix)}]
         The reagents to include in the master mix.  The following reagents are 
@@ -44,8 +55,8 @@ Options:
     oligo_2 = appcli.param('<oligo_2>')
     num_reactions = appcli.param('--num-rxns', default=1, cast=int)
     volume_uL = appcli.param('--volume', default=4, cast=float)
-    oligo_conc_uM = appcli.param('--oligo-conc', default=45, cast=float)
-    oligo_stock_uM = appcli.param('--oligo-stock', default=100, cast=float)
+    oligo_conc_uM = appcli.param('--oligo-conc', default=None, cast=float)
+    oligo_stock_uM = appcli.param('--oligo-stock', default=100, cast=float_pair)
     master_mix = appcli.param('--master-mix', default={'1'}, cast=comma_set)
 
     def __init__(self, oligo_1, oligo_2):
@@ -58,8 +69,6 @@ Options:
             =======  =====  =========  ===
             water           to 4.0 µL  yes
             PBS      10x       0.4 µL  yes
-            oligo1   10 µM     0.5 µL
-            oligo2   10 µM     0.5 µL
         """)
         rxn.num_reactions = self.num_reactions
         rxn.hold_ratios.volume = self.volume_uL, 'µL'
@@ -68,10 +77,21 @@ Options:
         rxn['oligo2'].name = self.oligo_2
         rxn['oligo1'].master_mix = bool({'1', self.oligo_1} & self.master_mix)
         rxn['oligo2'].master_mix = bool({'2', self.oligo_2} & self.master_mix)
-        rxn['oligo1'].stock_conc = self.oligo_stock_uM, 'µM'
-        rxn['oligo2'].stock_conc = self.oligo_stock_uM, 'µM'
-        rxn['oligo1'].hold_stock_conc.conc = self.oligo_conc_uM, 'µM'
-        rxn['oligo2'].hold_stock_conc.conc = self.oligo_conc_uM, 'µM'
+        rxn['oligo1'].stock_conc = pair(self.oligo_stock_uM, 0), 'µM'
+        rxn['oligo2'].stock_conc = pair(self.oligo_stock_uM, 1), 'µM'
+
+        if self.oligo_conc_uM:
+            rxn['oligo1'].hold_stock_conc.conc = self.oligo_conc_uM, 'µM'
+            rxn['oligo2'].hold_stock_conc.conc = self.oligo_conc_uM, 'µM'
+
+        else:
+            V = rxn.get_free_volume_excluding('oligo1', 'oligo2')
+            C1 = rxn['oligo1'].stock_conc
+            C2 = rxn['oligo2'].stock_conc
+            C12 = C1 + C2
+
+            rxn['oligo1'].volume = V * (C2 / C12)
+            rxn['oligo2'].volume = V * (C1 / C12)
 
         return rxn
 
