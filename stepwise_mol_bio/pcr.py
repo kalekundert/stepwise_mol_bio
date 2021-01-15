@@ -53,6 +53,10 @@ Options:
     -v --reaction-volume <μL>
         The volume of the PCR reaction.
 
+    -V --template-volume <µL>
+        The volume of template to use in the reaction.  This overrides the 
+        value specified by the preset.
+
     -m --master-mix <reagents>      [default: ${','.join(app.master_mix)}]
         Indicate which reagents should be included in the master mix.  The 
         following values are understood:
@@ -191,6 +195,11 @@ Options:
             Key(DocoptConfig, '--reaction-volume'),
             Key(PresetConfig, 'reaction_volume_uL'),
             cast=lambda x: float(eval(x)),
+            default=None,
+    )
+    template_volume_uL = appcli.param(
+            Key(DocoptConfig, '--template-volume'),
+            cast=float,
             default=None,
     )
     master_mix = appcli.param(
@@ -377,6 +386,9 @@ Options:
         pcr['template DNA'].name = self.template
         pcr['template DNA'].master_mix = 'dna' in self.master_mix
 
+        if x := self.template_volume_uL:
+            pcr['template DNA'].volume = x, 'µL'
+
         # Setup the primers.  This is complicated because the primers might 
         # get split into their own mix, if the volumes that would be added 
         # to the PCR reaction are too small.
@@ -514,26 +526,26 @@ Options:
         thermocycler = self.thermocycler_protocol
 
         if self.footnote:
-            protocol.footnotes[0] = self.footnote
+            protocol.footnotes[1] = self.footnote
 
-        protocol.footnotes[1] = f"""\
+        protocol.footnotes[2] = f"""\
 For resuspending lyophilized primers:
 {self.primer_stock_uM} µM = {1e3 / self.primer_stock_uM:g} µL/nmol
 """
         if x := pcr['template DNA'].stock_conc:
-            protocol.footnotes[2] = f"""\
+            protocol.footnotes[3] = f"""\
 For diluting template DNA to {x}:
 Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt([DNA]) µL
 """
         if primer_mix:
             protocol += f"""\
-Prepare 10x primer mix [1]:
+Prepare 10x primer mix [2]:
 
 {primer_mix}
 """
 
         footnotes = list(protocol.footnotes.keys())
-        if primer_mix: footnotes.remove(1)
+        if primer_mix: footnotes.remove(2)
         footnotes = ','.join(str(x) for x in footnotes)
         title = 'qPCR' if self.qpcr else 'PCR'
 
