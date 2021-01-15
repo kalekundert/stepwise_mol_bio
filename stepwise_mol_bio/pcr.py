@@ -9,6 +9,7 @@ from stepwise import UsageError, StepwiseConfig, PresetConfig
 from stepwise_mol_bio import Main, hanging_indent, merge_dicts, comma_set
 from more_itertools import first_true
 from copy import deepcopy
+from operator import not_
 
 def temp(x):
     try:
@@ -25,14 +26,14 @@ class Pcr(Main):
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
-    pcr <template> <fwd_primer> <rev_primer> (-a <°C>) (-x <sec>) [options]
+    pcr <template> <fwd> <rev> (-a <°C>) (-x <sec> | -l <kb>) [options]
 
 Arguments:
     <template>
         The name of the template(s) to amplify.
 
-    <fwd_primer> <rev_primer>
-        The name of the primers.
+    <fwd> <rev>
+        The names of the forward and reverse primers.
 
 <%! from stepwise_mol_bio import hanging_indent %>\
 Options:
@@ -41,6 +42,10 @@ Options:
         sets of parameters are currently available:
 
         ${hanging_indent(app.preset_briefs, 8*' ')}
+
+    -l --amplicon-length <bp>
+        The length of the amplicon in base pairs (bp).  This can be used to 
+        calculate an appropriate extension time.
 
     -n --num-reactions <int>        [default: ${app.num_reactions}]
         The number of reactions to set up.
@@ -100,6 +105,12 @@ Options:
         The duration of the extension step in seconds.  The rule of thumb is
         30 sec/kb, perhaps longer if you're amplifying a whole plasmid.
 
+    --no-round-extend-time 
+        When calculating an extension time from a given amplicon length (e.g. 
+        `-l`), do *not* round the result to the nearest 30 sec increment.  Note 
+        that when an explicit extension time is given (e.g. `-x`), it is never 
+        rounded.
+
     --final-extend-temp <°C>
         The temperature of the final extension step in °C, e.g. 72.
 
@@ -155,16 +166,21 @@ Options:
             Key(DocoptConfig, '<template>'),
     )
     fwd_primer = appcli.param(
-            Key(DocoptConfig, '<fwd_primer>'),
+            Key(DocoptConfig, '<fwd>'),
     )
     rev_primer = appcli.param(
-            Key(DocoptConfig, '<rev_primer>'),
+            Key(DocoptConfig, '<rev>'),
     )
     primer_stock_uM = appcli.param(
             Key(DocoptConfig, '--primer-stock'),
             Key(PresetConfig, 'primer_stock_uM'),
             Key(StepwiseConfig, 'primer_stock_uM'),
             cast=float,
+    )
+    amplicon_length_bp = appcli.param(
+            Key(DocoptConfig, '--amplicon-length'),
+            cast=float,
+            default=None,
     )
     num_reactions = appcli.param(
             Key(DocoptConfig, '--num-reactions'),
@@ -232,10 +248,19 @@ Options:
             Key(PresetConfig, 'extend_temp_C'),
             cast=temp,
     )
-    extend_time_s = appcli.param(
-            Key(DocoptConfig, '--extend-time'),
-            Key(PresetConfig, 'extend_time_s'),
-            cast=time,
+    extend_time_s_per_kb = appcli.param(
+            Key(PresetConfig, 'extend_time_s_per_kb'),
+            cast=float,
+    )
+    extend_time_func = appcli.param(
+            Key(PresetConfig, 'extend_time_func'),
+            cast=eval,
+    )
+    round_extend_time = appcli.param(
+            Key(DocoptConfig, '--no-round-extend-time', cast=not_),
+            Key(PresetConfig, 'round_extend_time'),
+            Key(StepwiseConfig, 'round_extend_time'),
+            default=True,
     )
     final_extend_temp_C = appcli.param(
             Key(DocoptConfig, '--final-extend-temp'),
@@ -268,9 +293,9 @@ Options:
             Key(PresetConfig, 'melt_curve_temp_step_C'),
             cast=temp,
     )
-    melt_curve_time_step_C = appcli.param(
+    melt_curve_time_step_s = appcli.param(
             Key(DocoptConfig, '--melt-curve-time-step'),
-            Key(PresetConfig, 'melt_curve_time_step_C'),
+            Key(PresetConfig, 'melt_curve_time_step_s'),
             cast=temp,
     )
     two_step = appcli.param(
@@ -285,6 +310,34 @@ Options:
             pick=first_true,
             default=False,
     )
+    footnote = appcli.param(
+            Key(PresetConfig, 'footnote'),
+            default=None,
+    )
+
+    @appcli.param(
+            Key(DocoptConfig, '--extend-time'),
+            Key(PresetConfig, 'extend_time_s'),
+            cast=time,
+            default=None,
+    )
+    def extend_time_s(self, x):
+        if x:
+            return x
+
+        bp = self.amplicon_length_bp
+
+        def round(x):
+            if not self.round_extend_time: return x
+            if x <= 10: return 10
+            if x <= 15: return 15
+            return 30 * ceil(x / 30)
+
+        if factor := self.extend_time_s_per_kb:
+            return round(factor * bp / 1000)
+
+        return round(self.extend_time_func(bp))
+
 
     def __init__(self, template, primers):
         self.template = template
@@ -439,7 +492,7 @@ Options:
 
         if has_step('melt_curve', 'low_temp_C high_temp_C temp_step_C time_step_s'.split()):
             thermocycler_steps += [
-                f"- {self.melt_curve_low_temp_C}-{self.melt_curve_high_temp_C}°C in {time(self.melt_curve_time_step_s)} steps of {self.melt_curve_temp_step_C}°C",
+                f"- {self.melt_curve_low_temp_C}-{self.melt_curve_high_temp_C}°C in {time(self.melt_curve_time_step_s)} steps of {self.melt_curve_temp_step_C}°C:",
             ]
 
         if self.qpcr:
@@ -459,6 +512,9 @@ Options:
 
         pcr, primer_mix = self.reaction
         thermocycler = self.thermocycler_protocol
+
+        if self.footnote:
+            protocol.footnotes[0] = self.footnote
 
         protocol.footnotes[1] = f"""\
 For resuspending lyophilized primers:
@@ -496,6 +552,7 @@ Run the following thermocycler protocol:
 {thermocycler}
 """
 
+        protocol.renumber_footnotes()
         return protocol
 
 if __name__ == '__main__':
