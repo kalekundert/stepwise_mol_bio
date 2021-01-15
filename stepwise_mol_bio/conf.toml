@@ -51,6 +51,9 @@ melt_curve_time_step_s = 5
 two_step = true
 qpcr = true
 
+[qpcr]
+default_preset = 'ssoadv'
+
 [gel.presets.bolt]
 brief = "Bolt SDS PAGE (Invitrogen)"
 title = "SDS PAGE"
