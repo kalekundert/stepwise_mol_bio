@@ -7,11 +7,11 @@ brief = "Official protocol for Q5 High-Fidelity DNA Polymerase (NEB)."
 reagents = '''
 Reagent            Stock      Volume  MM?
 ==============  ========  ==========  ===
-water                     to 10.0 µL  yes
-template DNA    20 pg/µL      1.0 µL
-forward primer     10 µM      0.5 µL
-reverse primer     10 µM      0.5 µL
-Q5 master mix         2x      5.0 µL  yes
+water                     to 5.00 µL  yes
+template DNA    20 pg/µL     0.50 µL
+forward primer     10 µM     0.25 µL
+reverse primer     10 µM     0.25 µL
+Q5 master mix         2x     2.50 µL  yes
 '''
 num_cycles = 35
 initial_denature_temp_C = 98
