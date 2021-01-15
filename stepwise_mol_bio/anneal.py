@@ -7,7 +7,7 @@ from stepwise_mol_bio import Main, comma_set
 @autoprop
 class Anneal(Main):
     """\
-Anneal linker-N and mRNA prior to ligation.
+Anneal two complementary oligos.
 
 Usage:
     anneal <oligo_1> <oligo_2> [-n <num_rxns>] [-v <µL>] [options]
