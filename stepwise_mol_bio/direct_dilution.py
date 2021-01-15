@@ -40,15 +40,18 @@ Arguments:
         The number of dilutions to make, including <high> and <low>.
 
 Options:
-    -m --material NAME          [default: ${app.material}]
+    -m --material <name>        [default: ${app.material}]
         The substance being diluted.
 
-    -d --diluent NAME           [default: ${app.diluent}]
+    -d --diluent <name>         [default: ${app.diluent}]
         The substance to dilute into.
 
-    -x --max-dilution FOLD      [default: ${app.max_dilution}]
+    -x --max-dilution <fold>    [default: ${app.max_dilution}]
         Specify the biggest dilution that can be made at any step, as larger 
         dilutions are prone to be less accurate.
+
+    -0 --include-zero
+        Include a "dilution" with no material in the protocol.
 """
     max_dilution = appcli.param('--max-dilution', cast=float, default=10)
 
@@ -90,6 +93,10 @@ Prepare the following dilutions:
         prev_target_conc = None
 
         for target_conc in self.concentrations:
+            if target_conc == 0:
+                stock_concs[target_conc] = stock_conc
+                break
+
             dilution = stock_conc / target_conc
             if dilution > self.max_dilution:
                 stock_conc = prev_target_conc

@@ -11,9 +11,9 @@ class SerialDilution(Main):
 Perform a serial dilution.
 
 Usage:
-    serial_dilution <volume> <high> to <low> <steps> [-m <name>] [-d <name>]
-    serial_dilution <volume> <high> / <factor> <steps> [-m <name>] [-d <name>]
-    serial_dilution <volume> <low> x <factor> <steps> [-m <name>] [-d <name>]
+    serial_dilution <volume> <high> to <low> <steps> [options]
+    serial_dilution <volume> <high> / <factor> <steps> [options]
+    serial_dilution <volume> <low> x <factor> <steps> [options]
 
 Arguments:
     <volume>
@@ -40,6 +40,9 @@ Options:
 
     -d --diluent <name>     [default: ${app.diluent}]
         The substance to dilute into.
+
+    -0 --include-zero
+        Include a "dilution" with no material in the protocol.
 """
     __config__ = [
             DocoptConfig(),
@@ -53,6 +56,7 @@ Options:
     steps = appcli.param('<steps>', cast=int)
     material = appcli.param('--material', default='material')
     diluent = appcli.param('--diluent', default='water')
+    include_zero = appcli.param('--include-zero', default=False)
 
     def __bareinit__(self):
         self._volume = None
@@ -77,13 +81,16 @@ Options:
                 for i, conc in enumerate(self.concentrations, 1)
         ]
 
+        num_tubes = self.steps if self.include_zero else self.steps - 1
+        each_tube = 'each tube *except the last*' if self.include_zero else 'each tube'
+
         protocol = stepwise.Protocol()
         protocol += stepwise.Step(
                 "Perform a serial dilution [1]:",
                 substeps=[
-                    f"Put {initial_volume:.2f} μL {material_str} in the first tube.",
-                    f"Add {self.volume:.2f} μL {self.diluent} in the {plural(self.steps - 1):# remaining tube/s}.",
-                    f"Transfer {transfer:.2f} μL between each tube to make {self.steps} {self.factor:.2g}-fold dilutions.",
+                    f"Put {initial_volume:.2f} μL {material_str} in a tube.",
+                    f"Put {self.volume:.2f} μL {self.diluent} in {plural(num_tubes):# adjacent tube/s}.",
+                    f"Transfer {transfer:.2f} μL between {each_tube} to make {self.steps} {self.factor:.2g}-fold dilutions.",
                 ]
         )
 
@@ -94,10 +101,15 @@ The final concentrations will be:
         return protocol
 
     def get_concentrations(self):
-        return [
+        concs = [
                 self.conc_high * self.factor**-i
                 for i in range(self.steps)
         ]
+
+        if self.include_zero:
+            concs.append(0)
+
+        return concs
 
     def get_volume(self):
         return self._volume
