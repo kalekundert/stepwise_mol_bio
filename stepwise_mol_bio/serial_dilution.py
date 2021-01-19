@@ -74,7 +74,7 @@ Options:
         transfer = self.volume * (f := self.inv_factor) / (1 - f)
         initial_volume = self.volume + transfer
 
-        conc_high_str = format_quantity(self.conc_high, self.conc_unit, '.2g')
+        conc_high_str = format_quantity(self.conc_high, self.conc_unit, 'g')
         material_str = f'{conc_high_str} {self.material}'.lstrip()
         conc_table = [
                 [i, format_quantity(conc, self.conc_unit, 'e')]
