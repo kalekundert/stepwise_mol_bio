@@ -57,6 +57,11 @@ Options:
         The volume of template to use in the reaction.  This overrides the 
         value specified by the preset.
 
+    -T --template-stock <conc>
+        The stock concentration of template to use in the reaction.  This 
+        overrides the value specified by the preset, without affecting the 
+        volume.  Include a unit, because none is implied.
+
     -m --master-mix <reagents>      [default: ${','.join(app.master_mix)}]
         Indicate which reagents should be included in the master mix.  The 
         following values are understood:
@@ -200,6 +205,10 @@ Options:
     template_volume_uL = appcli.param(
             Key(DocoptConfig, '--template-volume'),
             cast=float,
+            default=None,
+    )
+    template_stock = appcli.param(
+            Key(DocoptConfig, '--template-stock'),
             default=None,
     )
     master_mix = appcli.param(
@@ -388,6 +397,8 @@ Options:
 
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
+        if x := self.template_stock:
+            pcr['template DNA'].stock_conc = x
 
         # Setup the primers.  This is complicated because the primers might 
         # get split into their own mix, if the volumes that would be added 
