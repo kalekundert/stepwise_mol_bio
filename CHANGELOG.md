@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.7.0 (2021-01-20)
+### Feature
+* Add option to override template stock conc ([`8280110`](https://github.com/kalekundert/stepwise_mol_bio/commit/8280110228d69cb5a0b496aee4c9a20ed78962d1))
+
 ## v1.6.0 (2021-01-11)
 ### Feature
 * Migrate to appcli ([`342f863`](https://github.com/kalekundert/stepwise_mol_bio/commit/342f8637cac8b5ac1d36ac0d9f1f19c6db883cc6))
