@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v1.8.0 (2021-02-03)
+### Feature
+* **gel:** Include buffer in protocol ([`3fabfb8`](https://github.com/kalekundert/stepwise_mol_bio/commit/3fabfb82fc91febac59687d9c6ac796f0d012fb7))
+* Add option to skip cleanup step ([`95e4724`](https://github.com/kalekundert/stepwise_mol_bio/commit/95e472403e17dbbe1eca3a8f6be8cc6bb2867878))
+
 ## v1.7.0 (2021-01-20)
 ### Feature
 * Add option to override template stock conc ([`8280110`](https://github.com/kalekundert/stepwise_mol_bio/commit/8280110228d69cb5a0b496aee4c9a20ed78962d1))
