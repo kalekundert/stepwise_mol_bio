@@ -54,9 +54,11 @@ Options:
     -c --cleanup METHOD     [default: ${app.cleanup}]
         Choose the method for removing free nucleotides from the RNA:
 
-        none: Carry on the crude reaction mix.
         zymo: Zymo spin kits.
         ammonium: Ammonium acetate precipitation.
+
+    -C --no-cleanup
+        Don't include a cleanup step.
 
     -G --no-gel
         Don't include the gel electrophoresis step.
@@ -84,6 +86,7 @@ Options:
             default=500,
     )
     cleanup = appcli.param(
+            Key(DocoptConfig, '--no-cleanup', cast=lambda x: 'none'),
             Key(DocoptConfig, '--cleanup'),
             default='zymo',
     )
@@ -258,8 +261,6 @@ ammonium acetate precipitation:
             self.set_dna_uL(self._dna_uL)
         else:
             self.set_dna_ng(self._dna_ng)
-
-
 
 if __name__ == '__main__':
     Ivt.main()
