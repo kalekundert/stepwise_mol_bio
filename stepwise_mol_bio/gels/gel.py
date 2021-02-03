@@ -4,6 +4,7 @@ import stepwise, appcli, autoprop
 from appcli import DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig
 from stepwise_mol_bio import Main, ConfigError, merge_dicts
+from inform import plural
 
 def parse_num_samples(name):
     try:
@@ -38,11 +39,14 @@ Arguments:
         a number, which will be taken as the number of samples to run.
 
 Options:
-    -p --percent <int>
+    -p --percent <number>
         The percentage of polyacrylamide/agarose in the gel being run.
 
     -a --additive <str>
         An extra component to include in the gel itself, e.g. 1x EtBr.
+
+    -b --buffer <str>
+        The buffer to run the gel in, e.g. TAE.
 
     -c --sample-conc <value>
         The concentration of the sample.  This will be used to scale how much 
@@ -135,6 +139,10 @@ Options:
             appcli.Key(DocoptConfig, '--additive'),
             appcli.Key(PresetConfig, 'gel_additive'),
             default=None,
+    )
+    gel_buffer = appcli.param(
+            appcli.Key(DocoptConfig, '--buffer'),
+            appcli.Key(PresetConfig, 'gel_buffer'),
     )
     sample_conc = appcli.param(
             appcli.Key(DocoptConfig, '--sample-conc'),
@@ -239,7 +247,7 @@ Options:
             mix.fix_volumes('sample')
 
             p += f"""\
-Prepare samples for {self.title}:
+Prepare {plural(self.num_samples):# sample/s} for {self.title}:
 
 {mix}
 """
@@ -247,16 +255,17 @@ Prepare samples for {self.title}:
                 temp_C, time_min = x
                 p.steps[-1] += f"""\
 
-- Incubate at {temp_C}°C for {time_min} min.
+- Incubate at {temp_C:g}°C for {time_min:g} min.
 """
             
-        gel = f"gel with {x}" if (x := self.gel_additive) else "gel"
+        additive = f" with {x}" if (x := self.gel_additive) else ""
         p += f"""\
 Run a gel:
 
-- Use a {self.gel_percent}% {self.gel_type} {gel}.
-- Load {self.load_volume_uL} µL of each sample.
-- Run at {self.run_volts}V for {self.run_time_min} min.
+- Gel: {self.gel_percent}% {self.gel_type}{additive}
+- Buffer: {self.gel_buffer}
+- Load {self.load_volume_uL:g} µL of each sample.
+- Run at {self.run_volts:g}V for {self.run_time_min:g} min.
         """
 
         if x := self.stain:

@@ -60,8 +60,9 @@ default_preset = 'ssoadv'
 [gel.presets.bolt]
 brief = "Bolt SDS PAGE (Invitrogen)"
 title = "SDS PAGE"
-gel_type = "SDS PAGE"
+gel_type = "Bolt Bis-Tris SDS PAGE"
 gel_percent = "4−12"
+gel_buffer = "Bolt MES SDS running buffer"
 sample_mix = """
 Reagent                     Stock      Volume  MM?
 ======================  =========  ==========  ===
@@ -92,8 +93,9 @@ load_volume_uL = 15.39
 [gel.presets.native]
 brief = "Native PAGE"
 title = "native PAGE"
-gel_type = "native PAGE"
+gel_type = "Bis-Tris Novex NativePAGE"
 gel_percent = "3−12"
+gel_buffer = "NativePAGE running buffer"
 sample_mix = """
 Reagent             Stock      Volume  MM?
 ==============  =========  ==========  ===
@@ -109,6 +111,7 @@ stain = "coomassie"
 [gel.presets.nativeblue]
 brief = "Native PAGE with Coomassie"
 inherit = "native"
+gel_buffer = "light blue cathode buffer"
 sample_mix = """
 Reagent             Stock      Volume  MM?
 ==============  =========  ==========  ===
@@ -123,6 +126,7 @@ brief = "TBE/urea PAGE"
 title = "TBE/urea PAGE"
 gel_type = "TBE/urea PAGE"
 gel_percent = 6
+gel_buffer = "1x TBE"
 sample_mix = """
 Reagent             Stock    Volume  MM?
 ==============  =========  ========  ===
@@ -139,8 +143,9 @@ stain = "gelred"
 
 [gel.presets.agarose1]
 brief = "1.0% agarose"
-gel_type = "agarose"
+gel_type = "agarose/TAE"
 gel_percent = 1
+gel_buffer = "1x TAE"
 sample_mix = """
 Reagent             Stock  Volume  MM?
 ==============  =========  ======  ===
