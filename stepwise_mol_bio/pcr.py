@@ -6,7 +6,7 @@ from numbers import Real
 from inform import plural, indent
 from appcli import Key, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig
-from stepwise_mol_bio import Main, hanging_indent, merge_dicts, comma_set
+from stepwise_mol_bio import Main, merge_dicts, comma_set, require_reagent
 from more_itertools import first_true
 from copy import deepcopy
 from operator import not_
@@ -371,10 +371,6 @@ Options:
         self.fwd_primer, self.rev_primer = primers
 
     def get_reaction(self):
-        def require_reagent(pcr, reagent):
-            if reagent not in pcr:
-                raise UsageError(f"reagent table for preset {self.preset!r} missing {reagent!r}.")
-
         pcr = deepcopy(self.base_reaction)
     
         require_reagent(pcr, 'water')

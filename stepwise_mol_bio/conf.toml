@@ -185,3 +185,176 @@ filter = '832BP37'
 
 [ethanol_precipitation]
 preset = 'plasmid'
+
+[ivtt]
+default_preset = 'purexpress'
+
+[ivtt.presets.purexpress]
+kit = "PURExpress (NEB E6800)"
+
+# DNA:
+# - Control DHFR plasmid: 2727 bp, MW=1.69e6 Da
+# - NEB recommends 250 ng for 25 µL reaction
+# - 250 ng / 25 µL = 6 nM
+#
+# mRNA:
+# - Control DHFR mRNA: 740 nt, MW=241564 Da
+# - NEB recommends 1–5 µg mRNA for 25 µL reaction
+# - 3 µg / 25 µL = 500 nM
+#
+# RNase inhibitor:
+# - The PURExpress manual recommends 0.8 U/µL (20 U per 25 µL reaction).
+# - The product page for the inhibitor itself recommends 1 U/µL.  
+# - I'm using the former here because it's the recommendation I encountered 
+#   first, and it seems to work fine.
+#   
+# PURExpress manual: https://tinyurl.com/dxapyo69
+# RNAse inhibitor FAQs: https://tinyurl.com/y3zabsoz
+
+reaction = '''
+Reagent                        Catalog #  Flags      Stock      Volume  MM?
+=============================  =========  =====  =========  ==========  ===
+water                                                       to 25.0 µL   +
+solution A                                                     10.0 µL   +
+solution B                                                      7.5 µL   +
+RNase inhibitor, murine        NEB M0314  rnase    40 U/µL      0.5 µL   +
+DNA                                                  75 nM      2.0 µL   -
+mRNA                                               5000 nM      2.5 µL   -
+'''
+volume_uL = 10
+setup_instructions = [
+  "Thaw all components on ice.",
+  "Mix A well; certain components may precipitate during storage.",
+  "Mix B gently; do not vortex.",
+  "Add A before B.",
+]
+setup_footnote = "https://tinyurl.com/dxapyo69"
+incubation_time = '2–4 h'
+incubation_temp_C = 37
+
+[ivtt.presets.nebexpress]
+kit = "NEBExpress (NEB E5360)"
+
+# DNA:
+# - Control DHFR plasmid: 2727 bp, MW=1.69e6 Da
+# - NEB recommends 250 ng for 50 µL reaction
+# - 250 ng / 50 µL = 3 nM
+#
+# mRNA:
+# - Control DHFR mRNA: 740 nt, MW=241564 Da
+# - NEB recommends 1–5 µg mRNA for 50 µL reaction
+# - 3 µg / 50 µL = 250 nM
+
+reaction = '''
+Reagent                        Catalog #  Flags      Stock      Volume  MM?
+=============================  =========  =====  =========  ==========  ===
+water                                                       to 50.0 µL   +
+S30 extract                    NEB P0864                       12.0 µL   +
+synthesis buffer               NEB B0864                2x     25.0 µL   +
+T7 RNA polymerase              NEB M1019  dna     450 U/µL      1.0 µL   +
+RNase inhibitor, murine        NEB M1018  rnase    40 U/µL      1.0 µL   +
+GamS nuclease inhibitor        NEB P0774         1.5 µg/µL      1.0 µL   +
+DNA                                                  75 nM      2.0 µL   -
+mRNA                                               5000 nM      2.5 µL   -
+'''
+volume_uL = 10
+setup_instructions = [
+  "Thaw all components on ice.",
+  "Gently vortex the S30 extract and the synthesis buffer before use.",
+]
+setup_footnote = '''
+https://tinyurl.com/3e8tlw36
+
+During the experimental setup, it is recommended to add the linear DNA template 
+in the last step to allow GamS to bind and inhibit RecBCD exonuclease before 
+RecBCD has a chance to act on the DNA. 
+'''
+incubation_time = '2–4 h'
+incubation_temp_C = 37
+incubation_footnote = '''
+Additional incubation time (maximum 10 hours) at 37°C may increase yield.
+'''
+
+[ivtt.presets.purefrex]
+kit = "PUREfrex 2.0 (GeneFrontier PF201)"
+
+# DNA:
+# - GeneFrontier recommends 2 nM.
+#
+# mRNA:
+# - GeneFrontier recommends 100-1000 nM.
+# - Picking 200 nM
+#   - About ≈3x less than PURExpress recommendation.
+#   - Same proportion as DNA template.
+
+reaction = '''
+Reagent                        Catalog #  Flags      Stock      Volume  MM?
+=============================  =========  =====  =========  ==========  ===
+water                                                       to 20.0 µL   +
+solution I                                                     10.0 µL   +
+solution II                                                     1.0 µL   +
+solution III                                                    2.0 µL   +
+DNA                                                  75 nM      0.5 µL   -
+mRNA                                               5000 nM      0.8 µL   -
+'''
+volume_uL = 10
+
+setup_instructions = [
+  "Thaw solution I at 25–37°C for 1 min, then keep on ice.",
+  "Thaw solutions II and III on ice.",
+  "Vortex all thawed solutions before use.",
+]
+setup_footnote = '''
+https://tinyurl.com/ml26pu09
+'''
+incubation_time = '2–6 h'
+incubation_temp_C = 37
+
+[ivtt.presets.promega-s30-linear]
+kit = "S30 (Promega L1030)"
+
+# DNA:
+# - Promega recommends:
+#   - Control template: 8 µL for 50 µL reaction, 4 µg
+#   - Any template: not more than 4 µg
+# - Control template:
+#   - 500 ng/µL
+#   - 4486 bp
+#   - MW ≈ 607.4 * 4486 + 157.9 = 2724954.3 Da
+# - 4000 ng / 50 µL = 30 nM
+#
+# mRNA:
+# - Promega recommends 10–100 μg
+# - Control template:
+#   - HindIII/XhoI fragment is 1807 nt
+#   - MW ≈ 302.5 * 1807 + 159.0 = 546776.5 Da
+# - 30 µg / 50 µL = 1000 nM
+
+reaction = '''
+Reagent                        Catalog #  Flags      Stock      Volume  MM?
+=============================  =========  =====  =========  ==========  ===
+water                                                       to 50.0 µL   +
+complete amino acid mixture                                     5.0 µL   +
+S30 premix                                                     20.0 µL   +
+S30 extract, linear                                            15.0 µL   +
+DNA                                                 200 nM      7.5 µL   -
+mRNA                                              10000 nM      5.0 µL   -
+'''
+volume_uL = 5
+setup_instructions = [
+  "Gently mix all thawed components before use.",
+]
+setup_footnote = '''
+https://tinyurl.com/2bvzhpdz
+
+The activity of the S30 system may be inhibited by NaCl (≥50mM), glycerol 
+(≥1%), or by very small amounts of magnesium or potassium salts.  Precipitate 
+the DNA template with sodium acetate rather than ammonium acetate.
+'''
+incubation_time = '1–2 h'
+incubation_temp_C = 37
+incubation_footnote = '''
+Enhanced expression at lower temperatures for longer times appears to be 
+gene/protein-specific and may be tested if the standard reaction at 37°C for 1 
+hour does not produce the desired results.
+'''

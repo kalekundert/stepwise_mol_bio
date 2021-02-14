@@ -3,7 +3,7 @@
 import sys
 import appcli
 from appdirs import AppDirs
-from inform import Error
+from inform import Error, format_range
 from pathlib import Path
 
 app_dirs = AppDirs("stepwise_mol_bio")
@@ -20,9 +20,6 @@ class Main(appcli.App):
             self.protocol.print()
         except Error as err:
             err.report()
-
-    def load(self):
-        appcli.load(self)
 
 
 
@@ -60,4 +57,8 @@ def comma_list(x):
 
 def comma_set(x):
     return {x.strip() for x in x.split(',')}
+
+def require_reagent(rxn, reagent):
+    if reagent not in rxn:
+        raise UsageError(f"reagent table missing {reagent!r}")
 
