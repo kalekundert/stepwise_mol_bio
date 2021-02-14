@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.9.0 (2021-02-14)
+### Feature
+* Add the `ivtt` protocol ([`b3426d4`](https://github.com/kalekundert/stepwise_mol_bio/commit/b3426d49e8e52ebd864f5c861d5ae93ce9a5cea4))
+
 ## v1.8.0 (2021-02-03)
 ### Feature
 * **gel:** Include buffer in protocol ([`3fabfb8`](https://github.com/kalekundert/stepwise_mol_bio/commit/3fabfb82fc91febac59687d9c6ac796f0d012fb7))
