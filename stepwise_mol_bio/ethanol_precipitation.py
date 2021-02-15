@@ -103,7 +103,7 @@ Options:
             which is problematic for many applications.
 
     -b --buffer <name>                      [default: ${app.buffer}]
-        The aqueous buffer to resuspend the preciptated nucleic acid in.
+        The aqueous buffer to resuspend the precipitated nucleic acid in.
 
     -v --buffer-volume <µL>
         The volume of resuspension buffer to use, in µL.
@@ -285,7 +285,7 @@ References:
             default='water',
     )
     buffer_volume_uL = appcli.param(
-            Key(DocoptConfig, '--buffer'),
+            Key(DocoptConfig, '--buffer-volume'),
             default=None,
     )
     cation = appcli.param(
