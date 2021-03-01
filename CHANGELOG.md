@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.9.1 (2021-02-15)
+### Fix
+* **ethanol:** Use correct buffer volume option ([`4135336`](https://github.com/kalekundert/stepwise_mol_bio/commit/4135336d583368e84ece8c16fc385451ccc3ba1b))
+
 ## v1.9.0 (2021-02-14)
 ### Feature
 * Add the `ivtt` protocol ([`b3426d4`](https://github.com/kalekundert/stepwise_mol_bio/commit/b3426d49e8e52ebd864f5c861d5ae93ce9a5cea4))
