@@ -253,7 +253,7 @@ S30 extract                    NEB P0864                       12.0 µL   +
 synthesis buffer               NEB B0864                2x     25.0 µL   +
 T7 RNA polymerase              NEB M1019  dna     450 U/µL      1.0 µL   +
 RNase inhibitor, murine        NEB M1018  rnase    40 U/µL      1.0 µL   +
-GamS nuclease inhibitor        NEB P0774         1.5 µg/µL      1.0 µL   +
+GamS nuclease inhibitor        NEB P0774  dna    1.5 µg/µL      1.0 µL   +
 DNA                                                  75 nM      2.0 µL   -
 mRNA                                               5000 nM      2.5 µL   -
 '''
@@ -261,13 +261,10 @@ volume_uL = 10
 setup_instructions = [
   "Thaw all components on ice.",
   "Gently vortex the S30 extract and the synthesis buffer before use.",
+  "Add template after nuclease inhibitors."
 ]
 setup_footnote = '''
 https://tinyurl.com/3e8tlw36
-
-During the experimental setup, it is recommended to add the linear DNA template 
-in the last step to allow GamS to bind and inhibit RecBCD exonuclease before 
-RecBCD has a chance to act on the DNA. 
 '''
 incubation_time = '2–4 h'
 incubation_temp_C = 37
@@ -310,7 +307,7 @@ https://tinyurl.com/ml26pu09
 incubation_time = '2–6 h'
 incubation_temp_C = 37
 
-[ivtt.presets.promega-s30-linear]
+[ivtt.presets.'promega/s30/linear']
 kit = "S30 (Promega L1030)"
 
 # DNA:
