@@ -9,11 +9,14 @@ from copy import deepcopy
 from operator import not_
 
 class Po4Config(appcli.Config):
-    # This should be a general class with the following features:
-    # - Don't load the database until needed
-    # - Some option to specify the aggregation function for each attribute.  
-    #   Can probably default to `unanimous()`.
-    # - Move to PO₄ package.
+    # This should be a general class---provided by `po4`---with the following 
+    # features:
+    # - Don't load the database until needed.
+    # - Will query any key given in the PO₄ database.
+    # - Some option to specify the aggregation function for each key.  Can 
+    #   probably default to `unanimous()`.
+    # - Always yield layer if PO₄ is installed, even if template names aren't 
+    #   valid tags.  This leads to better error messages.
     autoload = False
 
     def load(self, obj):
@@ -54,7 +57,7 @@ Express proteins from linear DNA templates using NEBExpress.
 
 Usage:
     ivtt <templates>... [-p <name>] [-v <µL>] [-n <rxns>] [-c <nM>] [-C <nM>]
-        [-rIX] [-a <name;conc;vol;mm>]... [-t <time>] [-T <°C>]
+        [-mrIX] [-a <name;conc;vol;mm>]... [-t <time>] [-T <°C>]
 
 Arguments:
     <templates>
@@ -69,8 +72,9 @@ Options:
 
         ${hanging_indent(app.preset_briefs, 8*' ')}
 
-    -v --volume <µL>                    [default: ${app.volume_uL}]
-        The volume of the reaction in µL.
+    -v --volume <µL>
+        The volume of the reaction in µL.  By default, the volume specified by 
+        the reaction table in the chosen preset will be used.
 
     -n --num-reactions <int>
         The number of reactions to set up.  By default, this is inferred from
@@ -84,6 +88,9 @@ Options:
         If not specified, a concentration will be queried from the PO₄ 
         database.  In this case, all templates must be in the database and must 
         have identical concentrations.
+
+    -m --master-mix
+        Include the template in the master mix.
 
     -r --mrna
         Use mRNA as the template instead of DNA.
@@ -101,7 +108,8 @@ Options:
 
     -t --incubation-time <time>         [default: ${app.incubation_time}]
         The amount of time to incubate the reactions.  No unit is assumed, so 
-        be sure to include one.
+        be sure to include one.  If '0', the incubation step will be removed 
+        from the protocol (e.g. so it can be added back at a later point).
 
     -T --incubation-temperature <°C>    [default: ${app.incubation_temp_C}]
         The temperature to incubate the reactions at, in °C.
@@ -113,6 +121,7 @@ Options:
             StepwiseConfig('molbio.ivtt'),
     ]
     preset_briefs = appcli.config_attr()
+    preset_brief_template = '{kit}'
 
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
@@ -135,6 +144,15 @@ Options:
     )
     volume_uL = appcli.param(
             Key(DocoptConfig, '--volume', cast=eval),
+            default=None,
+    )
+    default_volume_uL = appcli.param(
+            # The difference between `default_volume_uL` and `volume_uL` is 
+            # that the default additives are applied to the reaction after the 
+            # default volume is set, but before the non-default volume is set.  
+            # This allows the volume of the additive to be scaled 
+            # proportionally to the volume of the reaction that the additive 
+            # was specified for.
             Key(PresetConfig, 'volume_uL'),
             Key(StepwiseConfig, 'default_volume_uL'),
             default=None,
@@ -146,12 +164,17 @@ Options:
     )
     template_conc_nM = appcli.param(
             Key(DocoptConfig, '--template-conc', cast=float),
+            Key(PresetConfig, 'template_conc_nM'),
             default=None,
     )
     template_stock_nM = appcli.param(
             Key(DocoptConfig, '--template-stock', cast=float),
-            Key(PresetConfig, 'template_stock_nM'),
             Key(Po4Config, 'conc_nM'),
+            Key(PresetConfig, 'template_stock_nM'),
+    )
+    master_mix = appcli.param(
+            Key(DocoptConfig, '--master-mix'),
+            default=False,
     )
     use_mrna = appcli.param(
             Key(DocoptConfig, '--mrna'),
@@ -165,6 +188,14 @@ Options:
     use_rnase_inhibitor = appcli.param(
             Key(DocoptConfig, '--no-inhibitor', cast=not_),
             default=True,
+    )
+    additives = appcli.param(
+            Key(DocoptConfig, '--additive'),
+            default_factory=list,
+    )
+    default_additives = appcli.param(
+            Key(PresetConfig, 'additives'),
+            default_factory=list,
     )
     setup_instructions = appcli.param(
             Key(PresetConfig, 'setup_instructions'),
@@ -198,7 +229,8 @@ Options:
                 rxn,
                 substeps=self.setup_instructions,
         )
-        p += stepwise.Step(
+        if self.incubation_time != '0':
+            p += stepwise.Step(
                 f"Incubate at {self.incubation_temp_C:g}°C for {self.incubation_time}"
                 f"{p.add_footnotes(self.incubation_footnote)}."
         )
@@ -206,11 +238,33 @@ Options:
         return p
 
     def get_reaction(self):
+
+        def add_reagents(additives):
+            nonlocal i
+            # It would be better if there was a utility in stepwise for parsing 
+            # `sw reaction`-style strings.  Maybe `Reagent.from_text()`.
+            for i, additive in enumerate(additives, i):
+                reagent, stock_conc, volume, master_mix = additive.split(';')
+                rxn[reagent].stock_conc = stock_conc
+                rxn[reagent].volume = volume
+                rxn[reagent].master_mix = {'+': True, '-': False, '': False}[master_mix]
+                rxn[reagent].order = i
+
         rxn = deepcopy(self.base_reaction)
-        rxn.num_reactions = self.num_reactions or len(self.templates)
+        rxn.num_reactions = self.num_reactions
+
+        for i, reagent in enumerate(rxn):
+            reagent.order = i
+
+        if self.default_volume_uL:
+            rxn.hold_ratios.volume = self.default_volume_uL, 'µL'
+
+        add_reagents(self.default_additives)
 
         if self.volume_uL:
             rxn.hold_ratios.volume = self.volume_uL, 'µL'
+
+        add_reagents(self.additives)
 
         if self.use_mrna:
             template = 'mRNA'
@@ -224,6 +278,7 @@ Options:
             del_reagents_by_flag(rxn, 'mrna')
 
         rxn[template].name = f"{','.join(self.templates)}"
+        rxn[template].master_mix = self.master_mix
         rxn[template].hold_conc.stock_conc = self.template_stock_nM, 'nM'
 
         if self.template_conc_nM:
@@ -236,6 +291,9 @@ Options:
 
         if not self.use_rnase_inhibitor:
             del_reagents_by_flag(rxn, 'rnase')
+
+        # Make sure the template is added last.
+        rxn[template].order = i+1
 
         if self.use_template:
             rxn.fix_volumes(template)
