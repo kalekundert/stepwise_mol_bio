@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v1.10.0 (2021-03-01)
+### Feature
+* Be more explicit about when to add nuclease inhibitors ([`eee734e`](https://github.com/kalekundert/stepwise_mol_bio/commit/eee734e68538808c99fe821af53c2a9532a46eaa))
+
+### Fix
+* Interpret additive volumes in the right context ([`855108a`](https://github.com/kalekundert/stepwise_mol_bio/commit/855108aff13032402b05e4009386d8e3938648bd))
+
 ## v1.9.1 (2021-02-15)
 ### Fix
 * **ethanol:** Use correct buffer volume option ([`4135336`](https://github.com/kalekundert/stepwise_mol_bio/commit/4135336d583368e84ece8c16fc385451ccc3ba1b))
