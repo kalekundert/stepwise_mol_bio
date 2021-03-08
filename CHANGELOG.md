@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v1.11.0 (2021-03-08)
+### Feature
+* **spin_cleanup:** Add protocol ([`1eda6f9`](https://github.com/kalekundert/stepwise_mol_bio/commit/1eda6f98074a0c659be74e1fb3e974439cfccf2d))
+* **stain:** Add a general staining protocol ([`83767be`](https://github.com/kalekundert/stepwise_mol_bio/commit/83767be74410bbbc0614cfe179998a88b09c5d89))
+
+### Fix
+* Use `ul()`/`pl()` instead of `Step()` ([`af42c54`](https://github.com/kalekundert/stepwise_mol_bio/commit/af42c5440bfe4d2a36fd927dccdc8df4813c0402))
+
 ## v1.10.0 (2021-03-01)
 ### Feature
 * Be more explicit about when to add nuclease inhibitors ([`eee734e`](https://github.com/kalekundert/stepwise_mol_bio/commit/eee734e68538808c99fe821af53c2a9532a46eaa))
