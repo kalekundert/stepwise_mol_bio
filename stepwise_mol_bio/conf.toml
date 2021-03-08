@@ -57,6 +57,51 @@ footnote = 'https://tinyurl.com/y4qffgss'
 [qpcr]
 default_preset = 'ssoadv'
 
+
+[spin_cleanup]
+default_preset = 'qiagen'
+
+[spin_cleanup.presets.qiagen]
+title = 'QIAquick PCR purification kit (28104)'
+protocol_link = 'https://tinyurl.com/xr8ruvr9'
+column_name = 'QIAquick column'
+spin_speed_g = 17900
+column_capacity_ug = 10
+sample_type = 'DNA'
+
+bind_buffer = "PB"
+bind_volume_x = 5
+bind_spin_sec = 30
+
+pH_buffer = "3M sodium acetate, pH=5.0"
+pH_volume_x = 0.2
+pH_color = "yellow"
+
+wash_buffer = 'PE'
+wash_volume_uL = 750
+wash_spin_sec = 30
+dry_spin_sec = 60
+
+elute_buffer = 'EB'
+elute_volume_uL = 50
+elute_min_volume_uL = 30
+elute_wait_sec = 60
+elute_spin_sec = 30
+
+[spin_cleanup.presets.'qiagen/min-elute']
+title = 'Qiagen MinElute PCR purification kit'
+inherit = 'qiagen'
+protocol_link = 'https://tinyurl.com/59wynv64'
+column_name = 'MinElute column'
+column_capacity_ug = 5
+
+bind_spin_sec = 60
+wash_spin_sec = 60
+elute_volume_uL = 10
+elute_min_volume_uL = 10
+elute_spin_sec = 60
+
+
 [gel.presets.bolt]
 brief = "Bolt SDS PAGE (Invitrogen)"
 title = "SDS PAGE"
