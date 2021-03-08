@@ -3,6 +3,7 @@
 import stepwise, appcli, autoprop
 from appcli import DocoptConfig
 from inform import Error, plural
+from stepwise import pl, ul
 from stepwise_mol_bio import Main
 
 @autoprop
@@ -85,13 +86,13 @@ Options:
         each_tube = 'each tube *except the last*' if self.include_zero else 'each tube'
 
         protocol = stepwise.Protocol()
-        protocol += stepwise.Step(
+        protocol += pl(
                 "Perform a serial dilution [1]:",
-                substeps=[
+                ul(
                     f"Put {initial_volume:.2f} μL {material_str} in a tube.",
                     f"Put {self.volume:.2f} μL {self.diluent} in {plural(num_tubes):# adjacent tube/s}.",
                     f"Transfer {transfer:.2f} μL between {each_tube} to make {self.steps} {self.factor:.2g}-fold dilutions.",
-                ]
+                ),
         )
 
         protocol.footnotes[1] = f"""\

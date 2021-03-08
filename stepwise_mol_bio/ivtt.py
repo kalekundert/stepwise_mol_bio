@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 from inform import fatal, warn, plural
 from appcli import Key, DocoptConfig
-from stepwise import StepwiseConfig, PresetConfig
+from stepwise import StepwiseConfig, PresetConfig, pl, ul
 from stepwise_mol_bio import Main, require_reagent, merge_dicts
 from copy import deepcopy
 from operator import not_
@@ -223,17 +223,13 @@ Options:
         p = stepwise.Protocol()
         rxn = self.reaction
 
-        p += stepwise.Step(
-                f"Setup {plural(self.num_reactions):# {self.title} reaction/s}"
-                f"{p.add_footnotes(self.setup_footnote)}:",
+        p += pl(
+                f"Setup {plural(self.num_reactions):# {self.title} reaction/s}{p.add_footnotes(self.setup_footnote)}:",
                 rxn,
-                substeps=self.setup_instructions,
+                ul(*self.setup_instructions),
         )
         if self.incubation_time != '0':
-            p += stepwise.Step(
-                f"Incubate at {self.incubation_temp_C:g}°C for {self.incubation_time}"
-                f"{p.add_footnotes(self.incubation_footnote)}."
-        )
+            p += f"Incubate at {self.incubation_temp_C:g}°C for {self.incubation_time}{p.add_footnotes(self.incubation_footnote)}."
 
         return p
 

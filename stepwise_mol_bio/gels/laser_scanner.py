@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 from inform import indent, plural
 from appcli import DocoptConfig
-from stepwise import StepwiseConfig, PresetConfig, UsageError
+from stepwise import StepwiseConfig, PresetConfig, UsageError, pl, pre
 from stepwise_mol_bio import Main, ConfigError, merge_dicts
 
 @autoprop
@@ -75,11 +75,10 @@ Arguments:
         filters = [f"{plural(optics):filter/s}:"] + [x['filter'] for x in optics]
 
         p = stepwise.Protocol()
-        p += f"""\
-Image with a laser scanner:
-
-{stepwise.tabulate([lasers, filters])}
-"""
+        p += pl(
+                "Image with a laser scanner:",
+                pre(stepwise.tabulate([lasers, filters])),
+        )
         return p
 
     def parse_optics(self, optics):

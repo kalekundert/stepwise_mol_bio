@@ -2,6 +2,7 @@
 
 import stepwise, appcli, autoprop
 from appcli import Key, DocoptConfig
+from stepwise import paragraph_list, unordered_list
 from stepwise_mol_bio import Main, UsageError
 from stepwise_mol_bio.gels.gel import Gel
 from operator import not_
@@ -22,7 +23,7 @@ Arguments:
 
 Options:
     -d --dna-ng-uL CONC  [default: ${app.dna_ng_uL}]
-        The concentration of the template DNA (in ng/µL).
+        The stock concentration of the template DNA (in ng/µL).
 
     -D --dna-ng AMOUNT    [default: ${app.dna_ng}]
         How much template DNA to use (in ng).  NEB recommends 1 µg.  Lower 
@@ -62,6 +63,68 @@ Options:
 
     -G --no-gel
         Don't include the gel electrophoresis step.
+
+Template Preparation:
+    The following information is taken directly from NEB:
+    https://www.neb.com/protocols/0001/01/01/dna-template-preparation-e2040
+
+    Plasmid Templates:
+        Completely linearized plasmid template of highest purity is critical 
+        for successful use of the HiScribe T7 High Yield RNA Synthesis Kit. 
+        Quality of the template DNA affects transcription yield and the 
+        integrity of RNA synthesized. The highest transcription yield is 
+        achieved with the highest purity template. Plasmid purified by many 
+        laboratory methods can be successfully used, provided it contains 
+        mostly supercoiled form, and is free from contaminating RNase, protein, 
+        RNA and salts.
+
+        To produce RNA transcript of a defined length, plasmid DNA must be 
+        completely linearized with a restriction enzyme downstream of the 
+        insert to be transcribed. Circular plasmid templates will generate long 
+        heterogeneous RNA transcripts in higher quantities because of high 
+        processivity of T7 RNA polymerase. NEB has a large selection of 
+        restriction enzymes; we recommend selecting restriction enzymes that 
+        generate blunt ends or 5´-overhangs.
+
+        After linearization, we recommend purifying the template DNA by 
+        phenol/chloroform extraction:
+
+        1. Extract DNA with an equal volume of 1:1 phenol/chloroform mixture, 
+           repeat if necessary.
+        2. Extract twice with an equal volume of chloroform to remove residual 
+           phenol.
+        3. Precipitate the DNA by adding 1/10th volume of 3 M sodium acetate, 
+           pH 5.2, and two volumes of ethanol. Incubate at -20°C for at least 
+           30 minutes.
+        4. Pellet the DNA in a microcentrifuge for 15 minutes at top speed. 
+           Carefully remove the supernatant.
+        5. Rinse the pellet by adding 500 μl of 70% ethanol and centrifuging 
+           for 15 minutes at top speed. Carefully remove the supernatant.
+        6. Air dry the pellet and resuspend it in nuclease-free water at a 
+           concentration of 0.5-1 μg/μl.
+
+    PCR Templates:
+
+        PCR products containing T7 RNA Polymerase promoter in the correct 
+        orientation can be transcribed. Though PCR mixture can be used 
+        directly, better yields will be obtained with purified PCR products. 
+        PCR products can be purified according to the protocol for plasmid 
+        restriction digests above, or by using commercially available spin 
+        columns (we recommend Monarch PCR & DNA Cleanup Kit, NEB #T1030). PCR 
+        products should be examined on an agarose gel to estimate concentration 
+        and to confirm amplicon size prior to its use as a template in the 
+        HiScribe T7 High Yield RNA Synthesis Kit. Depending on the PCR 
+        products, 0.1–0.5 μg of PCR fragments can be used in a 20 μl in vitro 
+        transcription reaction.
+
+    Synthetic DNA Oligonucleotides:
+
+        Synthetic DNA Oligonucleotides which are either entirely 
+        double-stranded or mostly single-stranded with a double-stranded T7 
+        promoter sequence can be used in the HiScribe T7 High Yield RNA 
+        Synthesis Kit. In general, the yields are relatively low and also 
+        variable depending upon the sequence, purity and preparation of the 
+        synthetic oligonucleotides.
 """
     __config__ = [
             DocoptConfig(),
@@ -178,12 +241,14 @@ Wipe down your bench and anything you'll touch
         ## In vitro transcription
         ivt = self.reaction
         n = plural(ivt.num_reactions)
-        p += f"""\
-Setup {n:# in vitro transcription reaction/s} [1,2] by 
-mixing the following reagents at room temperature 
-in the order given:
-
-{ivt}"""
+        p += paragraph_list(
+                f"Setup {n:# in vitro transcription reaction/s} [1,2]:",
+                ivt,
+                unordered_list(
+                    "Mix reagents in the order given.",
+                    "Ok to handle at room temperature.",
+                ),
+        )
         p.footnotes[1] = """\
 https://tinyurl.com/y4a2j8w5
 """

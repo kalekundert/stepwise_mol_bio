@@ -8,7 +8,7 @@ from inform import plural
 from fractions import Fraction
 from operator import not_
 from appcli import Key, DocoptConfig
-from stepwise import StepwiseConfig, PresetConfig
+from stepwise import StepwiseConfig, PresetConfig, pl, ul, pre
 from stepwise_mol_bio import Main
 
 def by_solvent(obj, x):
@@ -327,13 +327,12 @@ References:
 
     def get_protocol(self):
         p = stepwise.Protocol()
+        s = ul()
 
         if self.names:
-            s = stepwise.Step(f"Purify {','.join(self.names)} by ethanol precipitation [1,2]:")
+            p += pl(f"Purify {','.join(self.names)} by ethanol precipitation [1,2]:", s)
         else:
-            s = stepwise.Step("Perform an ethanol precipitation [1,2]:")
-
-        p += s
+            p += pl("Perform an ethanol precipitation [1,2]:", s)
 
         s += f"""\
                 Add {self.cation_name} to {self.cation_conc}."""
@@ -378,27 +377,27 @@ References:
                 self.buffer_volume_uL else 'any volume'} of {self.buffer} 
                 [6]."""
 
-        p.footnotes[1] = textwrap.dedent("""\
+        p.footnotes[1] = pre(textwrap.dedent("""\
                 Li2020: 10.2144/btn-2019-0109
-                Sambrook2006: 10.1101/pdb.prot4456
-        """)
-        p.footnotes[2] = stepwise.Footnote("""\
+                Sambrook2006: 10.1101/pdb.prot4456"""
+        ))
+        p.footnotes[2] = """\
                 This protocol was optimized for 100 ng/µL nucleic acid.  If 
                 your sample is substantially more dilute, it may be necessary 
                 to compensate by increasing the incubation time, the 
                 centrifugation time, or the centrifugation speed.
-        """)
-        p.footnotes[3] = stepwise.Footnote("""\
+        """
+        p.footnotes[3] = """\
                 DNA can be stored indefinitely in ethanolic solutions at either 
                 0°C or −20°C.
-        """)
-        p.footnotes[4] = stepwise.Footnote("""\
+        """
+        p.footnotes[4] = """\
                 Ethanol evaporates more quickly than water, so a solution that 
                 was 70% ethanol several months ago may be significantly more 
                 aqueous now.  If you are unsure, 100 µL of 70% EtOH should 
                 weigh 88.6 mg.
-        """)
-        p.footnotes[5] = stepwise.Footnote("""\
+        """
+        p.footnotes[5] = """\
                 Do not dry pellets of nucleic acid in a lyophilizer, as this 
                 causes denaturation of small (<400-nucleotide) fragments of DNA 
                 and greatly reduces the recovery of larger fragments of DNA. 
@@ -406,13 +405,13 @@ References:
                 If necessary, the open tube containing the redissolved DNA can 
                 be incubated for 2-3 minutes at 45°C in a heating block to 
                 allow any traces of ethanol to evaporate.
-        """)
-        p.footnotes[6] = stepwise.Footnote("""\
+        """
+        p.footnotes[6] = """\
                 Up to 50% of the DNA is smeared on the wall of the tube. To 
                 recover all of the DNA, push a bead of fluid backward and 
                 forward over the appropriate quadrant of wall with a pipette 
                 tip.
-        """)
+        """
 
         p.prune_footnotes()
         return p
