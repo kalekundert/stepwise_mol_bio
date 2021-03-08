@@ -2,7 +2,7 @@
 
 import stepwise, appcli, autoprop
 from appcli import DocoptConfig
-from stepwise import UsageError, StepwiseConfig, PresetConfig
+from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul
 from stepwise_mol_bio import Main, ConfigError, merge_dicts
 from inform import plural
 
@@ -128,22 +128,6 @@ Options:
             appcli.Key(PresetConfig, 'sample_mix'),
             default=None,
     )
-    gel_type = appcli.param(
-            appcli.Key(PresetConfig, 'gel_type'),
-    )
-    gel_percent = appcli.param(
-            appcli.Key(DocoptConfig, '--percent'),
-            appcli.Key(PresetConfig, 'gel_percent'),
-    )
-    gel_additive = appcli.param(
-            appcli.Key(DocoptConfig, '--additive'),
-            appcli.Key(PresetConfig, 'gel_additive'),
-            default=None,
-    )
-    gel_buffer = appcli.param(
-            appcli.Key(DocoptConfig, '--buffer'),
-            appcli.Key(PresetConfig, 'gel_buffer'),
-    )
     sample_conc = appcli.param(
             appcli.Key(DocoptConfig, '--sample-conc'),
             appcli.Key(PresetConfig, 'sample_conc'),
@@ -154,6 +138,14 @@ Options:
             appcli.Key(DocoptConfig, '--sample-volume'),
             appcli.Key(PresetConfig, 'sample_volume_uL'),
             cast=float,
+            default=None,
+    )
+    ladder_name = appcli.param(
+            appcli.Key(PresetConfig, 'ladder'),
+            default=None,
+    )
+    ladder_volume_uL = appcli.param(
+            appcli.Key(PresetConfig, 'ladder_volume_uL'),
             default=None,
     )
     mix_volume_uL = appcli.param(
@@ -177,6 +169,22 @@ Options:
             appcli.Key(DocoptConfig, '--incubate-time'),
             appcli.Key(PresetConfig, 'incubate_time_min'),
             cast=int,
+    )
+    gel_type = appcli.param(
+            appcli.Key(PresetConfig, 'gel_type'),
+    )
+    gel_percent = appcli.param(
+            appcli.Key(DocoptConfig, '--percent'),
+            appcli.Key(PresetConfig, 'gel_percent'),
+    )
+    gel_additive = appcli.param(
+            appcli.Key(DocoptConfig, '--additive'),
+            appcli.Key(PresetConfig, 'gel_additive'),
+            default=None,
+    )
+    gel_buffer = appcli.param(
+            appcli.Key(DocoptConfig, '--buffer'),
+            appcli.Key(PresetConfig, 'gel_buffer'),
     )
     load_volume_uL = appcli.param(
             appcli.Key(DocoptConfig, '--load-volume'),
@@ -246,27 +254,25 @@ Options:
 
             mix.fix_volumes('sample')
 
-            p += f"""\
-Prepare {plural(self.num_samples):# sample/s} for {self.title}:
-
-{mix}
-"""
+            p += pl(
+                    f"Prepare {plural(self.num_samples):# sample/s} for {self.title}:",
+                    mix,
+            )
             if x := both_or_neither('incubate_temp_C', 'incubate_time_min'):
                 temp_C, time_min = x
-                p.steps[-1] += f"""\
-
-- Incubate at {temp_C:g}°C for {time_min:g} min.
-"""
+                p.steps[-1] += ul(
+                        f"Incubate at {temp_C:g}°C for {time_min:g} min."
+                )
             
         additive = f" with {x}" if (x := self.gel_additive) else ""
-        p += f"""\
-Run a gel:
-
-- Gel: {self.gel_percent}% {self.gel_type}{additive}
-- Buffer: {self.gel_buffer}
-- Load {self.load_volume_uL:g} µL of each sample.
-- Run at {self.run_volts:g}V for {self.run_time_min:g} min.
-        """
+        p += pl("Run a gel:", ul(
+            f"Gel: {self.gel_percent}% {self.gel_type}{additive}",
+            f"Buffer: {self.gel_buffer}",
+            f"Ladder: {self.ladder_volume_uL:g} µL {self.ladder_name}"
+                if self.ladder_name else None,
+            f"Load: {self.load_volume_uL:g} µL",
+            f"Run: {self.run_volts:g}V for {self.run_time_min:g} min",
+        ))
 
         if x := self.stain:
             p += stepwise.load(x)
