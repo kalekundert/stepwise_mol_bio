@@ -167,6 +167,288 @@ brief = "2.0% agarose"
 inherit = 'agarose1'
 gel_percent = 2
 
+
+[stain.presets.gelred]
+title = 'GelRed'
+stain_buffer = '3x GelRed in electrophoresis buffer'
+stain_time_min = 30
+
+imaging_protocol = 'stepwise_mol_bio/uv 300'
+
+protocol_link = 'https://tinyurl.com/746v43ns'
+footnotes = [
+"""Including 0.1 M NaCl in the staining solution enhances sensitivity, but may 
+promote dye precipitation if the gel stain is reused.""",
+]
+
+[stain.presets.'gelred/page']
+title = 'PAGE GelRed'
+stain_buffer = '1x PAGE GelRed in water'
+stain_time_min = 30
+
+imaging_protocol = 'stepwise_mol_bio/uv 254'
+
+protocol_link = 'https://tinyurl.com/4msy6bf6'
+
+[stain.presets.gelgreen]
+title = 'GelGreen'
+
+stain_buffer = '3x GelGreen, 100 mM NaCl'
+stain_time_min = 30
+light_sensitive = true
+
+imaging_protocol = 'stepwise_mol_bio/uv'
+
+protocol_link = 'https://tinyurl.com/etxhfxws'
+footnotes = [
+"""Including 100 mM NaCl in the staining solution enhances sensitivity, but may 
+promote dye precipitation if the gel stain is reused.""",
+
+"""Staining solution can be reused at least 2-3x.  Store staining solution at 
+room temperature protected from light.""",
+]
+
+[stain.presets.'sybr-green-ii/page']
+title = 'SYBR Green II'
+
+stain_buffer = "1x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDTA, pH=8.0)"
+stain_time_min = 10
+light_sensitive = true
+
+imaging_protocol = 'stepwise_mol_bio/uv'
+
+protocol_link = 'https://tinyurl.com/y8n7237s'
+footnotes = [
+"""Staining with SYBR Green II reagent is pH sensitive.  For optimal 
+sensitivity, verify that the pH of the staining solution at the temperature 
+used for staining is between 7.5 and 8.0 (preferably 8.0).""",
+]
+
+[stain.presets.'sybr-green-ii/agarose']
+inherit = 'sybr-green-ii/page'
+stain_buffer = "2x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDTA, pH=8.0)"
+stain_time_min = 20
+
+[stain.presets.coomassie]
+title = "Coomassie"
+
+stain_buffer = "0.1% Coomassie R250, 10% acetic acid, 40% methanol"
+stain_microwave = true
+stain_time_min = 5
+stain_rinse_repeats = 2
+
+destain_repeats = "until the background is clear (2-3x)"
+destain_buffer = "20% methanol, 10% acetic acid"
+destain_time_min = 10
+destain_microwave = true
+destain_steps = [
+  "submerge",
+  "microwave",
+  "Place a wadded-up kimwipe in the destain",
+  "incubate",
+]
+
+protocol_link = 'https://tinyurl.com/4dtc22hz'
+
+[stain.presets.'coomassie/slow']
+inherit = 'coomassie'
+
+stain_time_min = 60
+stain_microwave = false
+
+destain_time_min = 60
+destain_microwave = false
+
+[stain.presets.'simplyblue/microwave/1mm']
+title = 'SimplyBlue SafeStain'
+
+prep_repeats = 3
+prep_buffer = 'water'
+prep_time_min = 1
+prep_microwave = true
+
+stain_buffer = 'SimplyBlue SafeStain'
+stain_microwave = true
+stain_time_min = 5
+
+destain_steps = [
+  "Wash the gel with 100 mL water for 10 min.",
+  "Add 20 mL 5M NaCl and wash for 5 min",
+]
+
+protocol_link = 'https://tinyurl.com/5a4uv53w'
+footnotes = [
+"""
+The gel can be stained for up to 3 hours, but 
+after 3 hours, sensitivity decreases.  If you need 
+to leave the gel overnight in the stain, add 2 mL 
+of 5M NaCl in water for every 20 mL of stain. This 
+procedure will not affect sensitivity.""",
+]
+
+[stain.presets.'simplyblue/microwave/2mm']
+inherit = 'simplyblue/microwave/1mm'
+stain_time_min = 10
+
+[stain.presets.'simplyblue/basic']
+title = "SimplyBlue SafeStain"
+
+prep_repeats = 3
+prep_buffer = 'water'
+prep_time_min = 5
+
+stain_buffer = "SimplyBlue SafeStain"
+stain_time_min = 60
+
+destain_steps = [
+  "Wash the gel with ≈100 mL water for 1−3h",
+  "To obtain the clearest background, wash again with ≈100 mL water for 1h.",
+]
+
+protocol_link = 'https://tinyurl.com/5a4uv53w'
+footnotes = [
+"""
+Rinsing removes SDS and buffer salts, which interfere with binding of the dye 
+to the protein.
+""",
+"""
+The gel can be stained for up to 3 hours, but 
+after 3 hours, sensitivity decreases.  If you need 
+to leave the gel overnight in the stain, add 2 mL 
+of 5M NaCl in water for every 20 mL of stain. This 
+procedure will not affect sensitivity.
+""",
+"""
+Sensitivity decreases if the gel is stored in 
+water for more than 1 day. The decrease in the 
+amount of free dye in the water favors 
+dissociation of the dye from the protein.  If you 
+need to store the gel in water for a few days, add 
+20 mL of 5M NaCl.
+"""
+]
+
+[stain.presets.'simplyblue/max']
+inherit = 'simplyblue/basic'
+destain_steps = [
+  "Wash the gel with 100 mL water for 1h.",
+  "Add 20 mL 5M NaCl to the above wash.",
+  "Continue washing for 2-16h.",
+]
+
+[stain.presets.sypro-ruby]
+title = "SYPRO Ruby"
+
+prep_buffer = "fix solution (50% methanol, 7% acetic acid)"
+prep_volume_mL = 100
+prep_time_min = 30
+
+stain_buffer = "SYPRO Ruby"
+stain_volume_mL = 60
+stain_time_hr = 16
+
+destain_buffer = "wash solution (10% methanol, 7% acetic acid)"
+destain_volume_mL = 100
+destain_time_min = 30
+destain_steps = [
+  "submerge",
+  "incubate",
+  "Rinse 2x for 5 min in ultrapure water.",
+]
+
+imaging_protocol = 'stepwise_mol_bio/laser_scanner red'
+
+protocol_link = "https://tinyurl.com/46jbd9nc"
+footnotes = [
+"""
+The staining protocol is optimized for standard 1 mm thick, 8 cm × 8 cm 
+SDS-PAGE minigels.  Larger or thicker gels require additional volumes of 
+reagents and/or longer incubation times.  Use 20 times the volume of the gel 
+for fix and wash solutions, and 10 times the volume of the gel for the staining 
+solution.
+""",
+]
+
+[stain.presets.'sypro-ruby/microwave']
+inherit = "sypro-ruby"
+
+prep_repeats = 2
+prep_time_min = 15
+
+stain_steps = [
+  "submerge",
+  "Microwave for 30s.",
+  "Shake briefly to evenly distribute heat.",
+  "Microwave again until almost boiling (≈30s).",
+  "Shake gently for 5m.",
+  "Microwave for 30s.",
+  "Shake gently for 23m.",
+]
+
+footnotes = [
+"""
+The staining protocol is optimized for standard 1 mm thick, 8 cm × 8 cm 
+SDS-PAGE minigels.  Larger or thicker gels require additional volumes of 
+reagents and/or longer incubation times.  Use 20 times the volume of the gel 
+for fix and wash solutions, and 10 times the volume of the gel for the staining 
+solution.  Microwave times should be optimized such that the stain reaches 
+80–85°C.
+""",
+"""
+Although SYPRO® Ruby stain solution is not flammable, use caution when 
+microwaving SYPRO® Ruby stain as the solution becomes very hot.  Placing a lid 
+loosely over the staining container will minimize fumes.  Do not heat the 
+fixative solution or other methanolic solutions in the microwave.
+""",
+]
+
+[stain.presets.'sypro-ruby/water-bath']
+inherit = "sypro-ruby"
+stain_steps = [
+  "submerge",
+  "Incubate the gel at 80°C in a shaking water bath for 30m.",
+]
+
+[stain.presets.sypro-red]
+title = "SYPRO Red"
+
+stain_buffer = "1x SYPRO Red, 7.5% acetic acid"
+stain_volume_mL = 50
+stain_time_min = 40
+
+destain_buffer = "7.5% acetic acid"
+destain_volume_mL = 50
+destain_time_min = 1
+
+imaging_protocol = 'stepwise_mol_bio/laser_scanner green'
+
+protocol_link = "https://tinyurl.com/r7p6juer"
+footnotes = [
+"""
+The stain solution may be reused up to four times, but sensitivty is 
+dramatically reduced.  Use fresh stain for optimal sensitivity.
+""",
+"""
+For low percentage gels and for very small proteins, 10% acetic acid will 
+result in better retention of the protein in the gel without compromising 
+sensitivity.  Do not fix the proteins with methanol-containing solutions.  
+Methanol removes the SDS coat from proteins, strongly reducing the signal from 
+SYPRO Orange and Red.""",
+"""
+Acetic acid will interfere with transfer of the proteins to a blot.  You can 
+try diluting SYPRO Red or Orange in transfer buffer, but this will result in 
+lower sensitivity staining.  Alternatively, you can stain the gel with SYPRO 
+Tangerine (which does not require acetic acid fixation) or you can stain the 
+blot directly with SYPRO Ruby.
+""",
+]
+
+[stain.presets.sypro-orange]
+inherit = "sypro-red"
+title = "SYPRO Orange"
+stain_buffer = "1x SYPRO Orange, 7.5% acetic acid"
+
+
 [laser.presets.blue]
 laser = 488
 filter = '518BP22'
@@ -183,8 +465,10 @@ filter = '710BP40'
 laser = 784
 filter = '832BP37'
 
+
 [ethanol_precipitation]
 preset = 'plasmid'
+
 
 [ivtt]
 default_preset = 'purexpress'

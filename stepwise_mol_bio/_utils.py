@@ -62,3 +62,22 @@ def require_reagent(rxn, reagent):
     if reagent not in rxn:
         raise UsageError(f"reagent table missing {reagent!r}")
 
+
+def format_sec(x):
+    if x < 60:
+        return f'{x}s'
+
+    min = x // 60
+    sec = x % 60
+
+    return f'{min}m{f"{sec:02}" if sec else ""}'
+
+def format_min(x):
+    if x < 60:
+        return f'{x}m'
+
+    hr = x // 60
+    min = x % 60
+
+    return f'{hr}h{f"{sec:02}" if min else ""}'
+
