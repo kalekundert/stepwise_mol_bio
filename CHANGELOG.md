@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v1.13.0 (2021-03-09)
+### Feature
+* **ivtt:** Add a PUREfrex 1.0 protocol ([`8d87531`](https://github.com/kalekundert/stepwise_mol_bio/commit/8d87531209e6417bb29784bb1bfb2a0691882d49))
+
+### Fix
+* **serial:** Update formatting ([`e01791e`](https://github.com/kalekundert/stepwise_mol_bio/commit/e01791e035cd39ebe14c73c55b6ef59abf12d258))
+
 ## v1.12.0 (2021-03-09)
 ### Feature
 * **spin_column:** Include title in protocol ([`58235a3`](https://github.com/kalekundert/stepwise_mol_bio/commit/58235a3d36791cb35904157134335b5bf1d47da6))
