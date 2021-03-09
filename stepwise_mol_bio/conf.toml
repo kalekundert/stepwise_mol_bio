@@ -601,7 +601,50 @@ incubation_footnote = '''
 Additional incubation time (maximum 10 hours) at 37°C may increase yield.
 '''
 
-[ivtt.presets.purefrex]
+[ivtt.presets.purefrex1]
+kit = "PUREfrex 1.0 (GeneFrontier PF001)"
+
+# The manual for PUREfrex2.0 is much more extensive than that for PUREfrex 1.0.
+#
+# DNA:
+# - GeneFrontier recommends 0.5-3 ng/µL per 1 kb.
+# - DNA MW = 1000 * 607.4 + 157.9 = 607557.9
+# - 0.5-3 ng/µL * 1e6 µL/L * (1/607557.9) nmol/ng = 1-5 nM
+#
+# - The same "0.5-3 ng/µL per 1 kb" recommendation is made for PUREfrex 2.0, 
+#   which eslewhere reccomends 2 nM template.
+# - 2 nM is within the range calculated above, and consistent with PUREfrex 
+#   2.0, so I'll stick with that here.
+#
+# mRNA:
+# - RNA templates are not mentioned in the PUREfrex 1.0 manual.
+# - The PUREfrex 2.0 manual recommends 100-1000 nM.
+# - I stuck with the PUREfrex 2.0 value above, so I'll do it again here.
+
+reaction = '''
+Reagent                        Catalog #  Flags      Stock      Volume  MM?
+=============================  =========  =====  =========  ==========  ===
+water                                                       to 20.0 µL   +
+solution I                                                     10.0 µL   +
+solution II                                                     1.0 µL   +
+solution III                                                    1.0 µL   +
+DNA                                                  75 nM      0.5 µL   -
+mRNA                                               5000 nM      0.8 µL   -
+'''
+volume_uL = 10
+
+setup_instructions = [
+  "Thaw solution I at 25–37°C for 1 min, then keep on ice.",
+  "Thaw solutions II and III on ice.",
+  "Vortex all thawed solutions before use.",
+]
+setup_footnote = '''
+https://tinyurl.com/2zue5vy4
+'''
+incubation_time = '2–4 h'
+incubation_temp_C = 37
+
+[ivtt.presets.purefrex2]
 kit = "PUREfrex 2.0 (GeneFrontier PF201)"
 
 # DNA:
@@ -684,3 +727,4 @@ Enhanced expression at lower temperatures for longer times appears to be
 gene/protein-specific and may be tested if the standard reaction at 37°C for 1 
 hour does not produce the desired results.
 '''
+

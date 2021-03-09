@@ -38,14 +38,14 @@ class Po4Config(appcli.Config):
             values['conc_nM'] = po4.unanimous(
                     x.conc_nM for x in constructs
             )
-        except (ValueError, po4.ParseError):
+        except (ValueError, po4.ParseError, po4.QueryError):
             pass
 
         try:
             values['is_rna'] = po4.unanimous(
                     x.is_rna for x in constructs
             )
-        except (ValueError, po4.ParseError):
+        except (ValueError, po4.ParseError, po4.QueryError):
             pass
 
         yield appcli.Layer(values=values, location=db.name)
