@@ -5,7 +5,7 @@ from math import sqrt, ceil
 from numbers import Real
 from inform import plural, indent
 from appcli import Key, DocoptConfig
-from stepwise import UsageError, StepwiseConfig, PresetConfig
+from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, pre
 from stepwise_mol_bio import Main, merge_dicts, comma_set, require_reagent
 from more_itertools import first_true
 from copy import deepcopy
@@ -524,52 +524,62 @@ Options:
                 f"- {temp(self.hold_temp_C)} hold",
             ]
 
-        return '\n'.join(thermocycler_steps)
+        return pre('\n'.join(thermocycler_steps))
 
     def get_protocol(self):
         protocol = stepwise.Protocol()
-
         pcr, primer_mix = self.reaction
         thermocycler = self.thermocycler_protocol
+        footnotes = []
+
+        # Primer mix (if applicable):
+
+        footnotes.append(pl(
+                f"For resuspending lyophilized primers:",
+                f"{self.primer_stock_uM} µM = {1e3 / self.primer_stock_uM:g} µL/nmol",
+                br='\n',
+        ))
+
+        if primer_mix:
+            protocol += pl(
+                    f"Prepare 10x primer mix{protocol.add_footnotes(*footnotes)}:",
+                    primer_mix,
+            )
+            footnotes = []
+
+        # PCR reaction setup:
 
         if self.footnote:
-            protocol.footnotes[1] = self.footnote
+            # Before the footnote on resuspending the primers, if it hasn't 
+            # been added to the protocol already.
+            footnotes.insert(0, self.footnote)
 
-        protocol.footnotes[2] = f"""\
-For resuspending lyophilized primers:
-{self.primer_stock_uM} µM = {1e3 / self.primer_stock_uM:g} µL/nmol
-"""
         if x := pcr['template DNA'].stock_conc:
-            protocol.footnotes[3] = f"""\
-For diluting template DNA to {x}:
-Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt([DNA]) µL
-"""
-        if primer_mix:
-            protocol += f"""\
-Prepare 10x primer mix [2]:
+            footnotes.append(pl(
+                    f"For diluting template DNA to {x}:",
+                    f"Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt([DNA]) µL",
+                    br='\n',
+            ))
 
-{primer_mix}
-"""
-
-        footnotes = list(protocol.footnotes.keys())
-        if primer_mix: footnotes.remove(2)
-        footnotes = ','.join(str(x) for x in footnotes)
         title = 'qPCR' if self.qpcr else 'PCR'
+        instructions = ul()
+        protocol += pl(
+                f"Setup {plural(pcr.num_reactions):# {title} reaction/s}{protocol.add_footnotes(*footnotes)}:",
+                pcr,
+                instructions,
+        )
 
-        protocol += f"""\
-Setup {plural(pcr.num_reactions):# {title} reaction/s}{f' [{footnotes}]' if footnotes else ''}:
+        if pcr.volume > '50 µL':
+            instructions += f"Split each reaction into {ceil(pcr.volume.value / 50)} tubes."
+        if pcr.num_reactions > 1:
+            instructions += "Use any extra master mix as a negative control."
 
-{pcr}
+        # Thermocycler protocol:
 
-{f'- Split each reaction into {ceil(pcr.volume.value / 50)} tubes.' if pcr.volume > '50 µL' else ''}
-{'- Use any extra master mix as a negative control.' if pcr.num_reactions > 1 else ''}
-""".replace('\n\n\n', '\n\n')
-
-        protocol += f"""\
-Run the following thermocycler protocol:
-
-{thermocycler}
-"""
+        protocol += pl(
+                "Run the following thermocycler protocol:",
+                thermocycler,
+        )
 
         protocol.renumber_footnotes()
         return protocol
