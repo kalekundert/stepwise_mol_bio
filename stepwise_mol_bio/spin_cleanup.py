@@ -55,6 +55,9 @@ Options:
             Key(PresetConfig, 'protocol_link'),
             default=None,
     )
+    title = appcli.param(
+            Key(PresetConfig, 'title'),
+    )
     column_name = appcli.param(
             Key(PresetConfig, 'column_name'),
             default='silica spin column',
@@ -145,7 +148,7 @@ Options:
         pl = stepwise.paragraph_list()
         ul = stepwise.unordered_list()
 
-        pl += f"Purify using a silica spin-column{p.add_footnotes(*footnotes)}:"
+        pl += f"Purify using {self.title}{p.add_footnotes(*footnotes)}:"
         pl += ul
 
         p += pl

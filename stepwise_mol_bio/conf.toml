@@ -89,7 +89,7 @@ elute_wait_sec = 60
 elute_spin_sec = 30
 
 [spin_cleanup.presets.'qiagen/min-elute']
-title = 'Qiagen MinElute PCR purification kit'
+title = 'Qiagen MinElute PCR purification kit (28004)'
 inherit = 'qiagen'
 protocol_link = 'https://tinyurl.com/59wynv64'
 column_name = 'MinElute column'
