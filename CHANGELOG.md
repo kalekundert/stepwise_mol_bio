@@ -2,6 +2,15 @@
 
 <!--next-version-placeholder-->
 
+## v1.12.0 (2021-03-09)
+### Feature
+* **spin_column:** Include title in protocol ([`58235a3`](https://github.com/kalekundert/stepwise_mol_bio/commit/58235a3d36791cb35904157134335b5bf1d47da6))
+
+### Fix
+* **pcr:** Update formatting ([`4747f32`](https://github.com/kalekundert/stepwise_mol_bio/commit/4747f328833d66d2ad7b337d8c840d7a88c42c9c))
+* Remove imports of deleted modules ([`e170378`](https://github.com/kalekundert/stepwise_mol_bio/commit/e170378600ac1a654adb1c2902929b1633669a19))
+* **gel:** Update formatting ([`63b65e2`](https://github.com/kalekundert/stepwise_mol_bio/commit/63b65e209ef6d89980fce71672aad0e62ce11007))
+
 ## v1.11.0 (2021-03-08)
 ### Feature
 * **spin_cleanup:** Add protocol ([`1eda6f9`](https://github.com/kalekundert/stepwise_mol_bio/commit/1eda6f98074a0c659be74e1fb3e974439cfccf2d))
