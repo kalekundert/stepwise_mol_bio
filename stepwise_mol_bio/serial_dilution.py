@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 from appcli import DocoptConfig
 from inform import Error, plural
-from stepwise import pl, ul
+from stepwise import pl, ul, pre
 from stepwise_mol_bio import Main
 
 @autoprop
@@ -95,10 +95,11 @@ Options:
                 ),
         )
 
-        protocol.footnotes[1] = f"""\
-The final concentrations will be:
-{stepwise.tabulate(conc_table, align='>>')}
-"""
+        protocol.footnotes[1] = pl(
+                "The final concentrations will be:",
+                pre(stepwise.tabulate(conc_table, align='>>')),
+                br='\n',
+        )
         return protocol
 
     def get_concentrations(self):
