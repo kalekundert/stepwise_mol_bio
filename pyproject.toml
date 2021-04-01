@@ -54,6 +54,9 @@ PCR = "stepwise_mol_bio.pcr:Po4Synthesis"
 
 [tool.flit.entrypoints."po4.cleanups"]
 
+[tool.pccc]
+types = ["chore", "docs", "feat", "fix", "refactor", "style", "test"]
+
 [tool.semantic_release]
 version_variable = 'stepwise_mol_bio/__init__.py:__version__'
 build_command = 'python -m pip install flit && flit build'
