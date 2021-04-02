@@ -243,7 +243,7 @@ Options:
                 reagent, stock_conc, volume, master_mix = additive.split(';')
                 rxn[reagent].stock_conc = stock_conc
                 rxn[reagent].volume = volume
-                rxn[reagent].master_mix = {'+': True, '-': False, '': False}[master_mix]
+                rxn[reagent].master_mix = {'+': True, '-': False, '': False}[master_mix.strip()]
                 rxn[reagent].order = i
 
         rxn = deepcopy(self.base_reaction)
