@@ -123,7 +123,7 @@ run_volts = 165
 run_time_min = 42
 stain = "coomassie"
 
-[gel.presets.boltmax]
+[gel.presets.'bolt/max']
 brief = "Bolt SDS PAGE (Invitrogen) without diluting the sample"
 inherit = 'bolt'
 sample_mix = """
@@ -153,7 +153,7 @@ run_volts = 150
 run_time_min = 115
 stain = "coomassie"
 
-[gel.presets.nativeblue]
+[gel.presets.'native/blue']
 brief = "Native PAGE with Coomassie"
 inherit = "native"
 gel_buffer = "light blue cathode buffer"
@@ -186,7 +186,7 @@ run_volts = 180
 run_time_min = 40
 stain = "gelred"
 
-[gel.presets.agarose1]
+[gel.presets.'agarose/1']
 brief = "1.0% agarose"
 gel_type = "agarose/TAE"
 gel_percent = 1
@@ -202,14 +202,14 @@ run_volts = 100
 run_time_min = 60
 stain = ''
 
-[gel.presets.agarose15]
+[gel.presets.'agarose/1.5']
 brief = "1.5% agarose"
-inherit = 'agarose1'
+inherit = 'agarose/1'
 gel_percent = 1.5
 
-[gel.presets.agarose2]
+[gel.presets.'agarose/2']
 brief = "2.0% agarose"
-inherit = 'agarose1'
+inherit = 'agarose/1'
 gel_percent = 2
 
 
