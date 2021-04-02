@@ -209,6 +209,7 @@ Template Preparation:
             ivt['rCTP'].volume = '1.5 µL'
             ivt['rGTP'].volume = '1.5 µL'
             ivt['rUTP'].volume = '1.5 µL'
+            ivt['HiScribe T7'].volume = '1.5 µL'
 
         if self.rntp_mix:
             ivt['rNTP mix'].volume = 4 * ivt['rATP'].volume
@@ -241,28 +242,23 @@ Wipe down your bench and anything you'll touch
         ## In vitro transcription
         ivt = self.reaction
         n = plural(ivt.num_reactions)
+        f = ["https://tinyurl.com/y4a2j8w5"]
         p += paragraph_list(
-                f"Setup {n:# in vitro transcription reaction/s} [1,2]:",
+                f"Setup {n:# in vitro transcription reaction/s}{p.add_footnotes(*f)}:",
                 ivt,
                 unordered_list(
                     "Mix reagents in the order given.",
                     "Ok to handle at room temperature.",
                 ),
         )
-        p.footnotes[1] = """\
-https://tinyurl.com/y4a2j8w5
-"""
-        p.footnotes[2] = """\
-I've found that T7 kits which have been in the 
-freezer for more than ≈4 weeks seem to produce 
-more degraded RNA.
-"""
+
+
         t = self.incubation_h or (4 if self.short else 2)
+        f = ["Use a thermocycler to prevent evaporation."]
+        if not self.incubation_h and self.short:
+            f += ["Reaction time is longer than usual because the template is short (<300 bp)."]
         p += f"""\
-Incubate at 37°C for {plural(t):# hour/s} [3].
-"""
-        p.footnotes[3] = """\
-Use a thermocycler to prevent evaporation.
+Incubate at 37°C for {plural(t):# hour/s}{p.add_footnotes(*f)}.
 """
         ## Purify product
         if self.cleanup == 'zymo':
@@ -289,21 +285,6 @@ ammonium acetate precipitation:
         else:
             raise UsageError(f"unknown RNA clean-up method: '{self.cleanup}'")
 
-#        ## Nanodrop concentration
-#        p += """\
-#Nanodrop to determine the RNA concentration.
-#"""
-#        ## Aliquot
-#        p += """\
-#Dilute (if desired) enough RNA to make several 
-#10 μM aliquots and to run a gel.  Keep any left- 
-#over RNA undiluted.  Flash-freeze in liquid N₂
-#and store at -80°C.
-#"""
-#        ## Gel electrophoresis
-#        if self.gel:
-#            p += Gel('urea', len(self.templates)).protocol
-#
         return p
 
     def get_dna_uL(self):
