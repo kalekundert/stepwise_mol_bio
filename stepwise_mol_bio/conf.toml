@@ -558,7 +558,7 @@ setup_instructions = [
   "Add A before B.",
 ]
 setup_footnote = "https://tinyurl.com/dxapyo69"
-incubation_time = '2–4 h'
+incubation_time = '2h'
 incubation_temp_C = 37
 
 [ivtt.presets.nebexpress]
@@ -595,7 +595,7 @@ setup_instructions = [
 setup_footnote = '''
 https://tinyurl.com/3e8tlw36
 '''
-incubation_time = '2–4 h'
+incubation_time = '2h'
 incubation_temp_C = 37
 incubation_footnote = '''
 Additional incubation time (maximum 10 hours) at 37°C may increase yield.
@@ -641,7 +641,7 @@ setup_instructions = [
 setup_footnote = '''
 https://tinyurl.com/2zue5vy4
 '''
-incubation_time = '2–4 h'
+incubation_time = '2h'
 incubation_temp_C = 37
 
 [ivtt.presets.purefrex2]
@@ -676,7 +676,7 @@ setup_instructions = [
 setup_footnote = '''
 https://tinyurl.com/ml26pu09
 '''
-incubation_time = '2–6 h'
+incubation_time = '2h'
 incubation_temp_C = 37
 
 [ivtt.presets.'promega/s30/linear']
@@ -720,7 +720,7 @@ The activity of the S30 system may be inhibited by NaCl (≥50mM), glycerol
 (≥1%), or by very small amounts of magnesium or potassium salts.  Precipitate 
 the DNA template with sodium acetate rather than ammonium acetate.
 '''
-incubation_time = '1–2 h'
+incubation_time = '1h'
 incubation_temp_C = 37
 incubation_footnote = '''
 Enhanced expression at lower temperatures for longer times appears to be 
