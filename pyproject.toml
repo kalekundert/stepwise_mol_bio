@@ -56,6 +56,31 @@ PCR = "stepwise_mol_bio.pcr:Po4Synthesis"
 
 [tool.pccc]
 types = ["chore", "docs", "feat", "fix", "refactor", "style", "test"]
+scopes = [
+  "aliquot",
+  "anneal",
+  "digest",
+  "direct_dilution",
+  "ethanol_precipitation",
+  "gibson",
+  "golden_gate",
+  "invpcr",
+  "ivt",
+  "ivtt",
+  "kld",
+  "ligate",
+  "pcr",
+  "qpcr",
+  "serial_dilution",
+  "spin_cleanup",
+  "phenol_chloroform",
+  "transform",
+  "retransform",
+  "gel",
+  "stain",
+  "laser_scanner",
+  "uv_transilluminator",
+]
 
 [tool.semantic_release]
 version_variable = 'stepwise_mol_bio/__init__.py:__version__'
