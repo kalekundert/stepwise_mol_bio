@@ -146,7 +146,6 @@ Options:
     )
     ladder_volume_uL = appcli.param(
             appcli.Key(PresetConfig, 'ladder_volume_uL'),
-            default=None,
     )
     mix_volume_uL = appcli.param(
             appcli.Key(DocoptConfig, '--mix-volume'),
@@ -270,7 +269,7 @@ Options:
             f"Buffer: {self.gel_buffer}",
             f"Ladder: {self.ladder_volume_uL:g} µL {self.ladder_name}"
                 if self.ladder_name else None,
-            f"Load: {self.load_volume_uL:g} µL",
+            f"Samples: {self.load_volume_uL:g} µL",
             f"Run: {self.run_volts:g}V for {self.run_time_min:g} min",
         ))
 
