@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v1.14.0 (2021-04-02)
+### Feature
+* **ivtt:** Use exact times, not ranges ([`0f01ef1`](https://github.com/kalekundert/stepwise_mol_bio/commit/0f01ef1383906aea13a2bc3606c00063427eecba))
+* **gel:** Make preset names more consistent ([`a824515`](https://github.com/kalekundert/stepwise_mol_bio/commit/a82451584b93aebc8d0904c0723e5f6ed3d02c0c))
+
+### Fix
+* **ivtt:** Strip whitespace when parsing reagents ([`c509e03`](https://github.com/kalekundert/stepwise_mol_bio/commit/c509e0374f5f771d55b93c80591a27a33bb6cf26))
+* **gel:** Tweak wording ([`d716e73`](https://github.com/kalekundert/stepwise_mol_bio/commit/d716e733eae2fd8fcf59d2071d7bdae192b34196))
+* **ivt:** Correct T7 volume for short templates ([`f41f74b`](https://github.com/kalekundert/stepwise_mol_bio/commit/f41f74b4b2a4f45edaaf63a8d18b35ff712dbb5e))
+
 ## v1.13.0 (2021-03-09)
 ### Feature
 * **ivtt:** Add a PUREfrex 1.0 protocol ([`8d87531`](https://github.com/kalekundert/stepwise_mol_bio/commit/8d87531209e6417bb29784bb1bfb2a0691882d49))
