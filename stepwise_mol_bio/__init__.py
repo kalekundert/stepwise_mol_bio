@@ -7,7 +7,6 @@ Protocols relating to molecular biology, e.g. PCR.
 __version__ = '1.13.0'
 
 from ._utils import *
-from ._presets import *
 
 from pathlib import Path
 from numbers import Real
