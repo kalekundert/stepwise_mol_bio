@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 from inform import indent, plural
 from appcli import DocoptConfig
-from stepwise import StepwiseConfig, UsageError, pl, pre
+from stepwise import StepwiseConfig, PresetConfig, UsageError, pl, pre
 from stepwise_mol_bio import Main, ConfigError, merge_dicts
 
 @autoprop
@@ -37,6 +37,7 @@ Arguments:
 """
     __config__ = [
             DocoptConfig(),
+            PresetConfig(),
             StepwiseConfig('molbio.laser'),
     ]
 
