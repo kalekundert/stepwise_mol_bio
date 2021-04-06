@@ -2,7 +2,7 @@
 
 import stepwise, appcli, autoprop
 from appcli import DocoptConfig
-from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul
+from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, dl
 from stepwise_mol_bio import Main, ConfigError, merge_dicts
 from inform import plural
 
@@ -22,7 +22,7 @@ def parse_sample_name(name):
 @autoprop
 class Gel(Main):
     """\
-Load, run and stain PAGE gels
+Load, run, and stain gels.
 
 Usage:
     gel <preset> <samples> [options]
@@ -264,13 +264,13 @@ Options:
                 )
             
         additive = f" with {x}" if (x := self.gel_additive) else ""
-        p += pl("Run a gel:", ul(
-            f"Gel: {self.gel_percent}% {self.gel_type}{additive}",
-            f"Buffer: {self.gel_buffer}",
-            f"Ladder: {self.ladder_volume_uL:g} µL {self.ladder_name}"
-                if self.ladder_name else None,
-            f"Samples: {self.load_volume_uL:g} µL",
-            f"Run: {self.run_volts:g}V for {self.run_time_min:g} min",
+        p += pl("Run a gel:", dl(
+            ("gel", f"{self.gel_percent}% {self.gel_type}{additive}"),
+            ("buffer", f"{self.gel_buffer}"),
+            ("ladder", f"{self.ladder_volume_uL:g} µL {self.ladder_name}"
+                if self.ladder_name else None),
+            ("samples", f"{self.load_volume_uL:g} µL"),
+            ("run", f"{self.run_volts:g}V for {self.run_time_min:g} min"),
         ))
 
         if x := self.stain:
