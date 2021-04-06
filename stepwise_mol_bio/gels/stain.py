@@ -6,6 +6,7 @@ from stepwise import StepwiseConfig, PresetConfig, pl, ul
 from stepwise_mol_bio import Main, merge_dicts, format_min, format_sec
 from inform import plural
 from collections import defaultdict
+from operator import not_
 
 @autoprop
 class Stain(Main):
@@ -127,7 +128,7 @@ Options:
     )
     imaging_cmd = appcli.param(
             Key(DocoptConfig, '--imaging-protocol'),
-            Key(DocoptConfig, '--no-imaging', cast=None),
+            Key(DocoptConfig, '--no-imaging', cast=not_),
             Key(PresetConfig, 'imaging_protocol'),
             default=None,
     )
@@ -219,8 +220,6 @@ Options:
             out += f"Rinse {plural(n)://#x }with water."
 
         return out
-
-
 
 if __name__ == '__main__':
     Stain.main()
