@@ -121,7 +121,7 @@ incubate_time_min = 10
 load_volume_uL = 10
 run_volts = 165
 run_time_min = 42
-stain = "coomassie"
+stain = "stain protein"
 
 [gel.presets.'bolt/max']
 brief = "Bolt SDS PAGE (Invitrogen) without diluting the sample"
@@ -151,7 +151,7 @@ sample                        1.25 µL
 load_volume_uL = 5
 run_volts = 150
 run_time_min = 115
-stain = "coomassie"
+stain = "stain coomassie"
 
 [gel.presets.'native/blue']
 brief = "Native PAGE with Coomassie"
@@ -184,7 +184,7 @@ incubate_time_min = 3
 load_volume_uL = 10
 run_volts = 180
 run_time_min = 40
-stain = "gelred"
+stain = "stain rna"
 
 [gel.presets.'agarose/1']
 brief = "1.0% agarose"
@@ -200,7 +200,7 @@ sample                       5 µL
 load_volume_uL = 5
 run_volts = 100
 run_time_min = 60
-stain = ''
+stain = "stain dna"
 
 [gel.presets.'agarose/1.5']
 brief = "1.5% agarose"
@@ -212,6 +212,15 @@ brief = "2.0% agarose"
 inherit = 'agarose/1'
 gel_percent = 2
 
+
+[stain.presets.dna]
+inherit = 'gelred'
+
+[stain.presets.rna]
+inherit = 'gelred'
+
+[stain.presets.protein]
+inherit = 'coomassie'
 
 [stain.presets.gelred]
 title = 'GelRed'
@@ -267,6 +276,8 @@ footnotes = [
 """Staining with SYBR Green II reagent is pH sensitive.  For optimal 
 sensitivity, verify that the pH of the staining solution at the temperature 
 used for staining is between 7.5 and 8.0 (preferably 8.0).""",
+"""The staining solution may be stored in the dark (preferably refrigerated) 
+and reused 3-4 times."""
 ]
 
 [stain.presets.'sybr-green-ii/agarose']
