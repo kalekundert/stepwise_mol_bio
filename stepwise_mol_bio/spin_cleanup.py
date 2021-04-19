@@ -75,14 +75,23 @@ Options:
             default='DNA',
     )
     sample_volume_uL = appcli.param(
-            Key(DocoptConfig, '--sample-volume', cast=int),
+            Key(DocoptConfig, '--sample-volume', cast=float),
+            default=None,
+    )
+    target_sample_volume_uL = appcli.param(
+            Key(PresetConfig, 'sample_volume_uL'),
             default=None,
     )
     bind_buffer = appcli.param(
             Key(PresetConfig, 'bind_buffer'),
     )
+    bind_volume_uL = appcli.param(
+            Key(PresetConfig, 'bind_volume_uL'),
+            default=None
+    )
     bind_volume_x = appcli.param(
             Key(PresetConfig, 'bind_volume_x'),
+            default=None
     )
     bind_spin_sec = appcli.param(
             Key(PresetConfig, 'bind_spin_sec'),
@@ -91,8 +100,13 @@ Options:
             Key(PresetConfig, 'pH_buffer'),
             default=None,
     )
+    ph_volume_uL = appcli.param(
+            Key(PresetConfig, 'pH_volume_uL'),
+            default=None
+    )
     ph_volume_x = appcli.param(
             Key(PresetConfig, 'pH_volume_x'),
+            default=None
     )
     ph_color = appcli.param(
             Key(PresetConfig, 'pH_color'),
@@ -156,12 +170,33 @@ Options:
         if self.spin_speed_g:
             ul += f"Perform all spin steps at {self.spin_speed_g}g."
 
+        ## Dilute
+        if x := self.target_sample_volume_uL:
+            v = self.sample_volume_uL
+
+            if not isinstance(x, dict):
+                target = '{x} µL'
+                skip = v and v == x
+                self.sample_volume_uL = x
+            elif 'min' and 'max' in x:
+                target = f"between {x['min']}–{x['max']} µL"
+                skip = v and x['min'] <= v <= x['max']
+            elif 'min' in x:
+                target = f"at least {x['min']} µL"
+                skip = v and x['min'] <= v
+            elif 'max' in x:
+                target = f"at most {x['max']} µL"
+                skip = v and v <= x['max']
+
+            if not skip:
+                ul += f"Ensure that the sample is {target}."
+
         ## Bind
-        bind_volume = resolve_volume(self.bind_volume_x, self.sample_volume_uL)
+        bind_volume = resolve_volume(self.bind_volume_uL, self.bind_volume_x, self.sample_volume_uL)
         ul += f"Add {bind_volume} {self.bind_buffer} to the crude {self.sample_type}."
 
         if self.ph_buffer:
-            ph_volume = resolve_volume(self.ph_volume_x, self.sample_volume_uL)
+            ph_volume = resolve_volume(self.ph_volume_uL, self.ph_volume_x, self.sample_volume_uL)
             ul += f"If not {self.ph_color}: Add {ph_volume} {self.ph_buffer}."
 
         ul += f"Load on a {self.column_name}."
@@ -187,12 +222,13 @@ Options:
 
         return p
 
-def resolve_volume(volume_x, sample_volume_uL):
-    if sample_volume_uL:
+def resolve_volume(volume_uL, volume_x, sample_volume_uL):
+    if volume_uL:
+        return f'{volume_uL} µL'
+    elif sample_volume_uL:
         return f'{volume_x * sample_volume_uL} µL'
     else:
         return f'{volume_x} volumes'
-
 
 if __name__ == '__main__':
     SpinCleanup.main()

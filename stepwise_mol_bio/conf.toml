@@ -88,10 +88,10 @@ elute_min_volume_uL = 30
 elute_wait_sec = 60
 elute_spin_sec = 30
 
-[spin_cleanup.presets.'qiagen/min-elute']
+[spin_cleanup.presets.'qiagen/min-elute/pcr']
 title = 'Qiagen MinElute PCR purification kit (28004)'
 inherit = 'qiagen'
-protocol_link = 'https://tinyurl.com/59wynv64'
+protocol_link = 'https://www.qiagen.com/HB-2069'
 column_name = 'MinElute column'
 column_capacity_ug = 5
 
@@ -100,6 +100,18 @@ wash_spin_sec = 60
 elute_volume_uL = 10
 elute_min_volume_uL = 10
 elute_spin_sec = 60
+
+[spin_cleanup.presets.'qiagen/min-elute/rxn']
+title = 'Qiagen MinElute reaction cleanup kit (28204)'
+inherit = 'qiagen/min-elute'
+
+sample_volume_uL.min = 20
+sample_volume_uL.max = 100
+
+bind_buffer = 'ERC'
+bind_volume_uL = 300
+
+pH_volume_uL = 10
 
 
 [gel.presets.bolt]
