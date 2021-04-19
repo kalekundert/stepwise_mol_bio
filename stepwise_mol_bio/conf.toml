@@ -114,11 +114,11 @@ bind_volume_uL = 300
 pH_volume_uL = 10
 
 
-[gel.presets.bolt]
-brief = "Bolt SDS PAGE (Invitrogen)"
+[gel.presets.'bolt/mes']
+brief = "Bolt Bis-Tris-MES SDS PAGE (Invitrogen)"
 title = "SDS PAGE"
 gel_type = "Bolt Bis-Tris SDS PAGE"
-gel_percent = "4−12"
+gel_percent = "4-12"
 gel_buffer = "Bolt MES SDS running buffer"
 sample_mix = """
 Reagent                     Stock      Volume  MM?
@@ -131,21 +131,40 @@ sample                  100 ng/µL      2.5 µL
 incubate_temp_C = 70
 incubate_time_min = 10
 load_volume_uL = 10
+ladder = 'SeeBlue Plus2 (Invitrogen LC5925)'
+ladder_volume_uL = 5
 run_volts = 165
 run_time_min = 42
 stain = "stain protein"
 
-[gel.presets.'bolt/max']
-brief = "Bolt SDS PAGE (Invitrogen) without diluting the sample"
-inherit = 'bolt'
+[gel.presets.'novex/tricine']
+brief = "Novex Tris-Tricine SDS PAGE (Invitrogen)"
+title = "SDS PAGE"
+gel_type = "Novex tris-tricine SDS PAGE"
+gel_percent = "10-20"
+gel_buffer = "tricine SDS running buffer"
+
+# Sample volume:
+# - Couldn't find a recommendation for how much protein to load.
+# - So I just copied from 'bolt/mes'.
 sample_mix = """
-Reagent                 Stock    Volume  MM?
-======================  =====  ========  ===
-Bolt LDS sample buffer     4x   3.85 µL  yes
-Bolt reducing agent       10x   1.54 µL  yes
-sample                         10.00 µL
+Reagent                         Stock      Volume  MM?
+==========================  =========  ==========  ===
+water                                  to 10.0 µL  yes
+tricine SDS sample buffer          2x      5.0 µL  yes
+NuPAGE reducing agent             10x      1.0 µL  yes
+sample                      100 ng/µL      2.5 µL
 """
-load_volume_uL = 15.39
+
+incubate_temp_C = 85
+incubate_time_min = 2
+load_volume_uL = 10
+ladder = "SeeBlue Plus2 (Invitrogen LC5925)"
+ladder_volume_uL = 5
+run_volts = 125
+run_time_min = 90
+stain = "stain protein"
+protocol_link = 'https://tinyurl.com/4nzuxfdb'
 
 [gel.presets.native]
 brief = "Native PAGE"

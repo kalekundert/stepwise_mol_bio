@@ -206,6 +206,10 @@ Options:
             appcli.Key(PresetConfig, 'stain'),
             default=None,
     )
+    protocol_link = appcli.param(
+            appcli.Key(PresetConfig, 'protocol_link'),
+            default=None,
+    )
 
     def __init__(self, preset, num_samples=None):
         self.preset = preset
@@ -264,8 +268,9 @@ Options:
                 )
             
         additive = f" with {x}" if (x := self.gel_additive) else ""
-        p += pl("Run a gel:", dl(
-            ("gel", f"{self.gel_percent}% {self.gel_type}{additive}"),
+        percent = x.replace('-', '–') if isinstance(x := self.gel_percent, str) else x
+        p += pl(f"Run a gel{p.add_footnotes(self.protocol_link)}:", dl(
+            ("gel", f"{percent}% {self.gel_type}{additive}"),
             ("buffer", f"{self.gel_buffer}"),
             ("ladder", f"{self.ladder_volume_uL:g} µL {self.ladder_name}"
                 if self.ladder_name else None),
