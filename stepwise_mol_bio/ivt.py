@@ -22,10 +22,13 @@ Arguments:
         The names to the DNA templates to transcribe.
 
 Options:
-    -d --dna-ng-uL CONC  [default: ${app.dna_ng_uL}]
+    -v --volume-uL VOLUME   [default: ${app.volume_uL}]
+        The volume of the transcription reaction, in µL.
+
+    -d --dna-ng-uL CONC     [default: ${app.dna_ng_uL}]
         The stock concentration of the template DNA (in ng/µL).
 
-    -D --dna-ng AMOUNT    [default: ${app.dna_ng}]
+    -D --dna-ng AMOUNT      [default: ${app.dna_ng}]
         How much template DNA to use (in ng).  NEB recommends 1 µg.  Lower 
         amounts will give proportionately lower yield, but will otherwise work 
         fine.  If the template is not concentrated enough to reach the given 
@@ -133,6 +136,11 @@ Template Preparation:
     templates = appcli.param(
             Key(DocoptConfig, '<templates>'),
     )
+    volume_uL = appcli.param(
+            Key(DocoptConfig, '--volume-uL'),
+            cast=float,
+            default=20,
+    )
     _dna_uL = appcli.param(
             Key(DocoptConfig, '--dna-uL'),
             cast=float,
@@ -229,6 +237,7 @@ Template Preparation:
             ivt['DNA template'].volume = self.dna_ng / self.dna_ng_uL, 'µL'
         
         ivt.fix_volumes('DNA template', 'nuclease-free water')
+        ivt.hold_ratios.volume = self.volume_uL, 'µL'
         return ivt
 
     def get_protocol(self):
