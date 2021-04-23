@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v1.15.0 (2021-04-23)
+### Feature
+* **pcr:** Implement freezerbox maker plugin ([`5cf472a`](https://github.com/kalekundert/stepwise_mol_bio/commit/5cf472a1178ea5f61c6127654906f9f84e1e2e22))
+* **gel:** Add tricine gel parameters ([`240c749`](https://github.com/kalekundert/stepwise_mol_bio/commit/240c7493dfcb42c5bc53a5d6fb1e2764d367e91b))
+* **spin_cleanup:** Add a sample dilution step ([`99868f6`](https://github.com/kalekundert/stepwise_mol_bio/commit/99868f6d62dfd1ccc48b97349216058b587115d3))
+* **ivt:** Add --volume-uL option ([`109b0a9`](https://github.com/kalekundert/stepwise_mol_bio/commit/109b0a95d4ac31869b8619cdf485bf573e2d5c22))
+* Add generic staining protocol presets ([`4df2876`](https://github.com/kalekundert/stepwise_mol_bio/commit/4df2876c1f8e2c6ca67c018b3fb81227f734bb39))
+
+### Fix
+* **stain:** Debug -I flag ([`9cda251`](https://github.com/kalekundert/stepwise_mol_bio/commit/9cda2519193b0adc68e0e4e579d807ba446c7f43))
+
 ## v1.14.0 (2021-04-02)
 ### Feature
 * **ivtt:** Use exact times, not ranges ([`0f01ef1`](https://github.com/kalekundert/stepwise_mol_bio/commit/0f01ef1383906aea13a2bc3606c00063427eecba))
