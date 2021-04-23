@@ -15,6 +15,7 @@ requires = [
   'configurator',
   'docopt',
   'inform>=1.21',
+  'more_itertools~=8.6',
   'numpy',
   'pytest',
   'requests',
@@ -49,10 +50,8 @@ docs = [
 [tool.flit.entrypoints."stepwise.protocols"]
 molbio = "stepwise_mol_bio:Plugin"
 
-[tool.flit.entrypoints."po4.syntheses"]
-PCR = "stepwise_mol_bio.pcr:Po4Synthesis"
-
-[tool.flit.entrypoints."po4.cleanups"]
+[tool.flit.entrypoints."freezerbox.make"]
+pcr = "stepwise_mol_bio.pcr:Pcr"
 
 [tool.pccc]
 types = ["chore", "docs", "feat", "fix", "refactor", "style", "test"]

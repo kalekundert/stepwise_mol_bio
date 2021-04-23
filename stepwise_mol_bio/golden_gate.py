@@ -4,9 +4,8 @@ import stepwise
 import appcli
 import autoprop
 from inform import plural
-from stepwise_mol_bio import UsageError
+from stepwise_mol_bio import UsageError, Assembly
 from stepwise_mol_bio.digest import NebRestrictionEnzymeDatabase
-from _assembly import Assembly
 
 @autoprop
 class GoldenGate(Assembly):

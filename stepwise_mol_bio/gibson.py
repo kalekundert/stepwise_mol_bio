@@ -4,7 +4,7 @@ import stepwise
 import appcli
 import autoprop
 from inform import plural
-from _assembly import Assembly
+from stepwise_mol_bio import Assembly
 
 @autoprop
 class Gibson(Assembly):

@@ -2,7 +2,7 @@
 
 from appcli import Key, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig
-from pcr import Pcr
+from stepwise_mol_bio import Pcr
 
 class Qpcr(Pcr):
     """\

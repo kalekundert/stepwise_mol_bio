@@ -3,7 +3,7 @@
 
 import stepwise, appcli, autoprop
 from inform import plural
-from _assembly import Assembly
+from stepwise_mol_bio import Assembly
 
 @autoprop
 class Ligate(Assembly):

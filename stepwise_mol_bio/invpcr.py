@@ -2,8 +2,7 @@
 
 import stepwise, appcli, autoprop
 from appcli import Key, DocoptConfig
-from stepwise_mol_bio import Main, pcr, kld
-from pcr import Pcr
+from stepwise_mol_bio import Main, Pcr, Kld
 
 @autoprop
 class InversePcr(Pcr):
@@ -31,7 +30,7 @@ Usage:
     )
 
     def __bareinit__(self):
-        self.kld = kld.Kld('PCR product')
+        self.kld = Kld('PCR product')
 
     def format_usage(self):
         return self.__doc__.format(

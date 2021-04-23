@@ -1,0 +1,267 @@
+test_find_amplicon:
+  -
+    id: flush
+    primer_1: tataacaggctgctgagacc
+    primer_2: tctaggactatcaccggagg
+    template: tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
+    expected:  tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
+    is_linear: True
+  -
+    id: overhang-template
+    primer_1: tataacaggctgctgagacc
+    primer_2: tctaggactatcaccggagg
+    template: AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA
+    expected:         tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
+    is_linear: True
+  -
+    id: overhang-primer
+    primer_1: GATTACAtataacaggctgctgagacc
+    primer_2: TGTAATCtctaggactatcaccggagg
+    template:       tataacaggctgctgagaccAAAAAAAcctccggtgatagtcctaga
+    expected: GATTACAtataacaggctgctgagaccAAAAAAAcctccggtgatagtcctagaGATTACA
+    is_linear: True
+  -
+    id: circular
+    primer_1: tataacaggctgctgagacc
+    primer_2: tctaggactatcaccggagg
+    template: cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA
+    expected: tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
+    is_linear: False
+  -
+    id: err-primers-cannot-anneal
+    primer_1: tataacaggctgctgagacc
+    primer_2: tctaggactatcaccggagg
+    template: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    is_linear: True
+    error: ValueError
+  -
+    id: err-primers-facing-away
+    primer_1: tataacaggctgctgagacc
+    primer_2: tctaggactatcaccggagg
+    template: cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA
+    is_linear: True
+    error: ValueError
+
+test_product_seqs:
+  -
+    id: seqs-linear
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr([r])
+      > app.template_seqs = [
+      >     'AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA',
+      > ]
+      > app.primer_seqs = [
+      >     ('tataacaggctgctgagacc', 'tctaggactatcaccggagg'),
+      > ]
+      > app.are_templates_linear = [
+      >     True,
+      > ]
+    expected:
+      > ['tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga']
+  -
+    id: seqs-circular
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr([r])
+      > app.template_seqs = [
+      >     'cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA',
+      > ]
+      > app.primer_seqs = [
+      >     ('tataacaggctgctgagacc', 'tctaggactatcaccggagg'),
+      > ]
+      > app.are_templates_linear = [
+      >     False,
+      > ]
+    expected:
+      > ['tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga']
+  -
+    id: seqs-err
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr([r])
+      > app.template_seqs = [
+      >     'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+      > ]
+      > app.primer_seqs = [
+      >     ('tataacaggctgctgagacc', 'tctaggactatcaccggagg'),
+      > ]
+      > app.are_templates_linear = [
+      >     True,
+      > ]
+    error:
+      type: ConfigError
+      message: 'b' and 'c' do not amplify 'a'
+
+test_anneal_temp_C:
+  -
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr([r])
+      > app.anneal_temp_C = 60
+    expected: 60
+  -
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr([r])
+      > app.primer_melting_temps = [(60, 65)]
+      > app.anneal_temp_func = min
+    expected: [60]
+  -
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr([r])
+      > app.primer_melting_temps = [(60, 65)]
+    expected: [61]
+    # This test could be affected by the user's config files.  One I fix appcli 
+    # #17, I'll be able to avoid this by mocking the relevant configs.
+    marks: skip
+
+test_extend_time_s:
+  -
+    id: setattr
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.extend_time_s = 60
+    expected: 60
+  -
+    id: round-333
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 333
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 10
+  -
+    id: round-334
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 334
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 15
+  -
+    id: round-500
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 500
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 15
+  -
+    id: round-501
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 501
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 30
+  -
+    id: round-1000
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 1000
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 30
+  -
+    id: round-1001
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 1001
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 60
+  -
+    id: no-round
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 100
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = False
+    expected: 3
+  -
+    id: func
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 1000
+      > app.extend_time_s_per_kb = None
+      > app.extend_time_func = lambda x: 59
+      > app.round_extend_time = False
+    expected: 59
+  -
+    id: func
+    app:
+      > r = pcr.Reagents('a', 'b', 'c')
+      > app = Pcr(r)
+      > app.product_length_bp = 1000
+      > app.extend_time_s_per_kb = None
+      > app.extend_time_func = lambda x: 59
+      > app.round_extend_time = True
+    expected: 60
+
+test_master_mix:
+  -
+    app:
+      > app = Pcr([])
+      > app.master_mix = {'dna', 'fwd', 'rev'}
+    expected: {'dna', 'fwd', 'rev'}
+  -
+    app:
+      > r = [
+      >     pcr.Reagents('a', 'b', 'c'),
+      >     pcr.Reagents('d', 'e', 'f'),
+      > ]
+      > app = Pcr(r)
+    expected: set()
+  -
+    app:
+      > r = [
+      >     pcr.Reagents('x', 'b', 'c'),
+      >     pcr.Reagents('x', 'e', 'f'),
+      > ]
+      > app = Pcr(r)
+    expected: {'dna'}
+  -
+    app:
+      > r = [
+      >     pcr.Reagents('a', 'y', 'c'),
+      >     pcr.Reagents('d', 'y', 'f'),
+      > ]
+      > app = Pcr(r)
+    expected: {'fwd'}
+  -
+    app:
+      > r = [
+      >     pcr.Reagents('a', 'b', 'z'),
+      >     pcr.Reagents('d', 'e', 'z'),
+      > ]
+      > app = Pcr(r)
+    expected: {'rev'}
+  -
+    app:
+      > r = [
+      >     pcr.Reagents('a', 'y', 'z'),
+      >     pcr.Reagents('d', 'y', 'z'),
+      > ]
+      > app = Pcr(r)
+    expected: {'fwd', 'rev'}
+  -
+    app:
+      > r = [
+      >     pcr.Reagents('x', 'y', 'z'),
+      >     pcr.Reagents('x', 'y', 'z'),
+      > ]
+      > app = Pcr(r)
+    expected: {'dna', 'fwd', 'rev'}
+
+

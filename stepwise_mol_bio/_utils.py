@@ -2,8 +2,10 @@
 
 import sys
 import appcli
+import tidyexc
 from appdirs import AppDirs
-from inform import Error, format_range
+from inform import format_range
+from more_itertools import all_equal
 from pathlib import Path
 
 app_dirs = AppDirs("stepwise_mol_bio")
@@ -14,16 +16,16 @@ class Main(appcli.App):
     @classmethod
     def main(cls):
         self = cls.from_params()
-        self.load()
+        self.load(appcli.DocoptConfig)
         
         try:
             self.protocol.print()
-        except Error as err:
-            err.report()
+        except StepwiseMolBioError as err:
+            print(err, file=sys.stderr)
 
 
 
-class StepwiseMolBioError(Error):
+class StepwiseMolBioError(tidyexc.Error):
     pass
 
 class ConfigError(StepwiseMolBioError):
@@ -46,6 +48,9 @@ def hanging_indent(text, prefix):
         prefix = ' ' * prefix
     return indent(text, prefix)[len(prefix):]
 
+def join_lists(lists):
+    return sum(lists, [])
+
 def merge_dicts(dicts):
     result = {}
     for dict in reversed(list(dicts)):
@@ -58,9 +63,30 @@ def comma_list(x):
 def comma_set(x):
     return {x.strip() for x in x.split(',')}
 
+def int_or_expr(x):
+    return type_or_expr(int, x)
+
+def float_or_expr(x):
+    return type_or_expr(float, x)
+
+def type_or_expr(type, x):
+    if isinstance(x, type):
+        return x
+    else:
+        return type(eval(x))
+
 def require_reagent(rxn, reagent):
     if reagent not in rxn:
         raise UsageError(f"reagent table missing {reagent!r}")
+
+def merge_names(names):
+    names = list(names)
+    if all_equal(names):
+        return names[0]
+    else:
+        return ','.join(names)
+
+
 
 
 def format_sec(x):
