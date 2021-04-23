@@ -10,9 +10,10 @@ Stepwise — Molecular Biology
    :alt: Python version
    :target: https://pypi.python.org/pypi/stepwise_mol_bio
 
-.. image:: https://img.shields.io/readthedocs/stepwise_mol_bio.svg
-   :alt: Documentation
-   :target: https://stepwise_mol_bio.readthedocs.io/en/latest/?badge=latest
+..
+  .. image:: https://img.shields.io/readthedocs/stepwise_mol_bio.svg
+     :alt: Documentation
+     :target: https://stepwise_mol_bio.readthedocs.io/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/github/workflow/status/kalekundert/stepwise_mol_bio/Test%20and%20release/master
    :alt: Test status
