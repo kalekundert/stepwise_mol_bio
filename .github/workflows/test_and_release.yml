@@ -3,6 +3,16 @@ name: Test and release
 on: push
 jobs:
 
+  commitlint:
+    name: Check commit message
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v2
+
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -19,7 +29,7 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip flit
-          flit install -s --extras=tests
+          flit install -s --extras=test
       - name: Run test suite
         run: |
           pytest --cov stepwise_mol_bio
