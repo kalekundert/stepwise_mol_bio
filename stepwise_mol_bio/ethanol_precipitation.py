@@ -227,7 +227,7 @@ References:
 
                 'centrifugation_time_min': 60,
                 'centrifugation_temp_C': 4,
-                'centrifugation_speed': '>21000',
+                'centrifugation_speed': '>21000g',
             },
     }
     solvents = {
