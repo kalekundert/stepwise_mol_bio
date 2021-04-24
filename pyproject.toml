@@ -52,6 +52,7 @@ molbio = "stepwise_mol_bio:Plugin"
 
 [tool.flit.entrypoints."freezerbox.make"]
 pcr = "stepwise_mol_bio.pcr:Pcr"
+inverse-pcr = "stepwise_mol_bio.invpcr:InversePcr"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --doctest-glob='*.rst'"

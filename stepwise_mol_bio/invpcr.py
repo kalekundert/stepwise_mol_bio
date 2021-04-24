@@ -50,6 +50,11 @@ Usage:
             p += "Transform 2 µL."
         return p
 
+    @property
+    def is_product_circular(self):
+        return True
+
+
 if __name__ == '__main__':
     InversePcr.main()
 

@@ -3,6 +3,7 @@
 
 import stepwise, appcli, autoprop
 from inform import plural
+from stepwise import pl, ul
 from stepwise_mol_bio import Main
 
 @autoprop
@@ -56,13 +57,13 @@ Options:
 
     def get_protocol(self):
         protocol = stepwise.Protocol()
-        protocol += f"""\
-Run {plural(self.num_reactions):# ligation reaction/s}:
-
-{self.reaction}
-
-- Incubate at room temperature for 1h.
-"""
+        protocol += pl(
+                f"Run {plural(self.num_reactions):# ligation reaction/s}:",
+                self.reaction,
+                ul(
+                    "Incubate at room temperature for 1h.",
+                ),
+        )
         return protocol
 
 if __name__ == '__main__':

@@ -5,14 +5,17 @@ from math import sqrt, ceil
 from numbers import Real
 from inform import plural, indent
 from appcli import Key, Method, DocoptConfig
-from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, pre
+from stepwise import (
+        StepwiseConfig, PresetConfig, Quantity, UsageError,
+        pl, ul, pre
+)
 from stepwise_mol_bio import (
         Main, ConfigError, merge_dicts, comma_set, require_reagent,
         int_or_expr, float_or_expr, join_lists, merge_names
 )
 from freezerbox import (
-        ReagentConfig, MakerArgsConfig, unanimous, parse_volume_uL, 
-        parse_temp_C, parse_time_s,
+        ReagentConfig, MakerArgsConfig, unanimous,
+        parse_volume_uL, parse_temp_C, parse_time_s,
 )
 from more_itertools import first_true, flatten, chunked, all_equal
 from collections.abc import Iterable
@@ -325,7 +328,8 @@ Options:
     )
     template_stock = appcli.param(
             Key(DocoptConfig, '--template-stock'),
-            Key(TemplateConfig, 'conc', cast=str),
+            # Don't try to get a value from the freezerbox database, because 
+            # the template volume is not affected by this setting.
             default=None,
     )
     primer_seqs = appcli.param(
@@ -706,6 +710,7 @@ Options:
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
         if x := self.template_stock:
+            debug(self.template_stock)
             pcr['template DNA'].stock_conc = x
 
         # Setup the primers.  This is complicated because the primers might 
@@ -774,6 +779,13 @@ Options:
 
     def get_product_volume(self):
         return Quantity(self.reaction_volume_uL, 'µL')
+
+    def get_product_molecule(self):
+        return 'dsDNA'
+
+    @property
+    def is_product_circular(self):
+        return False
 
     def get_dependencies(self):
         return list(flatten(x.dependencies for x in self.reagents))
