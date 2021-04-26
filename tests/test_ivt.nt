@@ -1,0 +1,274 @@
+test_reaction:
+  -
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = False
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water              6.00 µL
+      > reaction buffer            10x   2.00 µL
+      > rATP                    100 mM   2.00 µL
+      > rCTP                    100 mM   2.00 µL
+      > rGTP                    100 mM   2.00 µL
+      > rUTP                    100 mM   2.00 µL
+      > HiScribe T7                10x   2.00 µL
+      > a                    500 ng/µL   2.00 µL
+      > ────────────────────────────────────────
+      >                                 20.00 µL
+  -
+    id: templates
+    app:
+      > app = Ivt(['a', 'b'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = False
+    expected:
+      > Reagent                  Stock    Volume      2.2x
+      > ──────────────────────────────────────────────────
+      > nuclease-free water              6.00 µL  13.20 µL
+      > reaction buffer            10x   2.00 µL   4.40 µL
+      > rATP                    100 mM   2.00 µL   4.40 µL
+      > rCTP                    100 mM   2.00 µL   4.40 µL
+      > rGTP                    100 mM   2.00 µL   4.40 µL
+      > rUTP                    100 mM   2.00 µL   4.40 µL
+      > HiScribe T7                10x   2.00 µL   4.40 µL
+      > a,b                  500 ng/µL   2.00 µL
+      > ──────────────────────────────────────────────────
+      >                                 20.00 µL  18.00 µL/rxn
+  -
+    id: short
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = True
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water              9.00 µL
+      > reaction buffer            10x   1.50 µL
+      > rATP                    100 mM   1.50 µL
+      > rCTP                    100 mM   1.50 µL
+      > rGTP                    100 mM   1.50 µL
+      > rUTP                    100 mM   1.50 µL
+      > HiScribe T7                10x   1.50 µL
+      > a                    500 ng/µL   2.00 µL
+      > ────────────────────────────────────────
+      >                                 20.00 µL
+  -
+    id: rntp-mix
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = True
+      > app.short = False
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water              6.00 µL
+      > reaction buffer            10x   2.00 µL
+      > rNTP mix                100 mM   8.00 µL
+      > HiScribe T7                10x   2.00 µL
+      > a                    500 ng/µL   2.00 µL
+      > ────────────────────────────────────────
+      >                                 20.00 µL
+  -
+    id: template-conc
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = False
+      > app.template_stock_ng_uL = 250
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water              4.00 µL
+      > reaction buffer            10x   2.00 µL
+      > rATP                    100 mM   2.00 µL
+      > rCTP                    100 mM   2.00 µL
+      > rGTP                    100 mM   2.00 µL
+      > rUTP                    100 mM   2.00 µL
+      > HiScribe T7                10x   2.00 µL
+      > a                    250 ng/µL   4.00 µL
+      > ────────────────────────────────────────
+      >                                 20.00 µL
+  -
+    id: template-quantity
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = False
+      > app.template_mass_ng = 500
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water              7.00 µL
+      > reaction buffer            10x   2.00 µL
+      > rATP                    100 mM   2.00 µL
+      > rCTP                    100 mM   2.00 µL
+      > rGTP                    100 mM   2.00 µL
+      > rUTP                    100 mM   2.00 µL
+      > HiScribe T7                10x   2.00 µL
+      > a                    500 ng/µL   1.00 µL
+      > ────────────────────────────────────────
+      >                                 20.00 µL
+  -
+    id: template-volume
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = False
+      > app.template_volume_uL = 3
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water              5.00 µL
+      > reaction buffer            10x   2.00 µL
+      > rATP                    100 mM   2.00 µL
+      > rCTP                    100 mM   2.00 µL
+      > rGTP                    100 mM   2.00 µL
+      > rUTP                    100 mM   2.00 µL
+      > HiScribe T7                10x   2.00 µL
+      > a                    500 ng/µL   3.00 µL
+      > ────────────────────────────────────────
+      >                                 20.00 µL
+  -
+    id: template-fix-volume
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = False
+      > app.short = False
+      > app.template_volume_uL = 10
+    expected:
+      > Reagent              Stock    Volume
+      > ────────────────────────────────────
+      > reaction buffer        10x   2.00 µL
+      > rATP                100 mM   2.00 µL
+      > rCTP                100 mM   2.00 µL
+      > rGTP                100 mM   2.00 µL
+      > rUTP                100 mM   2.00 µL
+      > HiScribe T7            10x   2.00 µL
+      > a                500 ng/µL   8.00 µL
+      > ────────────────────────────────────
+      >                             20.00 µL
+
+test_dnase_reaction:
+  -
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+    expected:
+      > Reagent                  Stock     Volume
+      > ─────────────────────────────────────────
+      > nuclease-free water              68.00 µL
+      > DNase I buffer             10x   10.00 µL
+      > DNase I                 2 U/µL    2.00 µL
+      > transcription reaction           20.00 µL
+      > ─────────────────────────────────────────
+      >                                 100.00 µL
+  -
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.volume_uL = 10
+    expected:
+      > Reagent                  Stock    Volume
+      > ────────────────────────────────────────
+      > nuclease-free water             34.00 µL
+      > DNase I buffer             10x   5.00 µL
+      > DNase I                 2 U/µL   1.00 µL
+      > transcription reaction          10.00 µL
+      > ────────────────────────────────────────
+      >                                 50.00 µL
+
+test_protocol:
+  -
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.short = False
+    expected:
+      - Setup 1 in vitro transcription reaction [1]:
+      - Mix reagents in the order given
+      - Ok to handle at room temperature
+      - Incubate at 37°C for 2h
+  -
+    id: short
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.short = True
+    expected:
+      - Incubate at 37°C for 4h
+      - Reaction time is different than usual because the template is short (<300 bp)
+  -
+    id: dnase
+    app:
+      > app = Ivt(['a'])
+      > app.preset = 'hiscribe'
+      > app.dnase = True
+    expected:
+      - Setup 1 DNase reaction:
+      - Incubate at 37°C for 15m
+
+test_short:
+  -
+    app:
+      > app = Ivt(['a', 'b'])
+      > app.template_lengths = [100, 100]
+      > app.template_length_threshold = 100
+    expected:
+      > True
+  -
+    app:
+      > app = Ivt(['a', 'b'])
+      > app.template_lengths = [100, 101]
+      > app.template_length_threshold = 100
+    expected:
+      > False
+
+test_pick_by_short:
+  -
+    values: 1
+    is_short: True
+    expected: 1
+  -
+    values: 1
+    is_short: False
+    expected: 1
+  -
+    values: {'short': 1, 'long': 2}
+    is_short: True
+    expected: 1
+  -
+    values: {'short': 1, 'long': 2}
+    is_short: False
+    expected: 2
+
+test_affected_by_short:
+  -
+    values: 1
+    expected: False
+  -
+    values: {'short': 1, 'long': 2}
+    expected: True
+  -
+    values: {'short': 1, 'long': 1}
+    expected: False
+
+test_transcribe:
+  -
+    template: taatacgactcactataGATTACA
+    expected: GAUUACA
+  -
+    template: GATTACA
+    error:
+      type: ValueError
+      message: no T7 promoter found

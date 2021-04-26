@@ -3,6 +3,8 @@
 import sys
 import appcli
 import tidyexc
+
+from freezerbox import MakerArgsConfig
 from appdirs import AppDirs
 from inform import format_range
 from more_itertools import all_equal
@@ -15,13 +17,21 @@ class Main(appcli.App):
 
     @classmethod
     def main(cls):
-        self = cls.from_params()
-        self.load(appcli.DocoptConfig)
+        app = cls.from_params()
+        app.load(appcli.DocoptConfig)
         
         try:
-            self.protocol.print()
+            app.protocol.print()
         except StepwiseMolBioError as err:
             print(err, file=sys.stderr)
+
+    @classmethod
+    def from_product(cls, product):
+        app = cls.from_params()
+        app.db = product.db
+        app.products = [product]
+        app.load(MakerArgsConfig)
+        return app
 
 
 
@@ -44,6 +54,8 @@ def try_except(expr, exc, failure, success=None):
 
 def hanging_indent(text, prefix):
     from textwrap import indent
+    if not isinstance(text, str):
+        text = '\n'.join(map(str, text))
     if isinstance(prefix, int):
         prefix = ' ' * prefix
     return indent(text, prefix)[len(prefix):]

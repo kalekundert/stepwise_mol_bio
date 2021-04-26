@@ -557,6 +557,130 @@ filter = '832BP37'
 preset = 'plasmid'
 
 
+[ivt]
+default_preset = 'hiscribe'
+
+[ivt.presets.hiscribe]
+brief = "HiScribe T7 High Yield RNA Synthesis Kit (NEB E2040)"
+reaction.long = '''
+Reagent              Product #  Stock Conc  Flags      Volume  MM?
+===================  =========  ==========  =====  ==========  ===
+nuclease-free water                                to 20.0 μL  yes
+reaction buffer                        10x             2.0 μL  yes
+rATP                                100 mM   rntp      2.0 μL  yes
+rCTP                                100 mM   rntp      2.0 μL  yes
+rGTP                                100 mM   rntp      2.0 μL  yes
+rUTP                                100 mM   rntp      2.0 μL  yes
+HiScribe T7          NEB E2040         10x             2.0 μL  yes
+template                         500 ng/μL             2.0 μL
+'''
+reaction.short = '''
+Reagent              Product #  Stock Conc  Flags      Volume  MM?
+===================  =========  ==========  =====  ==========  ===
+nuclease-free water                                to 20.0 μL  yes
+reaction buffer                        10x             1.5 μL  yes
+rATP                                100 mM   rntp      1.5 μL  yes
+rCTP                                100 mM   rntp      1.5 μL  yes
+rGTP                                100 mM   rntp      1.5 μL  yes
+rUTP                                100 mM   rntp      1.5 μL  yes
+HiScribe T7          NEB E2040         10x             1.5 μL  yes
+template                         500 ng/μL             2.0 μL
+'''
+instructions = [
+  "Mix reagents in the order given.",
+  "Ok to handle at room temperature.",
+]
+incubation_time_min.long = 120
+incubation_time_min.short = 240
+incubation_temp_C = 37
+length_threshold = 300
+expected_yield_ug = 180
+
+dnase.reaction = '''
+Reagent                 Stock Conc     Volume
+======================  ==========  =========
+nuclease-free water                 to 100 µL
+DNase I buffer                 10x      10 µL
+DNase I                     2 U/µL       2 µL
+transcription reaction                  20 µL
+'''
+dnase.incubation_time_min = 15
+dnase.incubation_temp_C = 37
+
+footnotes.reaction = [
+  'https://tinyurl.com/cbnz445t',
+]
+footnotes.incubation = [
+  'For reaction times longer than 60 minutes, we recommend using a dry air incubator or a PCR instrument, to prevent evaporation.'
+]
+
+[ivt.presets.megascript]
+brief = "MEGAscript Kit (Ambion AM1330)"
+reaction = '''
+Reagent               Stock Conc  Flags      Volume  MM?
+====================  ==========  =====  ==========  ===
+nuclease-free water                      to 20.0 μL  yes
+reaction buffer              10x             2.0 μL  yes
+rATP                       75 mM   rntp      2.0 μL  yes
+rCTP                       75 mM   rntp      2.0 μL  yes
+rGTP                       75 mM   rntp      2.0 μL  yes
+rUTP                       75 mM   rntp      2.0 μL  yes
+enzyme mix                                   2.0 μL  yes
+template               500 ng/μL             2.0 μL
+'''
+instructions = [
+  "Thaw and vortex the transcription buffer and the ribonucleotides until completely in solution",
+  "Keep the RNA polymerase and the ribonucleotides on ice.",
+  "Keep the transcription buffer at room temperature.",
+  "Assemble the reation at room temperature."
+]
+incubation_time_min.long = 120
+incubation_time_min.short = 240
+incubation_temp_C = 37
+length_threshold = 500
+expected_yield_ug = 100
+
+dnase.reaction = '''
+Reagent                 Stock Conc     Volume
+======================  ==========  =========
+transcription reaction                  20 µL
+TURBO DNase I               2 U/µL       1 µL
+'''
+dnase.incubation_time_min = 15
+dnase.incubation_temp_C = 37
+
+footnotes.reaction = [
+  'https://tinyurl.com/5ykv4753',
+  'The spermidine in the transcription buffer can coprecipitate the template DNA if the reaction is assembled on ice.',
+]
+
+[ivt.presets.maxiscript]
+brief = "MAXIscript Kit (Ambion AM1308)"
+inherit = 'megascript'
+reaction = '''
+Reagent               Stock Conc  Flags      Volume  MM?
+====================  ==========  =====  ==========  ===
+nuclease-free water                      to 20.0 μL  yes
+transcription buffer         10x             2.0 μL  yes
+rATP                       10 mM   rntp      1.0 μL  yes
+rCTP                       10 mM   rntp      1.0 μL  yes
+rGTP                       10 mM   rntp      1.0 μL  yes
+rUTP                       10 mM   rntp      1.0 μL  yes
+T7 enzyme mix            15 U/µL             2.0 μL  yes
+template               500 ng/μL             2.0 μL
+'''
+incubation_time_min = 10
+incubation_temp_C = 25
+
+footnotes.reaction = [
+  'tinyurl.com/ymxr7yr9',
+  'The spermidine in the transcription buffer can coprecipitate the template DNA if the reaction is assembled on ice.',
+]
+footnotes.incubation = [
+  'The exact incubation temperature is not critical; from room temperature to 40°C, MAXIscript reactions show nearly equivalent yield.',
+]
+
+
 [ivtt]
 default_preset = 'purexpress'
 

@@ -128,6 +128,14 @@ app_expected = Schema({
     'app': exec_app,
     'expected': eval,
 })
+app_expected_reaction = Schema({
+    'app': exec_app,
+    'expected': str,
+})
+app_expected_protocol = Schema({
+    'app': exec_app,
+    'expected': [str],
+})
 app_expected_error = Schema({
     'app': exec_app,
     **error_or({
