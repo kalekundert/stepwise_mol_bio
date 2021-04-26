@@ -2,6 +2,15 @@
 
 <!--next-version-placeholder-->
 
+## v1.16.0 (2021-04-26)
+### Feature
+* **ivt:** Implement freezerbox maker plugin ([`b07cdfb`](https://github.com/kalekundert/stepwise_mol_bio/commit/b07cdfbc65f97d5edc9e513c8cf7f308bdeb5aa7))
+* **rnasezap:** Add protocol ([`6ea3401`](https://github.com/kalekundert/stepwise_mol_bio/commit/6ea3401f39a4c07a97b54fb4b72811f23d1bb6f8))
+* **invpcr:** Implement freezerbox maker plugin ([`fab5240`](https://github.com/kalekundert/stepwise_mol_bio/commit/fab5240ccc28c44fb93681d5297a2cc8dc36fc2a))
+
+### Documentation
+* Remove docs badge ([`c2bd23d`](https://github.com/kalekundert/stepwise_mol_bio/commit/c2bd23ddd6c99a4e564aa6250b4a8007060cd004))
+
 ## v1.15.0 (2021-04-23)
 ### Feature
 * **pcr:** Implement freezerbox maker plugin ([`5cf472a`](https://github.com/kalekundert/stepwise_mol_bio/commit/5cf472a1178ea5f61c6127654906f9f84e1e2e22))
