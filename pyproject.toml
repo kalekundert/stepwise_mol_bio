@@ -19,6 +19,7 @@ requires = [
   'more_itertools~=8.6',
   'numpy',
   'requests',
+  'rtoml',
   'stepwise',
   'tidyexc',
 ]
@@ -53,6 +54,7 @@ molbio = "stepwise_mol_bio:Plugin"
 [tool.flit.entrypoints."freezerbox.make"]
 pcr = "stepwise_mol_bio.pcr:Pcr"
 inverse-pcr = "stepwise_mol_bio.invpcr:InversePcr"
+ivt = "stepwise_mol_bio.ivt:Ivt"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --doctest-glob='*.rst'"
@@ -67,23 +69,24 @@ scopes = [
   "digest",
   "direct_dilution",
   "ethanol_precipitation",
+  "gel",
   "gibson",
   "golden_gate",
   "invpcr",
   "ivt",
   "ivtt",
   "kld",
+  "laser_scanner",
   "ligate",
   "pcr",
+  "phenol_chloroform",
   "qpcr",
+  "retransform",
+  "rnasezap",
   "serial_dilution",
   "spin_cleanup",
-  "phenol_chloroform",
-  "transform",
-  "retransform",
-  "gel",
   "stain",
-  "laser_scanner",
+  "transform",
   "uv_transilluminator",
 ]
 ignore_generated_commits = true
