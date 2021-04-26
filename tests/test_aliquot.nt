@@ -1,0 +1,38 @@
+test_protocol:
+  -
+    app:
+      > app = Aliquot('5µL')
+    expected:
+      - Make 5 µL aliquots.
+  -
+    app:
+      > app = Aliquot('5µL', conc='1µM')
+    expected:
+      - Make 5 µL, 1 µM aliquots.
+  -
+    app:
+      > app = Aliquot('5µL')
+      > app.show_product_names = True
+    expected:
+      - Make 5 µL aliquots.
+  -
+    app:
+      > app = Aliquot('5µL')
+      > app.products = ['x1']
+      > app.show_product_names = True
+    expected:
+      - Make 5 µL aliquots of: x1
+  -
+    app:
+      > app = Aliquot('5µL')
+      > app.products = ['x1', 'x2']
+      > app.show_product_names = True
+    expected:
+      - Make 5 µL aliquots of: x1, x2
+  -
+    app:
+      > app = Aliquot('5µL')
+      > app.products = ['x1', 'x2']
+      > app.show_product_names = False
+    expected:
+      - Make 5 µL aliquots.

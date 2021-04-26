@@ -14,7 +14,6 @@ requires = [
   'appdirs',
   'autoprop',
   'biopython',
-  'freezerbox',
   'inform~=1.21',
   'more_itertools~=8.6',
   'numpy',
@@ -55,6 +54,8 @@ molbio = "stepwise_mol_bio:Plugin"
 pcr = "stepwise_mol_bio.pcr:Pcr"
 inverse-pcr = "stepwise_mol_bio.invpcr:InversePcr"
 ivt = "stepwise_mol_bio.ivt:Ivt"
+
+aliquot = "stepwise_mol_bio.aliquot:Aliquot"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --doctest-glob='*.rst'"
