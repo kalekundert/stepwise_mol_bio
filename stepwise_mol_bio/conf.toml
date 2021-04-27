@@ -103,7 +103,7 @@ elute_spin_sec = 60
 
 [spin_cleanup.presets.'qiagen/min-elute/rxn']
 title = 'Qiagen MinElute reaction cleanup kit (28204)'
-inherit = 'qiagen/min-elute'
+inherit = 'qiagen/min-elute/pcr'
 
 sample_volume_uL.min = 20
 sample_volume_uL.max = 100
