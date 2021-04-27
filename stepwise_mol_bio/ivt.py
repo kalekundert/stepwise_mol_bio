@@ -306,7 +306,7 @@ Template Preparation:
     )
     template_stock_ng_uL = appcli.param(
             Key(DocoptConfig, '--template-stock', cast=float),
-            Key(TemplateConfig, 'conc_ng_uL', cast=unanimous),
+            Key(TemplateConfig, 'conc_ng_uL', cast=min),
             default=None,
     )
     short = appcli.param(
