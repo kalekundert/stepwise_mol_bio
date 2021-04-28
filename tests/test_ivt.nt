@@ -39,6 +39,23 @@ test_reaction:
       > ──────────────────────────────────────────────────
       >                                 20.00 µL  18.00 µL/rxn
   -
+    id: templates
+    app:
+      > app = Ivt(['a', 'b'])
+      > app.preset = 'hiscribe'
+      > app.rntp_mix = True
+      > app.short = False
+    expected:
+      > Reagent                  Stock    Volume      2.2x
+      > ──────────────────────────────────────────────────
+      > nuclease-free water              6.00 µL  13.20 µL
+      > reaction buffer            10x   2.00 µL   4.40 µL
+      > rNTP mix                100 mM   8.00 µL  17.60 µL
+      > HiScribe T7                10x   2.00 µL   4.40 µL
+      > a,b                  500 ng/µL   2.00 µL
+      > ──────────────────────────────────────────────────
+      >                                 20.00 µL  18.00 µL/rxn
+  -
     id: short
     app:
       > app = Ivt(['a'])

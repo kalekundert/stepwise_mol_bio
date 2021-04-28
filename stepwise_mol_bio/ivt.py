@@ -411,6 +411,7 @@ Template Preparation:
 
             rxn['rNTP mix'].volume = sum(x.volume for x in rntps)
             rxn['rNTP mix'].stock_conc = sum(x.stock_conc for x in rntps) / len(rntps)
+            rxn['rNTP mix'].master_mix = all(x.master_mix for x in rntps)
             rxn['rNTP mix'].order = rntps[0].order
 
             for rntp in rntps:
