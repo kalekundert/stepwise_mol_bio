@@ -56,8 +56,9 @@ class InVitroTranslation(Main):
 Express proteins from linear DNA templates using NEBExpress.
 
 Usage:
-    ivtt <templates>... [-p <name>] [-v <µL>] [-n <rxns>] [-c <nM>] [-C <nM>]
-        [-mrIX] [-a <name;conc;vol;mm>]... [-t <time>] [-T <°C>]
+    ivtt <templates>... [-p <name>] [-v <µL>] [-n <rxns>] [-x <percent>] 
+        [-c <nM>] [-C <nM>] [-mrIX] [-a <name;conc;vol;mm>]... [-t <time>]
+        [-T <°C>]
 
 Arguments:
     <templates>
@@ -79,6 +80,10 @@ Options:
     -n --num-reactions <int>
         The number of reactions to set up.  By default, this is inferred from
         the number of templates.
+
+    -x --extra-percent <percent>
+        How much extra master mix to prepare, as a percentage of the minimum 
+        required  master mix volume.
 
     -c --template-conc <nM>
         The desired final concentration of template in the reaction.  
@@ -161,6 +166,10 @@ Options:
             Key(DocoptConfig, '--num-reactions', cast=eval),
             default=None,
             get=lambda self, x: x or len(self.templates),
+    )
+    extra_percent = appcli.param(
+            Key(DocoptConfig, '--extra-percent', cast=float),
+            default=10,
     )
     template_conc_nM = appcli.param(
             Key(DocoptConfig, '--template-conc', cast=float),
@@ -293,6 +302,8 @@ Options:
 
         if self.use_template:
             rxn.fix_volumes(template)
+
+        rxn.extra_percent = self.extra_percent
 
         return rxn
 
