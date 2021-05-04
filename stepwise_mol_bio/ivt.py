@@ -184,13 +184,13 @@ Configuration:
         Lists of footnotes for the reaction setup, incubation, and DNase 
         treatment steps, respectively.
 
-Database Synthesis:
-    In vitro transcription reactions can appear in the "Synthesis" column 
-    of a FreezerBox database:
+Database:
+    In vitro transcription reactions can appear in the "Synthesis" column of a 
+    FreezerBox database.  The associated database entry will automatically be 
+    considered ssRNA, e.g. for the purpose of molecular weight calculations:
 
-        ivt <fields>...
-
-    The following fields are understood:
+        ivt template=<tag> [preset=<preset>] [volume=<µL>] [time=<min>]
+            [temp=<°C>]
 
     template=<tag>
         See `<templates>`.  Only one template can be specified.
