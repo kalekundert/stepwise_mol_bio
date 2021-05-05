@@ -39,9 +39,11 @@ class StepwiseMolBioError(tidyexc.Error):
     pass
 
 class ConfigError(StepwiseMolBioError):
+    # For values that don't make sense, e.g. non-existent enzymes, etc.
     pass
 
 class UsageError(StepwiseMolBioError):
+    # For if the program isn't being used correctly, e.g. missing information.
     pass
 
 def try_except(expr, exc, failure, success=None):
@@ -98,7 +100,14 @@ def merge_names(names):
     else:
         return ','.join(names)
 
-
+def match_len(x, n):
+    # Something more generic than this might fit well in `more_itertools`.
+    if isinstance(x, list):
+        if len(x) != n:
+            raise ValueError(f"expected {n} item(s), got {len(x)}")
+        return x
+    else:
+        return n * [x]
 
 
 def format_sec(x):

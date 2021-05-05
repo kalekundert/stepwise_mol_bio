@@ -32,6 +32,7 @@ test = [
   'pytest',
   'pytest-cov',
   'parametrize_from_file',
+  'requests_testing',
   'coveralls',
 ]
 doc = [
@@ -51,9 +52,10 @@ doc = [
 molbio = "stepwise_mol_bio:Plugin"
 
 [tool.flit.entrypoints."freezerbox.make"]
-pcr = "stepwise_mol_bio.pcr:Pcr"
+digest = "stepwise_mol_bio.digest:RestrictionDigest"
 inverse-pcr = "stepwise_mol_bio.invpcr:InversePcr"
 ivt = "stepwise_mol_bio.ivt:Ivt"
+pcr = "stepwise_mol_bio.pcr:Pcr"
 
 aliquot = "stepwise_mol_bio.aliquot:Aliquot"
 

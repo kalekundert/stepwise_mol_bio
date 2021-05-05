@@ -1,0 +1,464 @@
+test_calc_digest_products:
+  -
+    seq: 'GAATTCAAGCTT'
+    enzymes: ['EcoRI']
+    is_circular: True
+    target_size: None
+    products: ['AATTCAAGCTTG']
+    product: 'AATTCAAGCTTG'
+
+  -
+    seq: 'GAATTCAAGCTT'
+    enzymes: ['HindIII']
+    is_circular: True
+    target_size: None
+    products: ['AGCTTGAATTCA']
+    product: 'AGCTTGAATTCA'
+
+  -
+    seq: 'GAATTCAAGCTT'
+    enzymes: ['HindIII']
+    is_circular: False
+    target_size: None
+    products: ['GAATTCA', 'AGCTT']
+    product: 'GAATTCA'
+
+  -
+    seq: 'GAATTCAAGCTT'
+    enzymes: ['HindIII']
+    is_circular: False
+    target_size: 7
+    products: ['GAATTCA', 'AGCTT']
+    product: 'GAATTCA'
+
+  -
+    seq: 'GAATTCAAGCTT'
+    enzymes: ['HindIII']
+    is_circular: False
+    target_size: 5
+    products: ['GAATTCA', 'AGCTT']
+    product: 'AGCTT'
+
+  -
+    seq: 'GAATTCaAAGCTT'
+    enzymes: ['EcoRI', 'HindIII']
+    is_circular: True
+    target_size: None
+    products: ['AATTCaA', 'AGCTTG']
+    product: 'AATTCaA'
+
+  -
+    seq: 'GAATTCaAAGCTT'
+    enzymes: ['EcoRI', 'HindIII']
+    is_circular: True
+    target_size: 6
+    products: ['AATTCaA', 'AGCTTG']
+    product: 'AGCTTG'
+
+  -
+    seq: 'GAATTCaAAGCTT'
+    enzymes: ['EcoRI', 'HindIII']
+    is_circular: False
+    target_size: None
+    products: ['G', 'AATTCaA', 'AGCTT']
+    product: 'AATTCaA'
+
+  -
+    seq: 'GAATTCaAAGCTT'
+    enzymes: ['EcoRI', 'HindIII']
+    is_circular: False
+    target_size: 1
+    products: ['G', 'AATTCaA', 'AGCTT']
+    product: 'G'
+
+  -
+    seq: 'GAATTCaAAGCTT'
+    enzymes: ['EcoRI', 'HindIII']
+    is_circular: False
+    target_size: 5
+    products: ['G', 'AATTCaA', 'AGCTT']
+    product: 'AGCTT'
+
+  -
+    id: err
+    seq: 'GAATTCGAATTC'
+    enzymes: []
+    is_circular: False
+    target_size: None
+    error:
+      type: UsageError
+      message: no enzymes specified
+  -
+    id: err
+    seq: 'GAATTCGAATTC'
+    enzymes: ['HindIII']
+    is_circular: False
+    target_size: None
+    error:
+      type: ConfigError
+      message: 'HindIII' does not cut template
+  -
+    id: err
+    seq: 'GAATTCGAATTC'
+    enzymes: ['HindIII', 'BsaI']
+    is_circular: False
+    target_size: None
+    error:
+      type: ConfigError
+      message: 'HindIII','BsaI' do not cut template
+  -
+    id: err
+    seq: 'GAATTCGAATTC'
+    enzymes: ['unknown enzyme']
+    is_circular: False
+    target_size: None
+    error:
+      type: ConfigError
+      message: unknown enzyme\(s\): 'unknown enzyme'
+
+test_pick_compatible_buffer:
+  -
+    id: solo-buf5
+    enzymes:
+      -
+        displayName: 'EcoRI'
+        recommBuffer: 'NEBuffer EcoRI'
+
+        buf1 : 25
+        star1: False
+
+        buf2 : 100
+        star2: True
+
+        buf3 : 50
+        star3: False
+
+        buf4 : 50
+        star4: True
+
+        buf5 : 100
+        star5: False
+
+    expected: NEBuffer EcoRI
+
+  -
+    id: least-star
+    enzymes:
+      -
+        recommBuffer: 'NEBuffer r1.1'
+
+        buf1 : 100
+        star1: False
+
+        buf2 : 100
+        star2: False
+
+        buf3 : 100
+        star3: True
+
+        buf4 : 100
+        star4: True
+
+        buf5 : 0
+        star5: True
+      -
+        recommBuffer: 'NEBuffer r3.1'
+
+        buf1 : 100
+        star1: True
+
+        buf2 : 100
+        star2: False
+
+        buf3 : 100
+        star3: False
+
+        buf4 : 100
+        star4: True
+
+        buf5 : 0
+        star5: True
+
+    expected: NEBuffer r2.1
+
+  -
+    id: most-cutting
+    enzymes:
+      -
+        recommBuffer: 'NEBuffer r1.1'
+
+        buf1 : 100
+        star1: False
+
+        buf2 : 75
+        star2: False
+
+        buf3 : 25
+        star3: False
+
+        buf4 : 25
+        star4: False
+
+        buf5 : 0
+        star5: False
+      -
+        recommBuffer: 'NEBuffer r3.1'
+
+        buf1 : 25
+        star1: False
+
+        buf2 : 75
+        star2: False
+
+        buf3 : 100
+        star3: False
+
+        buf4 : 25
+        star4: False
+
+        buf5 : 0
+        star5: False
+
+    expected: NEBuffer r2.1
+
+  -
+    id: prefer-cutsmart
+    enzymes:
+      -
+        recommBuffer: 'NEBuffer r1.1'
+
+        buf1 : 100
+        star1: False
+
+        buf2 : 100
+        star2: False
+
+        buf3 : 100
+        star3: False
+
+        buf4 : 100
+        star4: False
+
+        buf5 : 0
+        star5: False
+      -
+        recommBuffer: 'NEBuffer r3.1'
+
+        buf1 : 100
+        star1: False
+
+        buf2 : 100
+        star2: False
+
+        buf3 : 100
+        star3: False
+
+        buf4 : 100
+        star4: False
+
+        buf5 : 0
+        star5: False
+
+    expected: rCutSmart Buffer
+
+test_reaction:
+  -
+    id: baseline
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                         3.50 µL
+      > x1                200 ng/µL   5.00 µL
+      > rCutSmart Buffer        10x   1.00 µL
+      > BsaI-HFv2           20 U/µL   0.50 µL
+      > ─────────────────────────────────────
+      >                              10.00 µL
+  -
+    id: enzymes
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2', 'BbsI-HF'])
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                         3.00 µL
+      > x1                200 ng/µL   5.00 µL
+      > rCutSmart Buffer        10x   1.00 µL
+      > BsaI-HFv2           20 U/µL   0.50 µL
+      > BbsI-HF             20 U/µL   0.50 µL
+      > ─────────────────────────────────────
+      >                              10.00 µL
+  -
+    id: templates
+    app:
+      > app = RestrictionDigest(['x1', 'x2'], ['BsaI-HFv2'])
+    expected:
+      > Reagent               Stock    Volume     2.2x
+      > ──────────────────────────────────────────────
+      > water                         3.50 µL  7.70 µL
+      > rCutSmart Buffer        10x   1.00 µL  2.20 µL
+      > BsaI-HFv2           20 U/µL   0.50 µL  1.10 µL
+      > x1,x2             200 ng/µL   5.00 µL
+      > ──────────────────────────────────────────────
+      >                              10.00 µL  5.00 µL/rxn
+  -
+    id: num-reactions
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app.num_reactions = 2
+    expected:
+      > Reagent               Stock    Volume      2.2x
+      > ───────────────────────────────────────────────
+      > water                         3.50 µL   7.70 µL
+      > x1                200 ng/µL   5.00 µL  11.00 µL
+      > rCutSmart Buffer        10x   1.00 µL   2.20 µL
+      > BsaI-HFv2           20 U/µL   0.50 µL   1.10 µL
+      > ───────────────────────────────────────────────
+      >                              10.00 µL  10.00 µL/rxn
+  -
+    id: scale-volume
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app.target_volume_uL = 20
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                        12.50 µL
+      > x1                200 ng/µL   5.00 µL
+      > rCutSmart Buffer        10x   2.00 µL
+      > BsaI-HFv2           20 U/µL   0.50 µL
+      > ─────────────────────────────────────
+      >                              20.00 µL
+  -
+    id: scale-enz
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app.dna_ug = 2
+      > app.dna_stock_ng_uL = 500
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                         4.00 µL
+      > x1                500 ng/µL   4.00 µL
+      > rCutSmart Buffer        10x   1.00 µL
+      > BsaI-HFv2           20 U/µL   1.00 µL
+      > ─────────────────────────────────────
+      >                              10.00 µL
+  -
+    id: scale-enz-dna
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app.dna_ug = 2
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > x1                200 ng/µL  10.00 µL
+      > rCutSmart Buffer        10x   1.22 µL
+      > BsaI-HFv2           20 U/µL   1.00 µL
+      > ─────────────────────────────────────
+      >                              12.22 µL
+  -
+    id: supplement-sam
+    app:
+      > app = RestrictionDigest(['x1'], ['BaeI'])
+      > # Increase the volume because BaeI is more dilute than BsaI-HFv2.
+      > app.target_volume_uL = 50
+
+    # NEBcloner (link below) has a bug.  It says that the final concentration 
+    # of SAM should be 20 µM, but it also calls for 0.125 µL of 32 mM SAM in a 
+    # 50 µL reaction, which works out to 80 µM.  I'm not totally sure which is 
+    # right, but my protocol gives a final concentration of 20 µM (0.03125 µL 
+    # in a 50 µL reaction).
+    #
+    # http://nebcloner.neb.com/#!/protocol/re/single/BaeI
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                        37.97 µL
+      > x1                200 ng/µL   5.00 µL
+      > rCutSmart Buffer        10x   5.00 µL
+      > SAM                   32 mM   0.03 µL
+      > BaeI                 5 U/µL   2.00 µL
+      > ─────────────────────────────────────
+      >                              50.00 µL
+  -
+    id: supplement-bsa
+    app:
+      > app = RestrictionDigest(['x1'], ['PI-PspI'])
+      > # Increase the volume because PI-PspI is more dilute than BsaI-HFv2.
+      > app.target_volume_uL = 50
+    # http://nebcloner.neb.com/#!/protocol/re/single/PI-PspI
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                        37.75 µL
+      > x1                200 ng/µL   5.00 µL
+      > NEBuffer PI-PspI        10x   5.00 µL
+      > rAlbumin           20 mg/mL   0.25 µL
+      > PI-PspI              5 U/µL   2.00 µL
+      > ─────────────────────────────────────
+      >                              50.00 µL
+  -
+    id: genomic
+    app:
+      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app.is_genomic = True
+    expected:
+      > Reagent               Stock    Volume
+      > ─────────────────────────────────────
+      > water                         3.00 µL
+      > x1                200 ng/µL   5.00 µL
+      > rCutSmart Buffer        10x   1.00 µL
+      > BsaI-HFv2           20 U/µL   1.00 µL
+      > ─────────────────────────────────────
+      >                              10.00 µL
+
+test_protocol:
+  -
+    id: baseline
+    app:
+      > app = RestrictionDigest(['f1'], ['BsaI-HFv2'])
+    expected:
+      - Setup 1 BsaI-HFv2 digestion
+      - 37°C for 5–15 min
+      - 80°C for 20 min
+      - https://www.neb.com/products/r3733-bsai-hf-v2
+  -
+    id: temperatures
+    app:
+      > app = RestrictionDigest(['f1'], ['BsaI-HFv2', 'BsmBI-v2'])
+    expected:
+      - Setup 1 restriction digestion
+      - 37°C for 5–15 min
+      - 55°C for 5–15 min
+      - 80°C for 20 min
+
+test_make:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >     seq='GAATTCAAGCTT',
+        > )
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('digest template=p1 enzymes=EcoRI'),
+        > )
+    expected:
+      f1:
+        seq: 'AATTCAAGCTTG'
+
+  -
+    db:
+      f1:
+        > NucleicAcid(
+        >     seq='GAATTCaAAGCTT'
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('digest template=f1 enzymes=EcoRI,HindIII size=5bp'),
+        > )
+    expected:
+      f2:
+        seq: 'AGCTT'

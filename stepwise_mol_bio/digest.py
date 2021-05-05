@@ -1,7 +1,23 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
-from stepwise_mol_bio import Main, app_dirs, comma_list
+import stepwise
+import appcli
+import autoprop
+import re
+import json
+import requests
+
+from stepwise_mol_bio import (
+        Main, UsageError, ConfigError,
+        app_dirs, comma_list, match_len,
+)
+from stepwise import StepwiseConfig, pl, ul
+from freezerbox import (
+        ReagentConfig, MakerArgsConfig,
+        parse_mass_ug, parse_volume_uL, parse_size_bp,
+        iter_combo_makers, group_by_identity, join_lists,
+)
+from appcli import Key, Method, DocoptConfig
 from inform import Error, plural, did_you_mean
 from pathlib import Path
 
@@ -30,7 +46,7 @@ Options:
     -d --dna <µg>               [default: ${app.dna_ug}]
         The amount of DNA to digest, in µg.
 
-    -D --dna-stock <ng/µL>      [default: ${app.dna_stock_nguL}]
+    -D --dna-stock <ng/µL>      [default: ${app.dna_stock_ng_uL}]
         The stock concentration of the DNA template, in ng/µL.
 
     -v --target-volume <µL>     [default: ${app.target_volume_uL}]
@@ -48,57 +64,104 @@ Options:
         amount of enzyme used, as recommended by NEB.
 """
     __config__ = [
-            appcli.DocoptConfig(),
-            stepwise.StepwiseConfig('molbio.digest'),
+            DocoptConfig(),
+            MakerArgsConfig(),
+            ReagentConfig(lambda self: self.templates),
+            StepwiseConfig('molbio.digest'),
     ]
     templates = appcli.param(
-            '<templates>', ...,
+            Key(DocoptConfig, '<templates>'),
+            Key(MakerArgsConfig, 'template'),
             cast=comma_list,
+    )
+    template_seqs = appcli.param(
+            Key(ReagentConfig, 'seq'),
     )
     enzyme_names = appcli.param(
-            '<enzymes>', ...,
+            Key(DocoptConfig, '<enzymes>'),
+            Key(MakerArgsConfig, 'enzymes'),
             cast=comma_list,
     )
+    num_reactions = appcli.param(
+            Key(DocoptConfig, '--num-reactions'),
+            Method(lambda self: len(self.templates)),
+            cast=int,
+    )
     dna_ug = appcli.param(
-            '--dna', 'dna_ug',
+            Key(DocoptConfig, '--dna'),
+            Key(MakerArgsConfig, 'mass', cast=parse_mass_ug),
+            Key(StepwiseConfig, 'dna_ug'),
             cast=float,
             default=1,
     )
-    dna_stock_nguL = appcli.param(
-            '--dna-stock', 'dna_stock_nguL',
+    dna_stock_ng_uL = appcli.param(
+            Key(DocoptConfig, '--dna-stock'),
+            Key(ReagentConfig, 'conc_ng_uL', cast=min),
+            Key(StepwiseConfig, 'dna_stock_ng_uL'),
             cast=float,
             default=200,
     )
     target_volume_uL = appcli.param(
-            '--target-volume', 'target_volume_uL', 
+            Key(DocoptConfig, '--target-volume'),
+            Key(MakerArgsConfig, 'volume', cast=parse_volume_uL),
+            Key(StepwiseConfig, 'target_volume_uL'),
             cast=float,
             default=10,
     )
-    explicit_num_reactions = appcli.param(
-            '--num-reactions', ..., 
-            cast=int,
-            default=0,
+    target_size_bp = appcli.param(
+            Key(MakerArgsConfig, 'size', cast=parse_size_bp),
+            default=None,
     )
     is_genomic = appcli.param(
-            '--genomic', ...,
+            Key(DocoptConfig, '--genomic'),
             default=False,
+    )
+    is_circular = appcli.param(
+            Key(ReagentConfig, 'is_circular'),
+            default=True,
+            get=lambda self, x: \
+                    x if isinstance(x, list) else [x] * len(self.templates)
     )
 
     def __bareinit__(self):
-        self._enzyme_db = NebRestrictionEnzymeDatabase()
+        self._enzyme_db = None
 
-    def __init__(self, templates, enzyme_names):
+    def __init__(self, templates, enzyme_names, db=None):
         self.templates = templates
         self.enzyme_names = enzyme_names
+        self.enzyme_db = db
 
-    def get_num_reactions(self):
-        return self.explicit_num_reactions or len(self.templates)
+    @classmethod
+    def make(cls, db, products):
+        def factory():
+            app = cls.from_params()
+            app.db = db
+            return app
 
-    def set_num_reactions(self, n):
-        self.explicit_num_reactions = n
+        yield from iter_combo_makers(
+                factory,
+                map(cls.from_product, products),
+                group_by={
+                    'enzyme_names': group_by_identity,
+                    'dna_ug': group_by_identity,
+                    'target_volume_uL': group_by_identity,
+                },
+                merge_by={
+                    'templates': join_lists,
+                    'target_size_bp': list,
+                }
+        )
 
     def get_enzymes(self):
-        return [self._enzyme_db[x] for x in self.enzyme_names]
+        return [self.enzyme_db[x] for x in self.enzyme_names]
+
+    def get_enzyme_db(self):
+        if self._enzyme_db is None:
+            self._enzyme_db = NebRestrictionEnzymeDatabase()
+        return self._enzyme_db
+
+    def set_enzyme_db(self, db):
+        self._enzyme_db = db
 
     def get_reaction(self):
         # Define a prototypical restriction digest reaction.  Stock 
@@ -106,14 +169,14 @@ Options:
         # numbers.
 
         rxn = stepwise.MasterMix.from_text("""\
-        Reagent  Catalog      Stock    Volume  MM?
-        =======  =======  =========  ========  ===
-        water                        to 50 µL  yes
-        DNA               200 ng/µL      5 µL
-        BSA        B9000   20 mg/mL      0 µL  yes
-        SAM        B9003      32 mM      0 µL  yes
-        ATP        P0756      10 mM      0 µL  yes
-        buffer                  10x      5 µL  yes
+        Reagent   Catalog      Stock    Volume  MM?
+        ========  =======  =========  ========  ===
+        water                         to 50 µL  yes
+        DNA                200 ng/µL      5 µL  yes
+        buffer                   10x      5 µL  yes
+        bsa         B9200   20 mg/mL      0 µL  yes
+        sam         B9003      32 mM      0 µL  yes
+        atp         P0756      10 mM      0 µL  yes
         """)
 
         # Plug in the parameters the user requested.
@@ -121,7 +184,11 @@ Options:
         rxn.num_reactions = self.num_reactions
 
         rxn['DNA'].name = ','.join(self.templates)
-        rxn['DNA'].hold_conc.stock_conc = self.dna_stock_nguL, 'ng/µL'
+        rxn['DNA'].hold_conc.stock_conc = self.dna_stock_ng_uL, 'ng/µL'
+
+        if len(self.templates) > 1:
+            rxn['DNA'].order = -1
+            rxn['DNA'].master_mix = False
         
         for enz in self.enzymes:
             key = enz['name']
@@ -137,17 +204,39 @@ Options:
 
         rxn['buffer'].name = pick_compatible_buffer(self.enzymes)
 
-        def add_supplement(key, unit, scale=1):
+        # Supplements
+
+        known_supplements = []
+
+        def add_supplement(key, name, unit, scale=1):
             conc = max(x['supplement'][key] for x in self.enzymes)
+            known_supplements.append(key)
 
             if not conc:
-                del rxn[key.upper()]
+                del rxn[key]
             else:
-                rxn[key.upper()].hold_stock_conc.conc = conc * scale, unit
+                rxn[key].hold_stock_conc.conc = conc * scale, unit
+                rxn[key].name = name
 
-        add_supplement('bsa', 'mg/mL', 1e-3)
-        add_supplement('sam', 'mM', 1e-3)
-        add_supplement('atp', 'mM')
+        add_supplement('bsa', 'rAlbumin', 'mg/mL', 1e-3)
+        add_supplement('sam', 'SAM', 'mM', 1e-3)
+        add_supplement('atp', 'ATP', 'mM')
+
+        # Make sure there aren't any supplements we should add that we don't 
+        # know about.
+        
+        for enzyme in self.enzymes:
+            for supp, conc in enzyme['supplement'].items():
+                if conc > 0 and supp not in known_supplements:
+                    err = ConfigError(
+                            enzyme=enzyme,
+                            supp=supp,
+                            conc=conc,
+                    )
+                    err.brief = "{enzyme[name]!r} requires an unknown supplement: {supp!r}"
+                    err.hints += "the restriction digest protocol needs updated"
+                    err.hints += "please submit a bug report"
+                    raise err
         
         # Update the reaction volume.  This takes some care, because the 
         # reaction volume depends on the enzyme volume, which in turn depends 
@@ -177,6 +266,7 @@ Options:
             rxn[key].volume = enz_vols[key]
 
         return rxn
+
     def get_protocol(self):
         from itertools import groupby
         from operator import itemgetter
@@ -194,10 +284,10 @@ Options:
                     (k, max(time_getter(x) for x in group))
                     for k, group in groupby(self.enzymes, temp_getter)
             ]
-            return '\n'.join(
-                    f"- {temp}°C for {time_formatter(time)}"
+            return [
+                    f"{temp}°C for {time_formatter(time)}"
                     for temp, time in sorted(incubate_params)
-            )
+            ]
 
         digest_steps = incubate(
                 itemgetter('incubateTemp'),
@@ -209,93 +299,107 @@ Options:
                 itemgetter('heatInactivationTime'),
         )
 
+        protocol += pl(
+            f"Setup {plural(rxn.num_reactions):# {rxn_type} digestion/s} [1,2]:",
+            rxn,
+        )
+        protocol += pl(
+            f"Incubate at the following temperatures [3]:",
+            ul(*digest_steps, *inactivate_steps),
+        )
 
-        protocol += f"""\
-Setup {plural(rxn.num_reactions):# {rxn_type} digestion/s} [1]:
-
-{rxn}
-"""
-
-        protocol += f"""\
-Incubate at the following temperatures [2]:
-
-{digest_steps}
-{inactivate_steps}
-"""
-        protocol.footnotes[1] = """\
+        urls = [x['url'] for x in self.enzymes if x.get('url')]
+        protocol.footnotes[1] = pl(*urls, br='\n')
+        protocol.footnotes[2] = """\
 NEB recommends 5–10 units of enzyme per µg DNA 
 (10–20 units for genomic DNA).  Enzyme volume 
 should not exceed 10% of the total reaction 
 volume to prevent star activity due to excess 
 glycerol.
 """
-        protocol.footnotes[2] = """\
+        protocol.footnotes[3] = """\
 The heat inactivation step is not necessary if 
 the DNA will be purified before use.
 """
         return protocol
 
+    def get_product_seqs(self):
+        n = len(self.templates)
+        iter_templates = zip(
+                self.templates,
+                self.template_seqs,
+                match_len(self.target_size_bp, n),
+                match_len(self.is_circular, n),
+        )
+        for tag, seq, target_size, is_circular in iter_templates:
+            with ConfigError.add_info("tag: {tag}", tag=tag):
+                yield calc_digest_product(
+                        seq, self.enzyme_names,
+                        target_size=target_size,
+                        is_circular=is_circular,
+                )
+
+
 class NebRestrictionEnzymeDatabase:
 
-    def __init__(self):
-        import json
-        import requests
-
-        cache = Path(app_dirs.user_cache_dir) / 'neb' / 'restriction_enzymes.json'
-        cache.parent.mkdir(parents=True, exist_ok=True)
-
-        try:
-            url = 'http://nebcloner.neb.com/data/reprop.json'
-            data = requests.get(url).json()
-
-            with cache.open('w') as f:
-                json.dump(data, f)
-
-        except requests.exceptions.ConnectionError:
-            if not cache.exists():
-                raise NoEnzymeData(url)
-
-            with cache.open() as f:
-                data = json.load(f)
-
-        self.enzyme_names = list(data.keys())
-        self.enzyme_params = {k.lower(): v for k, v in data.items()}
+    def __init__(self, cache_path=None):
+        self.cache_path = cache_path or Path(app_dirs.user_cache_dir) / 'neb' / 'restriction_enzymes.json'
+        self.load_cache()
 
     def __getitem__(self, name):
         try:
             return self.enzyme_params[name.lower()]
+
         except KeyError:
-            raise UnknownEnzyme(name, self.enzyme_names)
+            try:
+                self.download_cache()
+                self.load_cache()
+                return self.enzyme_params[name.lower()]
 
+            except (KeyError, ConfigError) as err1:
+                err2 = ConfigError(
+                        enzyme=name,
+                        known_enzymes=self.enzyme_names,
+                        fresh_download=not isinstance(err1, ConfigError),
+                )
+                err2.brief = "no such enzyme {enzyme!r}"
+                err2.info += lambda e: (
+                        f"successfully downloaded the most recent restriction enzyme data from NEB (in case {e.enzyme!r} is a new enzyme)"
+                        if e.fresh_download else
+                        f"failed to download the most recent restriction enzyme data from NEB (in case {e.enzyme!r} is a new enzyme)"
+                )
+                err2.hints += lambda e: f"did you mean: {did_you_mean(e.enzyme, e.known_enzymes)!r}"
 
-class RestrictionDigestError(Error):
-    pass
+                raise err2 from err1
 
-class CantDownloadEnzymes(RestrictionDigestError):
-    template = """\
-            Failed to download restriction enzyme data from NEB.  Make sure the 
-            internet is connected and that the following URL is reachable:  
+    def load_cache(self):
+        if not self.cache_path.exists():
+            self.download_cache()
 
-            {url}
+        with self.cache_path.open() as f:
+            data = json.load(f)
 
-            Note that the data only needs to be downloaded once.  After that, 
-            this script should work offline."""
-    wrap = True
+        self.enzyme_names = list(data.keys())
+        self.enzyme_params = {k.lower(): v for k, v in data.items()}
 
-    def __init__(self, url):
-        super().__init__(url=url)
+    def download_cache(self):
+        url = 'http://nebcloner.neb.com/data/reprop.json'
 
+        try:
+            data = requests.get(url).json()
 
-class UnknownEnzyme(RestrictionDigestError):
-    template = "No such enzyme {enzyme_name!r}.  Did you mean {did_you_mean!r}?"
-    wrap = True
+        except requests.exceptions.ConnectionError as err1:
+            err2 = ConfigError(url=url)
+            err2.brief = "failed to download restriction enzyme data from NEB"
+            err2.info += "URL: {url}"
+            err2.hints += "make sure the internet is connected and the above URL is reachable."
+            raise err2 from err1
 
-    def __init__(self, enzyme_name, enzyme_names):
-        super().__init__(
-                enzyme_name=enzyme_name,
-                enzyme_names=enzyme_names,
-                did_you_mean=did_you_mean(enzyme_name, enzyme_names),
-        )
+        else:
+            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with self.cache_path.open('w') as f:
+                json.dump(data, f)
 
 def pick_compatible_buffer(enzymes):
     if len(enzymes) == 1:
@@ -306,10 +410,10 @@ def pick_compatible_buffer(enzymes):
     # same buffer.
 
     buffer_names = {
-            '1': "NEBbuffer 1.1",
-            '2': "NEBbuffer 2.1",
-            '3': "NEBbuffer 3.1",
-            '4': "CutSmart Buffer",
+            '1': "NEBuffer r1.1",
+            '2': "NEBuffer r2.1",
+            '3': "NEBuffer r3.1",
+            '4': "rCutSmart Buffer",
     }
     buffer_scores = {
             k: (
@@ -325,6 +429,54 @@ def pick_compatible_buffer(enzymes):
     )
 
     return buffer_names[best_buffer]
+
+def calc_digest_products(seq, enzymes, *, is_circular):
+    from more_itertools import pairwise, flatten
+    from Bio.Restriction import RestrictionBatch
+    from Bio.Seq import Seq
+
+    if not enzymes:
+        raise UsageError("no enzymes specified", enzymes=enzymes)
+
+    enzymes = [
+            re.sub('-HF(v2)?$', '', x)
+            for x in enzymes
+    ]
+
+    try:
+        batch = RestrictionBatch(enzymes)
+    except ValueError:
+        raise ConfigError(
+                lambda e: f"unknown enzyme(s): {','.join(map(repr, e.enzymes))}",
+                enzymes=enzymes,
+        ) from None
+
+    sites = [x-1 for x in flatten(batch.search(Seq(seq)).values())]
+
+    if not sites:
+        raise ConfigError(
+                lambda e: f"{','.join(map(repr, e.enzymes))} {plural(enzymes):/does/do} not cut template.",
+                enzymes=enzymes,
+                seq=seq,
+        )
+
+    sites += [] if is_circular else [0, len(seq)]
+    sites = sorted(sites)
+
+    seqs = []
+    for i,j in pairwise(sorted(sites)):
+        seqs.append(seq[i:j])
+
+    if is_circular:
+        wrap_around = seq[sites[-1]:] + seq[:sites[0]]
+        seqs.append(wrap_around)
+
+    return seqs
+
+def calc_digest_product(seq, enzymes, *, is_circular, target_size=None):
+    target_size = target_size or len(seq)
+    product_seqs = calc_digest_products(seq, enzymes, is_circular=is_circular)
+    return min(product_seqs, key=lambda x: abs(target_size - len(x)))
 
 
 if __name__ == '__main__':

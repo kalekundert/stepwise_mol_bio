@@ -1,0 +1,48 @@
+test_match_len:
+  -
+    id: len-0-
+    given: 1
+    length: 0
+    expected: []
+  -
+    id: len-0-
+    given: []
+    length: 0
+    expected: []
+  -
+    id: len-1-
+    given: 1
+    length: 1
+    expected: [1]
+  -
+    id: len-1-
+    given: [1]
+    length: 1
+    expected: [1]
+  -
+    id: len-2-
+    given: 1
+    length: 2
+    expected: [1, 1]
+  -
+    id: len-2-
+    given: [1, 2]
+    length: 2
+    expected: [1, 2]
+  -
+    id: err-too-short
+    given: [1, 2]
+    length: 1
+    error:
+      type: ValueError
+      message: expected 1 item\(s\), got 2
+  -
+    id: err-too-short
+    given: [1, 2]
+    length: 3
+    error:
+      type: ValueError
+      message: expected 3 item\(s\), got 2
+
+
+

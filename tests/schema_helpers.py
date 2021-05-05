@@ -1,37 +1,63 @@
 #!/usr/bin/env python3
 
 import stepwise_mol_bio
+import freezerbox
 import pytest
 import parametrize_from_file
 from voluptuous import Schema, Invalid, Coerce, And, Or, Optional
 from unittest.mock import MagicMock
+from contextlib import nullcontext
 
-class eval_with:
+class do_with:
 
     def __init__(self, globals=None, **kw_globals):
         self.globals = globals or {}
         self.globals.update(kw_globals)
 
-    def __call__(self, code):
+    def all(self, module):
         try:
-            return eval(code, self.globals)
+            keys = module.__all__
+        except AttributeError:
+            keys = module.__dict__
+
+        self.globals.update({
+                k: module.__dict__[k]
+                for k in keys
+        })
+        return self
+
+class eval_with(do_with):
+
+    def __call__(self, src):
+        try:
+            if isinstance(src, list):
+                return [self(x) for x in src]
+            elif isinstance(src, dict):
+                return {k: self(v) for k, v in src.items()}
+            else:
+                return eval(src, self.globals)
+
         except Exception as err:
             raise Invalid(str(err)) from err
 
-    def all(self, module):
-        self.globals.update({
-                k: module.__dict__[k]
-                for k in module.__all__
-        })
-        return self
-class nullcontext:
-    # This context manager is built in to python>=3.7
+class exec_with(do_with):
 
-    def __enter__(self):
-        pass
+    def __init__(self, get, globals=None, **kw_globals):
+        super().__init__(globals, **kw_globals)
+        self.get = get
 
-    def __exit__(self, *exc):
-        pass
+    def __call__(self, src):
+        globals = self.globals.copy()
+
+        try:
+            exec(src, globals)
+        except Exception as err:
+            raise Invalid(str(err)) from err
+
+        if callable(self.get):
+            return self.get(globals)
+        else:
+            return globals[self.get]
 
 def error_or(expected):
     schema = {}
@@ -77,6 +103,7 @@ def error(x):
 
     err_eval = eval_with(
             ConfigError=stepwise_mol_bio.ConfigError,
+            UsageError=stepwise_mol_bio.UsageError,
     )
     if isinstance(x, str):
         err_type = err_eval(x)
@@ -85,7 +112,7 @@ def error(x):
         err_type = err_eval(x['type'])
         err_messages = x.get('message', [])
         if not isinstance(err_messages, list):
-            err_messages = list(err_messages)
+            err_messages = [err_messages]
 
     # Normally I'd use `@contextmanager` to make a context manager like this, 
     # but generator-based context managers cannot be reused.  This is a problem 
@@ -95,6 +122,9 @@ def error(x):
     # scratch.
 
     class expect_error:
+
+        def __repr__(self):
+            return f'<expect_error type={err_type!r} messages={err_messages!r}>'
 
         def __enter__(self):
             self.raises = pytest.raises(err_type)
@@ -110,19 +140,24 @@ def error(x):
 def empty_ok(x):
     return Or(x, And('', lambda y: type(x)()))
 
+def eval_db(reagents):
+    db = freezerbox.Database()
+    reagents = Schema(empty_ok({str: str}))(reagents)
 
-def exec_app(src, globals=None, **kw_globals):
-    if globals is None:
-        globals = {}
+    for tag, reagent in reagents.items():
+        db[tag] = eval_freezerbox(reagent)
 
-    globals.update(stepwise_mol_bio.__dict__)
+    return db
 
-    try:
-        exec(src, globals)
-    except Exception as err:
-        raise Invalid(str(err)) from err
+def exec_app(src):
+    app = exec_with('app').all(stepwise_mol_bio)(src)
 
-    return globals['app']
+    # Make sure the app doesn't try to access a real database.
+    app.db = freezerbox.Database()
+
+    return app
+
+eval_freezerbox = eval_with().all(freezerbox)
 
 app_expected = Schema({
     'app': exec_app,
@@ -141,5 +176,9 @@ app_expected_error = Schema({
     **error_or({
         'expected': eval,
     }),
+})
+db_expected = Schema({
+    'db': eval_db,
+    'expected': eval_with(),
 })
 
