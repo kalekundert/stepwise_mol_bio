@@ -15,7 +15,7 @@ from stepwise import StepwiseConfig, pl, ul
 from freezerbox import (
         ReagentConfig, MakerArgsConfig,
         parse_mass_ug, parse_volume_uL, parse_size_bp,
-        iter_combo_makers, group_by_identity, join_lists,
+        group_by_identity, join_lists,
 )
 from appcli import Key, Method, DocoptConfig
 from inform import Error, plural, did_you_mean
@@ -133,14 +133,8 @@ Options:
 
     @classmethod
     def make(cls, db, products):
-        def factory():
-            app = cls.from_params()
-            app.db = db
-            return app
-
-        yield from iter_combo_makers(
-                factory,
-                map(cls.from_product, products),
+        yield from cls._make(
+                db, products,
                 group_by={
                     'enzyme_names': group_by_identity,
                     'dna_ug': group_by_identity,
@@ -149,7 +143,7 @@ Options:
                 merge_by={
                     'templates': join_lists,
                     'target_size_bp': list,
-                }
+                },
         )
 
     def get_enzymes(self):
@@ -322,6 +316,9 @@ The heat inactivation step is not necessary if
 the DNA will be purified before use.
 """
         return protocol
+
+    def get_dependencies(self):
+        return self.templates
 
     def get_product_seqs(self):
         n = len(self.templates)

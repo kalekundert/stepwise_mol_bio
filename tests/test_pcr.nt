@@ -264,4 +264,16 @@ test_master_mix:
       > app = Pcr(r)
     expected: {'dna', 'fwd', 'rev'}
 
+test_make:
+  -
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid(seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA')
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2'))
 
+    expected:
+      f2:
+        seq: 'tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga'
+        dependencies: {'f1', 'o1', 'o2'}
+        conc_ng_uL: 50

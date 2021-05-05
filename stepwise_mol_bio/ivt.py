@@ -7,12 +7,12 @@ from stepwise import (
 )
 from stepwise_mol_bio import (
         Main, UsageError,
-        merge_dicts, format_min, join_lists,
+        merge_dicts, format_min,
 )
 from freezerbox import (
         ReagentConfig, MakerArgsConfig,
         parse_volume_uL, parse_time_m, parse_temp_C, convert_conc_unit,
-        unanimous, iter_combo_makers, group_by_identity, normalize_seq,
+        unanimous, group_by_identity, normalize_seq, join_lists,
 )
 from appcli import DocoptConfig, Key, Method
 from inform import plural, warn
@@ -373,9 +373,8 @@ Template Preparation:
 
     @classmethod
     def make(cls, db, products):
-        yield from iter_combo_makers(
-                cls.from_params,
-                map(cls.from_product, products),
+        yield from cls._make(
+                db, products,
                 group_by={
                     'preset': group_by_identity,
                     'volume_uL': group_by_identity,

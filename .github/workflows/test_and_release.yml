@@ -1,6 +1,10 @@
 name: Test and release
 
-on: push
+on:
+  push:
+  schedule:
+    - cron: '0 0 1,15 * *'
+
 jobs:
 
   commitlint:

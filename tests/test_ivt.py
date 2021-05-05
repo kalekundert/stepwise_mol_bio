@@ -42,3 +42,13 @@ def test_affected_by_short(values, expected):
 def test_transcribe(template, expected, error):
     with error:
         assert ivt.transcribe(template) == expected
+
+@parametrize_from_file(schema=db_expected)
+def test_make(db, expected):
+    for tag in expected:
+        assert db[tag].seq == expected[tag]['seq']
+        assert db[tag].dependencies == expected[tag]['dependencies']
+        assert db[tag].molecule == 'RNA'
+        assert db[tag].is_single_stranded == True
+
+

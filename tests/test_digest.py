@@ -149,4 +149,5 @@ def test_protocol(app, expected):
 def test_make(db, expected):
     for tag in expected:
         assert db[tag].seq == expected[tag]['seq']
+        assert db[tag].dependencies == expected[tag]['dependencies']
 

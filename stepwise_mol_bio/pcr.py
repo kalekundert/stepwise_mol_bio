@@ -11,11 +11,12 @@ from stepwise import (
 )
 from stepwise_mol_bio import (
         Main, ConfigError, merge_dicts, comma_set, require_reagent,
-        int_or_expr, float_or_expr, join_lists, merge_names
+        int_or_expr, float_or_expr, merge_names,
 )
 from freezerbox import (
         ReagentConfig, MakerArgsConfig, unanimous,
         parse_volume_uL, parse_temp_C, parse_time_s,
+        group_by_identity, join_lists,
 )
 from more_itertools import first_true, flatten, chunked, all_equal
 from collections.abc import Iterable
@@ -505,28 +506,12 @@ Options:
         self.reagents = reagents
 
     @classmethod
-    def from_product(cls, product):
-        app = cls.from_params()
-        app.db = product.db
-        app.products = [product]
-        app.load(MakerArgsConfig)
-        return app
-
-    @classmethod
     def make(cls, db, products):
-        solo_makers = map(cls.from_product, products)
-
-        def maker_factory():
-            maker = cls.from_params()
-            maker.db = db
-            return maker
-
-        yield from freezerbox.iter_combo_makers(
-                maker_factory,
-                solo_makers,
+        yield from cls._make(
+                db, products,
                 group_by={
-                    'preset': freezerbox.group_by_identity,
-                    'reaction_volume_uL': freezerbox.group_by_identity,
+                    'preset': group_by_identity,
+                    'reaction_volume_uL': group_by_identity,
                 },
                 merge_by={
                     'reagents': join_lists,
@@ -710,7 +695,6 @@ Options:
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
         if x := self.template_stock:
-            debug(self.template_stock)
             pcr['template DNA'].stock_conc = x
 
         # Setup the primers.  This is complicated because the primers might 
@@ -788,7 +772,7 @@ Options:
         return False
 
     def get_dependencies(self):
-        return list(flatten(x.dependencies for x in self.reagents))
+        return set(flatten(x.dependencies for x in self.reagents))
 
 def find_amplicon(template, primer_1, primer_2, is_template_linear=True):
     from Bio.Seq import reverse_complement

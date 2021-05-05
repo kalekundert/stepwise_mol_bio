@@ -38,3 +38,13 @@ def test_extend_time_s(app, expected):
 def test_master_mix(app, expected):
     assert app.master_mix == expected
 
+@parametrize_from_file(schema=db_expected)
+def test_make(db, expected):
+    for tag in expected:
+        assert db[tag].seq == expected[tag]['seq'].upper()
+        assert db[tag].dependencies == expected[tag]['dependencies']
+        assert db[tag].conc_ng_uL == expected[tag]['conc_ng_uL']
+        assert db[tag].molecule == 'DNA'
+        assert db[tag].is_double_stranded == True
+        assert db[tag].is_circular == False
+

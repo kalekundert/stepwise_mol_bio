@@ -448,6 +448,7 @@ test_make:
     expected:
       f1:
         seq: 'AATTCAAGCTTG'
+        dependencies: {'p1'}
 
   -
     db:
@@ -462,3 +463,4 @@ test_make:
     expected:
       f2:
         seq: 'AGCTT'
+        dependencies: {'f1'}

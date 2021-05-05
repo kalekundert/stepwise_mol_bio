@@ -289,3 +289,14 @@ test_transcribe:
     error:
       type: ValueError
       message: no T7 promoter found
+
+test_make:
+  -
+    db:
+      f1: NucleicAcid(seq='taatacgactcactataGATTACA')
+      f2: NucleicAcid(synthesis=parse_fields('ivt template=f1'))
+
+    expected:
+      f2:
+        seq: 'GAUUACA'
+        dependencies: {'f1'}

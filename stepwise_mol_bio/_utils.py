@@ -4,7 +4,7 @@ import sys
 import appcli
 import tidyexc
 
-from freezerbox import MakerArgsConfig
+from freezerbox import MakerArgsConfig, iter_combo_makers
 from appdirs import AppDirs
 from inform import format_range
 from more_itertools import all_equal
@@ -26,12 +26,26 @@ class Main(appcli.App):
             print(err, file=sys.stderr)
 
     @classmethod
-    def from_product(cls, product):
-        app = cls.from_params()
-        app.db = product.db
-        app.products = [product]
-        app.load(MakerArgsConfig)
-        return app
+    def _make(cls, db, products, group_by={}, merge_by={}):
+
+        def solo_maker_factory(product):
+            app = cls.from_params()
+            app.db = product.db
+            app.products = [product]
+            app.load(MakerArgsConfig)
+            return app
+
+        def combo_maker_factory():
+            app = cls.from_params()
+            app.db = db
+            return app
+
+        yield from iter_combo_makers(
+                combo_maker_factory,
+                map(solo_maker_factory, products),
+                group_by=group_by,
+                merge_by=merge_by,
+        )
 
 
 
@@ -61,9 +75,6 @@ def hanging_indent(text, prefix):
     if isinstance(prefix, int):
         prefix = ' ' * prefix
     return indent(text, prefix)[len(prefix):]
-
-def join_lists(lists):
-    return sum(lists, [])
 
 def merge_dicts(dicts):
     result = {}
