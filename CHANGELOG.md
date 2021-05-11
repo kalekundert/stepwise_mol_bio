@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v1.18.0 (2021-05-11)
+### Feature
+* **spin_cleanup:** Implement freezerbox maker plugin ([`b77cda9`](https://github.com/kalekundert/stepwise_mol_bio/commit/b77cda92fa8991c30b21dbe593e3987459f2029e))
+
+### Fix
+* **gel:** Don't try to adjust volumes if there is no solvent ([`cb7f4af`](https://github.com/kalekundert/stepwise_mol_bio/commit/cb7f4af8f493bb800d77051d7260b3ca38714adb))
+
 ## v1.17.0 (2021-05-05)
 ### Feature
 * **digest:** Implement freezerbox maker plugin ([`b95a73f`](https://github.com/kalekundert/stepwise_mol_bio/commit/b95a73ffde8f94c8c6312dc5eb199351e4a944b7))
