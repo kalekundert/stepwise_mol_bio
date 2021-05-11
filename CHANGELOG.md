@@ -2,6 +2,20 @@
 
 <!--next-version-placeholder-->
 
+## v1.17.0 (2021-05-05)
+### Feature
+* **digest:** Implement freezerbox maker plugin ([`b95a73f`](https://github.com/kalekundert/stepwise_mol_bio/commit/b95a73ffde8f94c8c6312dc5eb199351e4a944b7))
+* **ivtt:** Add an --extra-percent option ([`5e25d56`](https://github.com/kalekundert/stepwise_mol_bio/commit/5e25d56519019f5228e885df8050128aca9e32de))
+* **aliquot:** Implement freezerbox maker plugin ([`4b7977f`](https://github.com/kalekundert/stepwise_mol_bio/commit/4b7977fe6445c0613de5ed8cffac3f85efbbdefb))
+
+### Fix
+* **ivt:** Include rNTP mix in the master mix ([`6306ee6`](https://github.com/kalekundert/stepwise_mol_bio/commit/6306ee628acaa5ba70fb13b4ee1d1376eec107eb))
+* **spin_cleanup:** Update preset name ([`2eb8419`](https://github.com/kalekundert/stepwise_mol_bio/commit/2eb8419a8a816477ffe0ab06fa8db8ca8bba9f7c))
+* **ivt:** Don't require unanimous template concentrations ([`1496226`](https://github.com/kalekundert/stepwise_mol_bio/commit/14962261341bd414cb5994e9f4dbb93f9d8e41e8))
+
+### Documentation
+* **ivt:** Tweak database section ([`9bbb70f`](https://github.com/kalekundert/stepwise_mol_bio/commit/9bbb70f219e21e145fdb393c617e55cdaaf63e23))
+
 ## v1.16.0 (2021-04-26)
 ### Feature
 * **ivt:** Implement freezerbox maker plugin ([`b07cdfb`](https://github.com/kalekundert/stepwise_mol_bio/commit/b07cdfbc65f97d5edc9e513c8cf7f308bdeb5aa7))
