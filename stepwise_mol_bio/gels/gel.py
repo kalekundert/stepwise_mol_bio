@@ -255,7 +255,8 @@ Options:
             if x := self.mix_volume_uL:
                 mix.hold_ratios.volume = x, 'µL'
 
-            mix.fix_volumes('sample')
+            if mix.solvent:
+                mix.fix_volumes('sample')
 
             p += pl(
                     f"Prepare {plural(self.num_samples):# sample/s} for {self.title}:",
