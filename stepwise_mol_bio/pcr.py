@@ -499,26 +499,21 @@ Options:
             default=None,
     )
 
+    group_by = {
+        'preset': group_by_identity,
+        'reaction_volume_uL': group_by_identity,
+    }
+    merge_by = {
+        'reagents': join_lists,
+        'anneal_temp_C': list,
+        'extend_time_s': max,
+    }
+
     def __bareinit__(self):
         self._db = None
 
     def __init__(self, reagents):
         self.reagents = reagents
-
-    @classmethod
-    def make(cls, db, products):
-        yield from cls._make(
-                db, products,
-                group_by={
-                    'preset': group_by_identity,
-                    'reaction_volume_uL': group_by_identity,
-                },
-                merge_by={
-                    'reagents': join_lists,
-                    'anneal_temp_C': list,
-                    'extend_time_s': max,
-                },
-        )
 
     def format_usage(self):
         return self.__doc__

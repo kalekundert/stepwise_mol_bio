@@ -1,0 +1,69 @@
+test_protocol:
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+    expected:
+      - Purify using QIAquick PCR purification kit (28104)
+      - Perform all spin steps at 17900g.
+
+      - Add 5 volumes PB to the crude DNA.
+      - If not yellow: Add 0.2 volumes 3M sodium acetate, pH=5.0.
+      - Load on a QIAquick column.
+      - Spin 30s; discard flow-through.
+
+      - Add 750 µL PE.
+      - Spin 30s; discard flow-through.
+      - Spin 1m; discard flow-through.
+
+      - Add 50 µL EB.
+      - Wait at least 1m.
+      - Spin 30s; keep flow-through.
+
+      - https://tinyurl.com/xr8ruvr9
+      - Column capacity: 10 µg
+
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.target_sample_volume_uL = 50
+    expected:
+      - Ensure that the sample is 50 µL.
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.target_sample_volume_uL = {'min': 50, 'max': 100}
+    expected:
+      - Ensure that the sample is between 50–100 µL.
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.target_sample_volume_uL = {'min': 50}
+    expected:
+      - Ensure that the sample is at least 50 µL.
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.target_sample_volume_uL = {'max': 100}
+    expected:
+      - Ensure that the sample is at most 100 µL.
+
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.bind_volume_uL = 500
+    expected:
+      - Add 500 µL PB to the crude DNA.
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.sample_volume_uL = 50
+    expected:
+      - Add 250 µL PB to the crude DNA.
+
+  -
+    app:
+      > app = SpinCleanup('qiagen')
+      > app.products = ['f1', 'f2']
+      > app.show_product_names = True
+    expected:
+      - Purify f1 and f2 using QIAquick PCR purification kit (28104)

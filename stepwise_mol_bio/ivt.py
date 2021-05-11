@@ -365,26 +365,21 @@ Template Preparation:
             default_factory=dict,
     )
 
+    group_by = {
+        'preset': group_by_identity,
+        'volume_uL': group_by_identity,
+        'incubation_times_min': group_by_identity,
+        'incubation_temp_C': group_by_identity,
+    }
+    merge_by = {
+        'templates': join_lists,
+    }
+
     def __init__(self, templates):
         self.templates = templates
 
     def __repr__(self):
         return f'Ivt(templates={self.templates!r})'
-
-    @classmethod
-    def make(cls, db, products):
-        yield from cls._make(
-                db, products,
-                group_by={
-                    'preset': group_by_identity,
-                    'volume_uL': group_by_identity,
-                    'incubation_times_min': group_by_identity,
-                    'incubation_temp_C': group_by_identity,
-                },
-                merge_by={
-                    'templates': join_lists,
-                },
-        )
 
     def get_reaction(self):
         rxn = self.reaction_prototype.copy()
@@ -483,7 +478,6 @@ Template Preparation:
 
     def get_product_molecule(self):
         return 'ssRNA'
-
 
 def transcribe(template_seq):
     t7_promoter = 'TAATACGACTCACTATA'

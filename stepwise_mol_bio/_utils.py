@@ -14,6 +14,11 @@ app_dirs = AppDirs("stepwise_mol_bio")
 
 class Main(appcli.App):
     usage_io = sys.stderr
+    group_by = {}
+    merge_by = {}
+
+    def __bareinit__(self):
+        self.products = []
 
     @classmethod
     def main(cls):
@@ -26,7 +31,7 @@ class Main(appcli.App):
             print(err, file=sys.stderr)
 
     @classmethod
-    def _make(cls, db, products, group_by={}, merge_by={}):
+    def make(cls, db, products, *, group_by=None, merge_by=None):
 
         def solo_maker_factory(product):
             app = cls.from_params()
@@ -40,12 +45,34 @@ class Main(appcli.App):
             app.db = db
             return app
 
+        if group_by is None:
+            group_by = cls.group_by
+
+        if merge_by is None:
+            merge_by = cls.merge_by
+
         yield from iter_combo_makers(
                 combo_maker_factory,
                 map(solo_maker_factory, products),
                 group_by=group_by,
                 merge_by=merge_by,
         )
+
+
+class Cleanup(Main):
+
+    def __bareinit__(self):
+        super().__bareinit__()
+        self.show_product_names = False
+
+    @classmethod
+    def make(cls, db, products):
+        makers = list(super().make(db, products))
+        show_product_names = (len(makers) != 1)
+
+        for maker in makers:
+            maker.show_product_names = show_product_names
+            yield maker
 
 
 

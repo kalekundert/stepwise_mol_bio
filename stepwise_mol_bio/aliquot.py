@@ -2,12 +2,12 @@
 
 import stepwise, appcli, autoprop
 from stepwise import Quantity
-from stepwise_mol_bio import Main
-from freezerbox import MakerArgsConfig, iter_combo_makers, group_by_identity
+from stepwise_mol_bio import Cleanup
+from freezerbox import MakerArgsConfig, group_by_identity
 from appcli import DocoptConfig, Key
 
 @autoprop
-class Aliquot(Main):
+class Aliquot(Cleanup):
     """\
 Make aliquots
 
@@ -38,33 +38,15 @@ Arguments:
             ignore=None,
     )
 
-    def __bareinit__(self):
-        self.products = []
-        self.show_product_names = False
+    group_by = {
+        'volume': group_by_identity,
+        'conc': group_by_identity,
+    }
 
     def __init__(self, volume, conc=None, products=None):
         self.volume = volume
         self.conc = conc
         self.products = products or []
-
-    @classmethod
-    def make(cls, db, products):
-        makers_it = iter_combo_makers(
-                cls.from_params,
-                map(cls.from_product, products),
-                group_by={
-                    'volume': group_by_identity,
-                    'conc': group_by_identity,
-                },
-                merge_by={
-                },
-        )
-        makers = list(makers_it)
-        show_product_names = (len(makers) != 1)
-
-        for maker in makers:
-            maker.show_product_names = show_product_names
-            yield maker
 
     def get_protocol(self):
         Q = Quantity.from_string

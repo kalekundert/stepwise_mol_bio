@@ -123,6 +123,16 @@ Options:
                     x if isinstance(x, list) else [x] * len(self.templates)
     )
 
+    group_by = {
+        'enzyme_names': group_by_identity,
+        'dna_ug': group_by_identity,
+        'target_volume_uL': group_by_identity,
+    }
+    merge_by = {
+        'templates': join_lists,
+        'target_size_bp': list,
+    }
+
     def __bareinit__(self):
         self._enzyme_db = None
 
@@ -130,21 +140,6 @@ Options:
         self.templates = templates
         self.enzyme_names = enzyme_names
         self.enzyme_db = db
-
-    @classmethod
-    def make(cls, db, products):
-        yield from cls._make(
-                db, products,
-                group_by={
-                    'enzyme_names': group_by_identity,
-                    'dna_ug': group_by_identity,
-                    'target_volume_uL': group_by_identity,
-                },
-                merge_by={
-                    'templates': join_lists,
-                    'target_size_bp': list,
-                },
-        )
 
     def get_enzymes(self):
         return [self.enzyme_db[x] for x in self.enzyme_names]
