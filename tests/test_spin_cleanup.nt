@@ -67,3 +67,55 @@ test_protocol:
       > app.show_product_names = True
     expected:
       - Purify f1 and f2 using QIAquick PCR purification kit (28104)
+
+  -
+    app:
+      > app = SpinCleanup('zymo/rna-clean-conc/25')
+    expected:
+      - Purify using Zymo Clean & Concentrator-25 kit (R1017)
+      - Perform all spin steps at 16000g.
+
+      - Ensure that the sample is at least 50 µL.
+      - Add 2 volumes RNA binding buffer to the crude RNA.
+      - Add 3 volumes 95-100% ethanol to the crude RNA.
+      - Load on a Zymo-Spin IICR column.
+      - Spin 30s; discard flow-through.
+
+      - Add 400 µL RNA prep buffer.
+      - Spin 30s; discard flow-through.
+      - Add 700 µL RNA wash buffer.
+      - Spin 30s; discard flow-through.
+      - Add 400 µL RNA wash buffer.
+      - Spin 1m; discard flow-through.
+
+      - Add 50 µL nuclease-free water.
+      - Spin 30s; keep flow-through.
+
+      - https://tinyurl.com/jn3nw4c8
+      - Column capacity: 50 µg
+  -
+    app:
+      > app = SpinCleanup('zymo/rna-clean-conc/100')
+    expected:
+      - Purify using Zymo Clean & Concentrator-100 kit (R1019)
+      - Perform all spin steps at 16000g.
+
+      - Ensure that the sample is at least 500 µL.
+      - Add 2 volumes RNA binding buffer to the crude RNA.
+      - Add 3 volumes 95-100% ethanol to the crude RNA.
+      - Load on a Zymo-Spin V-E column with reservoir.
+      - Apply vacuum.
+
+      - Add 400 µL RNA prep buffer.
+      - Apply vacuum.
+      - Add 400 µL RNA wash buffer.
+      - Apply vacuum.
+      - Add 400 µL RNA wash buffer.
+      - Apply vacuum.
+      - Spin 1m; discard flow-through.
+
+      - Add 100 µL nuclease-free water.
+      - Spin 30s; keep flow-through.
+
+      - https://tinyurl.com/2va2v8hm
+      - Column capacity: 250 µg

@@ -62,7 +62,7 @@ default_preset = 'ssoadv'
 default_preset = 'qiagen'
 
 [spin_cleanup.presets.qiagen]
-title = 'QIAquick PCR purification kit (28104)'
+protocol_name = 'QIAquick PCR purification kit (28104)'
 protocol_link = 'https://tinyurl.com/xr8ruvr9'
 column_name = 'QIAquick column'
 spin_speed_g = 17900
@@ -89,7 +89,7 @@ elute_wait_sec = 60
 elute_spin_sec = 30
 
 [spin_cleanup.presets.'qiagen/min-elute/pcr']
-title = 'Qiagen MinElute PCR purification kit (28004)'
+protocol_name = 'Qiagen MinElute PCR purification kit (28004)'
 inherit = 'qiagen'
 protocol_link = 'https://www.qiagen.com/HB-2069'
 column_name = 'MinElute column'
@@ -102,7 +102,7 @@ elute_min_volume_uL = 10
 elute_spin_sec = 60
 
 [spin_cleanup.presets.'qiagen/min-elute/rxn']
-title = 'Qiagen MinElute reaction cleanup kit (28204)'
+protocol_name = 'Qiagen MinElute reaction cleanup kit (28204)'
 inherit = 'qiagen/min-elute/pcr'
 
 sample_volume_uL.min = 20
@@ -112,6 +112,59 @@ bind_buffer = 'ERC'
 bind_volume_uL = 300
 
 pH_volume_uL = 10
+
+[spin_cleanup.presets.'zymo/rna-clean-conc/5']
+inherit = 'zymo/rna-clean-conc/25'
+protocol_name = 'Zymo Clean & Concentrator-5 kit (R1015)'
+protocol_link = 'https://tinyurl.com/yd699u8b'
+column_capacity_ug = 10
+elute_volume_uL = 15
+elute_min_volume_uL = 6
+
+[spin_cleanup.presets.'zymo/rna-clean-conc/25']
+protocol_name = 'Zymo Clean & Concentrator-25 kit (R1017)'
+protocol_link = 'https://tinyurl.com/jn3nw4c8'
+column_name = 'Zymo-Spin IICR column'
+column_capacity_ug = 50
+spin_speed_g = 16000
+sample_type = 'RNA'
+sample_volume_uL.min = 50
+
+bind_buffer = ['RNA binding buffer', '95-100% ethanol']
+bind_volume_x = [2, 3]
+bind_spin_sec = 30
+
+wash_buffer = ['RNA prep buffer', 'RNA wash buffer', 'RNA wash buffer']
+wash_volume_uL = [400, 700, 400]
+wash_spin_sec = [30, 30, 60]
+
+elute_buffer = 'nuclease-free water'
+elute_volume_uL = 50
+elute_min_volume_uL = 25
+elute_spin_sec = 30
+
+[spin_cleanup.presets.'zymo/rna-clean-conc/100']
+protocol_name = 'Zymo Clean & Concentrator-100 kit (R1019)'
+protocol_link = 'https://tinyurl.com/2va2v8hm'
+column_name = 'Zymo-Spin V-E column with reservoir'
+column_capacity_ug = 250
+spin_speed_g = 16000
+sample_type = 'RNA'
+sample_volume_uL.min = 500
+
+bind_buffer = ['RNA binding buffer', '95-100% ethanol']
+bind_volume_x = [2, 3]
+bind_vacuum = true
+
+wash_buffer = ['RNA prep buffer', 'RNA wash buffer', 'RNA wash buffer']
+wash_volume_uL = [400, 400, 400]
+wash_vacuum = [true, true, true]
+dry_spin_sec = 60
+
+elute_buffer = 'nuclease-free water'
+elute_volume_uL = 100
+elute_min_volume_uL = 100
+elute_spin_sec = 30
 
 
 [gel.presets.'bolt/mes']
