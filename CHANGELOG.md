@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v1.19.0 (2021-05-19)
+### Feature
+* **spin_cleanup:** Add Zymo RNA Clean & Concentrator protocols ([`713f444`](https://github.com/kalekundert/stepwise_mol_bio/commit/713f444164c4de97ea8605cd94e64869b1139e1d))
+
+### Fix
+* **ivt:** Update variable name ([`c3d73ce`](https://github.com/kalekundert/stepwise_mol_bio/commit/c3d73ce43f057888e3715943d5304ce683cfa328))
+
 ## v1.18.0 (2021-05-11)
 ### Feature
 * **spin_cleanup:** Implement freezerbox maker plugin ([`b77cda9`](https://github.com/kalekundert/stepwise_mol_bio/commit/b77cda92fa8991c30b21dbe593e3987459f2029e))
