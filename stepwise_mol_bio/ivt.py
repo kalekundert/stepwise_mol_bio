@@ -387,7 +387,7 @@ Template Preparation:
         rxn.extra_percent = self.extra_percent
 
         if self.volume_uL:
-            ivt.hold_ratios.volume = self.volume_uL, 'µL'
+            rxn.hold_ratios.volume = self.volume_uL, 'µL'
 
         if self.rntp_mix:
             rntps = []
