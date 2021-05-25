@@ -182,3 +182,23 @@ db_expected = Schema({
     'expected': eval_with(),
 })
 
+def match_protocol(app, expected):
+    actual = app.protocol.format_text()
+    prev = None
+    print(actual.strip() + '\n')
+
+    i = 0
+    for x in expected:
+        j = actual.find(x, i)
+
+        if j == -1:
+            print(f"Expected:\n  {x!r}")
+            if prev:
+                print(f"After:\n  {prev!r}")
+
+            return False
+
+        i = j + len(x)
+        prev = x
+
+    return True

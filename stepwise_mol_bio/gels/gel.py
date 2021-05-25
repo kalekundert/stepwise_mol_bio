@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import stepwise, appcli, autoprop
-from appcli import DocoptConfig
+from appcli import Key, Method, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, dl
 from stepwise_mol_bio import Main, ConfigError, merge_dicts
 from inform import plural
@@ -68,6 +68,9 @@ Options:
     --mix-extra <percent>
         How much extra sample/loading buffer mix to make.
 
+    -M --no-mix
+        Don't describe how to prepare the sample/loading buffer mix.
+
     --incubate-temp <°C>
         What temperature to incubate the sample/loading buffer at before 
         loading it onto the gel.  The incubation step will be skipped if 
@@ -79,6 +82,13 @@ Options:
         temperature before loading it onto the gel.  The incubation step will 
         be skipped if neither `--incubate-temp` nor `--incubate-time` are 
         specified (either on the command-line or via the preset).
+
+    --prerun-volts
+        The voltage to pre-run the gel at.  By default, this will be the same 
+        as the voltage the gel is run at.
+
+    --prerun-time
+        How long to prerun the gel, in minutes.
 
     -l --load-volume <µL>
         The volume of the sample/loading buffer mix to load onto the gel.
@@ -94,7 +104,95 @@ Options:
         For example, this could be 'gelred' or 'coomassie -f'.
         
     -S --no-stain
-        Leave off the staining step of the protocol.
+        Don't describe how to stain/visualize the gel.
+
+Configuration:
+    Default values for this protocol can be specified in any of the following 
+    stepwise configuration files:
+
+        ${hanging_indent(app.config_paths, 8)}
+
+    molbio.gel.presets:
+        Named groups of default reaction parameters.  Typically each preset 
+        corresponds to a particular kit or protocol.  See below for the various 
+        settings that can be specified in each preset.
+
+    molbio.gel.presets.<name>.title:
+        How to briefly describe the gel in the protocol.  The default is 
+        "electrophoresis".
+
+    molbio.gel.presets.<name>.inherit:
+        Copy all settings from another preset.  This can be used to make small 
+        tweaks to a gel protocol, e.g. "SDS PAGE at lower-than-usual voltage".
+
+    molbio.gel.presets.<name>.sample_mix:
+        A table describing how to prepare the samples for the gel, in the 
+        format understood by `stepwise.MasterMix.from_string()`.  The table 
+        must contain one reagent named "sample".  This will be replaced with 
+        the actual sample name specified on the command line, if possible.  If 
+        no table is specified, the sample mix step will be left out of the 
+        protocol.
+
+    molbio.gel.presets.<name>.sample_conc:
+        The default value for the `--sample-conc` option.
+
+    molbio.gel.presets.<name>.sample_volume_uL:
+        The default value for the `--sample-volume` option.
+
+    molbio.gel.presets.<name>.ladder:
+        The name of the ladder to use with this gel.
+
+    molbio.gel.presets.<name>.ladder_volume_uL:
+        How much ladder to load, in µL.
+
+    molbio.gel.presets.<name>.mix_volume_uL:
+        The default value for the `--mix-volume` option.
+        
+    molbio.gel.presets.<name>.mix_extra_percent:
+        The default value for the `--mix-extra` option.
+
+    molbio.gel.presets.<name>.incubate_temp_C:
+        The default value for the `--incubate-temp` option.
+
+    molbio.gel.presets.<name>.incubate_time_min:
+        The default value for the `--incubate-time` option.
+
+    molbio.gel.presets.<name>.gel_type:
+        What kind of gel to use, e.g. "Bis-Tris/MES SDS PAGE", "TBE/urea PAGE", 
+        "TAE/agarose", etc.  Don't include the gel percentage here; use the 
+        `gel_percent` setting for that.
+
+    molbio.gel.presets.<name>.gel_percent:
+        The default value for the `--percent` option.
+
+    molbio.gel.presets.<name>.gel_additive:
+        The default value for the `--additive` option.
+
+    molbio.gel.presets.<name>.gel_buffer:
+        The default value for the `--buffer` option.
+        
+    molbio.gel.presets.<name>.load_volume_uL:
+        The default value for the `--load-volume` option.
+
+    molbio.gel.presets.<name>.prerun_volts:
+        The default value for the `--prerun-volts` option.
+
+    molbio.gel.presets.<name>.prerun_time_min:
+        The default value for the `--prerun-time` option.
+
+    molbio.gel.presets.<name>.run_volts:
+        The default value for the `--run-volts` option.
+
+    molbio.gel.presets.<name>.run_time_min:
+        The default value for the `--run-time` option.
+
+    molbio.gel.presets.<name>.stain:
+        The default value for the `--stain` option.  If unspecified, there will 
+        be no staining step by default.
+
+    molbio.gel.presets.<name>.protocol_link:
+        A hyperlink to an online description of the protocol, e.g. from the gel 
+        manufacturer.  This link will be included as a footnote.
 """
 
     __config__ = [
@@ -103,111 +201,125 @@ Options:
             StepwiseConfig('molbio.gel'),
     ]
     preset_briefs = appcli.config_attr()
+    config_paths = appcli.config_attr()
 
     presets = appcli.param(
-            appcli.Key(StepwiseConfig, 'presets'),
+            Key(StepwiseConfig, 'presets'),
             pick=merge_dicts,
     )
     preset = appcli.param(
-            appcli.Key(DocoptConfig, '<preset>'),
+            Key(DocoptConfig, '<preset>'),
     )
     title = appcli.param(
-            appcli.Key(PresetConfig, 'title'),
+            Key(PresetConfig, 'title'),
             default='electrophoresis',
     )
     num_samples = appcli.param(
-            appcli.Key(DocoptConfig, '<samples>', cast=parse_num_samples),
+            Key(DocoptConfig, '<samples>', cast=parse_num_samples),
             ignore=None,
             default=1,
     )
     sample_name = appcli.param(
-            appcli.Key(DocoptConfig, '<samples>', cast=parse_sample_name),
+            Key(DocoptConfig, '<samples>', cast=parse_sample_name),
             default=None,
     )
     sample_mix = appcli.param(
-            appcli.Key(PresetConfig, 'sample_mix'),
+            Key(DocoptConfig, '--no-mix', cast=lambda x: None),
+            Key(PresetConfig, 'sample_mix'),
             default=None,
     )
     sample_conc = appcli.param(
-            appcli.Key(DocoptConfig, '--sample-conc'),
-            appcli.Key(PresetConfig, 'sample_conc'),
+            Key(DocoptConfig, '--sample-conc'),
+            Key(PresetConfig, 'sample_conc'),
             cast=float,
             default=None,
     )
     sample_volume_uL = appcli.param(
-            appcli.Key(DocoptConfig, '--sample-volume'),
-            appcli.Key(PresetConfig, 'sample_volume_uL'),
+            Key(DocoptConfig, '--sample-volume'),
+            Key(PresetConfig, 'sample_volume_uL'),
             cast=float,
             default=None,
     )
     ladder_name = appcli.param(
-            appcli.Key(PresetConfig, 'ladder'),
+            Key(PresetConfig, 'ladder'),
             default=None,
     )
     ladder_volume_uL = appcli.param(
-            appcli.Key(PresetConfig, 'ladder_volume_uL'),
+            Key(PresetConfig, 'ladder_volume_uL'),
     )
     mix_volume_uL = appcli.param(
-            appcli.Key(DocoptConfig, '--mix-volume'),
-            appcli.Key(PresetConfig, 'mix_volume_uL'),
+            Key(DocoptConfig, '--mix-volume'),
+            Key(PresetConfig, 'mix_volume_uL'),
             cast=float,
             default=None,
     )
     mix_extra_percent = appcli.param(
-            appcli.Key(DocoptConfig, '--mix-extra'),
-            appcli.Key(PresetConfig, 'mix_extra_percent'),
+            Key(DocoptConfig, '--mix-extra'),
+            Key(PresetConfig, 'mix_extra_percent'),
             cast=float,
             default=50,
     )
     incubate_temp_C = appcli.param(
-            appcli.Key(DocoptConfig, '--incubate-temp'),
-            appcli.Key(PresetConfig, 'incubate_temp_C'),
+            Key(DocoptConfig, '--incubate-temp'),
+            Key(PresetConfig, 'incubate_temp_C'),
             cast=float,
     )
     incubate_time_min = appcli.param(
-            appcli.Key(DocoptConfig, '--incubate-time'),
-            appcli.Key(PresetConfig, 'incubate_time_min'),
+            Key(DocoptConfig, '--incubate-time'),
+            Key(PresetConfig, 'incubate_time_min'),
             cast=int,
     )
     gel_type = appcli.param(
-            appcli.Key(PresetConfig, 'gel_type'),
+            Key(PresetConfig, 'gel_type'),
     )
     gel_percent = appcli.param(
-            appcli.Key(DocoptConfig, '--percent'),
-            appcli.Key(PresetConfig, 'gel_percent'),
+            Key(DocoptConfig, '--percent'),
+            Key(PresetConfig, 'gel_percent'),
     )
     gel_additive = appcli.param(
-            appcli.Key(DocoptConfig, '--additive'),
-            appcli.Key(PresetConfig, 'gel_additive'),
+            Key(DocoptConfig, '--additive'),
+            Key(PresetConfig, 'gel_additive'),
             default=None,
     )
     gel_buffer = appcli.param(
-            appcli.Key(DocoptConfig, '--buffer'),
-            appcli.Key(PresetConfig, 'gel_buffer'),
+            Key(DocoptConfig, '--buffer'),
+            Key(PresetConfig, 'gel_buffer'),
     )
     load_volume_uL = appcli.param(
-            appcli.Key(DocoptConfig, '--load-volume'),
-            appcli.Key(PresetConfig, 'load_volume_uL'),
+            Key(DocoptConfig, '--load-volume'),
+            Key(PresetConfig, 'load_volume_uL'),
             cast=float,
     )
+    prerun_volts = appcli.param(
+            Key(DocoptConfig, '--prerun-volts'),
+            Key(PresetConfig, 'prerun_volts'),
+            Method(lambda self: self.run_volts),
+            cast=float,
+    )
+    prerun_time_min = appcli.param(
+            Key(DocoptConfig, '--prerun-time'),
+            Key(PresetConfig, 'prerun_time_min'),
+            cast=int,
+            default=None,
+    )
     run_volts = appcli.param(
-            appcli.Key(DocoptConfig, '--run-volts'),
-            appcli.Key(PresetConfig, 'run_volts'),
+            Key(DocoptConfig, '--run-volts'),
+            Key(PresetConfig, 'run_volts'),
             cast=float,
     )
     run_time_min = appcli.param(
-            appcli.Key(DocoptConfig, '--run-time'),
-            appcli.Key(PresetConfig, 'run_time_min'),
+            Key(DocoptConfig, '--run-time'),
+            Key(PresetConfig, 'run_time_min'),
             cast=int,
     )
     stain = appcli.param(
-            appcli.Key(DocoptConfig, '--stain'),
-            appcli.Key(DocoptConfig, '--no-stain', cast=lambda x: None),
-            appcli.Key(PresetConfig, 'stain'),
+            Key(DocoptConfig, '--stain'),
+            Key(DocoptConfig, '--no-stain', cast=lambda x: None),
+            Key(PresetConfig, 'stain'),
             default=None,
     )
     protocol_link = appcli.param(
-            appcli.Key(PresetConfig, 'protocol_link'),
+            Key(PresetConfig, 'protocol_link'),
             default=None,
     )
 
@@ -275,7 +387,9 @@ Options:
             ("buffer", f"{self.gel_buffer}"),
             ("ladder", f"{self.ladder_volume_uL:g} µL {self.ladder_name}"
                 if self.ladder_name else None),
-            ("samples", f"{self.load_volume_uL:g} µL"),
+            ("samples", f"{self.load_volume_uL:g} µL/lane"),
+            ("prerun", f"{self.prerun_volts:g}V for {self.prerun_time_min:g} min"
+                if self.prerun_time_min else None),
             ("run", f"{self.run_volts:g}V for {self.run_time_min:g} min"),
         ))
 

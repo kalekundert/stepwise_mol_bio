@@ -1,0 +1,127 @@
+test_protocol:
+  # Need to stop pytest from capturing stdin in order to test staining.  For 
+  # now, I'm just skipping the staining step.
+  -
+    id: presets-agarose/1
+    app:
+      > app = Gel('agarose/1')
+      > app.stain = None
+    expected:
+      - Prepare 1 sample for electrophoresis:
+      - Reagent         Stock   Volume
+      - ──────────────────────────────
+      - loading buffer     6x  1.00 µL
+      - sample                 5.00 µL
+      - ──────────────────────────────
+      -                        6.00 µL
+
+      - Run a gel:
+      - gel: 1% agarose/TAE
+      - buffer: 1x TAE
+      - samples: 5 µL/lane
+      - run: 100V for 60 min
+  -
+    id: presets-bolt/mes
+    app:
+      > app = Gel('bolt/mes')
+      > app.stain = None
+    expected:
+      - Prepare 1 sample for SDS PAGE:
+
+      - Reagent                     Stock    Volume
+      - ───────────────────────────────────────────
+      - water                               4.00 µL
+      - Bolt LDS sample buffer         4x   2.50 µL
+      - Bolt reducing agent           10x   1.00 µL
+      - sample                  100 ng/µL   2.50 µL
+      - ───────────────────────────────────────────
+      -                                    10.00 µL
+
+      - Incubate at 70°C for 10 min.
+
+      - Run a gel:
+
+      - gel: 4–12% Bolt Bis-Tris SDS PAGE
+      - buffer: Bolt MES SDS running buffer
+      - ladder: 5 µL SeeBlue Plus2 (Invitrogen LC5925)
+      - samples: 10 µL/lane
+      - run: 165V for 42 min
+
+  -
+    id: sample-conc
+    app:
+      > app = Gel('bolt/mes')
+      > app.sample_conc = 200
+      > app.stain = None
+    expected:
+      - Reagent                     Stock    Volume
+      - ───────────────────────────────────────────
+      - water                               5.25 µL
+      - Bolt LDS sample buffer         4x   2.50 µL
+      - Bolt reducing agent           10x   1.00 µL
+      - sample                  200 ng/µL   1.25 µL
+      - ───────────────────────────────────────────
+      -                                    10.00 µL
+  -
+    id: sample-volume
+    app:
+      > app = Gel('bolt/mes')
+      > app.sample_volume_uL = 2
+      > app.stain = None
+    expected:
+      - Reagent                     Stock    Volume
+      - ───────────────────────────────────────────
+      - water                               4.50 µL
+      - Bolt LDS sample buffer         4x   2.50 µL
+      - Bolt reducing agent           10x   1.00 µL
+      - sample                  100 ng/µL   2.00 µL
+      - ───────────────────────────────────────────
+      -                                    10.00 µL
+  -
+    id: sample-volume-overflow
+    app:
+      > app = Gel('bolt/mes')
+      > app.sample_volume_uL = 10
+      > app.stain = None
+    expected:
+      - Reagent                     Stock    Volume
+      - ───────────────────────────────────────────
+      - Bolt LDS sample buffer         4x   2.50 µL
+      - Bolt reducing agent           10x   1.00 µL
+      - sample                  100 ng/µL   6.50 µL
+      - ───────────────────────────────────────────
+      -                                    10.00 µL
+  -
+    id: mix-volume
+    app:
+      > app = Gel('bolt/mes')
+      > app.mix_volume_uL = 20
+      > app.stain = None
+    expected:
+      - Reagent                     Stock    Volume
+      - ───────────────────────────────────────────
+      - water                               8.00 µL
+      - Bolt LDS sample buffer         4x   5.00 µL
+      - Bolt reducing agent           10x   2.00 µL
+      - sample                  100 ng/µL   5.00 µL
+      - ───────────────────────────────────────────
+      -                                    20.00 µL
+  -
+    id: prerun
+    app:
+      > app = Gel('agarose/1')
+      > app.prerun_time_min = 30
+      > app.stain = None
+    expected:
+      - prerun: 100V for 30 min
+      - run: 100V for 60 min
+  -
+    id: prerun
+    app:
+      > app = Gel('agarose/1')
+      > app.prerun_time_min = 30
+      > app.prerun_volts = 150
+      > app.stain = None
+    expected:
+      - prerun: 150V for 30 min
+      - run: 100V for 60 min
