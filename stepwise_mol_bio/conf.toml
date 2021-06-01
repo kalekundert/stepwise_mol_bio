@@ -270,6 +270,19 @@ run_volts = 180
 run_time_min = 40
 stain = "stain rna"
 
+[gel.presets.'urea/purify']
+inherit = 'urea'
+
+sample_mix = """
+Reagent              Stock    Volume  MM?
+===============  =========  ========  ===
+water                       to 10 µL  yes
+RNA loading dye         2x      5 µL  yes
+sample               10 µM      5 µL
+"""
+ladder = 'low range ssRNA ladder (NEB N0364S)'
+ladder_volume_uL = 1
+
 [gel.presets.'agarose/1']
 brief = "1.0% agarose"
 gel_type = "agarose/TAE"
@@ -295,6 +308,15 @@ gel_percent = 1.5
 brief = "2.0% agarose"
 inherit = 'agarose/1'
 gel_percent = 2
+
+
+[page_purify]
+default_preset = 'default'
+
+[page_purify.presets.default]
+gel_preset = 'urea/purify'
+cleanup_preset.rna = 'zymo/rna-clean-conc/5'
+cleanup_preset.dna = 'qiagen/min-elute/rxn'
 
 
 [stain.presets.dna]

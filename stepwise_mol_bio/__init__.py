@@ -30,6 +30,7 @@ from .spin_cleanup import SpinCleanup
 # Avoid circular imports
 from .invpcr import InversePcr
 from .qpcr import Qpcr
+from .page_purify import PagePurify
 
 from pathlib import Path
 

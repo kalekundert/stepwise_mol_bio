@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
+import stepwise
 import stepwise_mol_bio
 import freezerbox
 import pytest
 import parametrize_from_file
+
 from voluptuous import Schema, Invalid, Coerce, And, Or, Optional
 from unittest.mock import MagicMock
 from contextlib import nullcontext
+from textwrap import indent
 
 class do_with:
 
@@ -150,7 +153,7 @@ def eval_db(reagents):
     return db
 
 def exec_app(src):
-    app = exec_with('app').all(stepwise_mol_bio)(src)
+    app = exec_with('app').all(stepwise).all(stepwise_mol_bio)(src)
 
     # Make sure the app doesn't try to access a real database.
     app.db = freezerbox.Database()
@@ -181,9 +184,21 @@ db_expected = Schema({
     'db': eval_db,
     'expected': eval_with(),
 })
+db_expected_protocol = Schema({
+    'db': eval_db,
+    'expected': [str],
+})
+cmd_stdout_stderr = Schema({
+    'cmd': str,
+    Optional('stdout', default='^$'): str,
+    Optional('stderr', default='^$'): str,
+})
 
-def match_protocol(app, expected):
-    actual = app.protocol.format_text()
+
+def match_protocol(app, expected, capture=nullcontext()):
+    with capture:
+        actual = app.protocol.format_text()
+
     prev = None
     print(actual.strip() + '\n')
 

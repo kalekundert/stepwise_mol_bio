@@ -19,7 +19,7 @@ def parse_sample_name(name):
     except ValueError:
         return name
 
-@autoprop
+@autoprop.cache
 class Gel(Main):
     """\
 Load, run, and stain gels.
@@ -223,7 +223,7 @@ Configuration:
             Key(DocoptConfig, '<samples>', cast=parse_sample_name),
             default=None,
     )
-    sample_mix = appcli.param(
+    sample_mix_str = appcli.param(
             Key(DocoptConfig, '--no-mix', cast=lambda x: None),
             Key(PresetConfig, 'sample_mix'),
             default=None,
@@ -330,6 +330,21 @@ Configuration:
     def get_protocol(self):
         p = stepwise.Protocol()
 
+        if self.sample_mix:
+            p += self.prep_step
+
+        p += self.run_step
+            
+        if self.stain:
+            p += stepwise.load(self.stain)
+
+        return p
+
+    def del_protocol(self):
+        pass
+
+    def get_prep_step(self):
+
         def both_or_neither(key1, key2):
             has_key1 = has_key2 = True
 
@@ -349,54 +364,66 @@ Configuration:
             else:
                 return False
 
-        if self.sample_mix:
-            mix = stepwise.MasterMix.from_text(self.sample_mix)
-            mix.num_reactions = self.num_samples
-            mix.extra_percent = self.mix_extra_percent
-            mix['sample'].name = self.sample_name
-
-            if x := self.sample_conc:
-                stock_conc = mix['sample'].stock_conc
-                if stock_conc is None:
-                    raise ConfigError(f"can't change sample stock concentration, no initial concentration specified.")
-                mix['sample'].hold_conc.stock_conc = x, stock_conc.unit
-
-            if x := self.sample_volume_uL:
-                mix['sample'].volume = x, 'µL'
-
-            if x := self.mix_volume_uL:
-                mix.hold_ratios.volume = x, 'µL'
-
-            if mix.solvent:
-                mix.fix_volumes('sample')
-
-            p += pl(
-                    f"Prepare {plural(self.num_samples):# sample/s} for {self.title}:",
-                    mix,
+        s = pl(
+                f"Prepare {plural(self.num_samples):# sample/s} for {self.title}:",
+                self.sample_mix,
+        )
+        if x := both_or_neither('incubate_temp_C', 'incubate_time_min'):
+            temp_C, time_min = x
+            s += ul(
+                    f"Incubate at {temp_C:g}°C for {time_min:g} min."
             )
-            if x := both_or_neither('incubate_temp_C', 'incubate_time_min'):
-                temp_C, time_min = x
-                p.steps[-1] += ul(
-                        f"Incubate at {temp_C:g}°C for {time_min:g} min."
-                )
-            
+
+        return s
+
+    def del_prep_step(self):
+        pass
+
+    def get_run_step(self):
+        p = stepwise.Protocol()
         additive = f" with {x}" if (x := self.gel_additive) else ""
         percent = x.replace('-', '–') if isinstance(x := self.gel_percent, str) else x
         p += pl(f"Run a gel{p.add_footnotes(self.protocol_link)}:", dl(
             ("gel", f"{percent}% {self.gel_type}{additive}"),
             ("buffer", f"{self.gel_buffer}"),
-            ("ladder", f"{self.ladder_volume_uL:g} µL {self.ladder_name}"
-                if self.ladder_name else None),
-            ("samples", f"{self.load_volume_uL:g} µL/lane"),
-            ("prerun", f"{self.prerun_volts:g}V for {self.prerun_time_min:g} min"
-                if self.prerun_time_min else None),
+            ("ladder", self.ladder_name and f"{self.ladder_volume_uL:g} µL {self.ladder_name}"),
+            ("samples", self.load_volume_uL and f"{self.load_volume_uL:.3g} µL/lane"),
+            ("prerun", self.prerun_time_min and f"{self.prerun_volts:g}V for {self.prerun_time_min:g} min"),
             ("run", f"{self.run_volts:g}V for {self.run_time_min:g} min"),
         ))
-
-        if x := self.stain:
-            p += stepwise.load(x)
-
         return p
+
+    def del_run_step(self):
+        pass
+
+    def get_sample_mix(self):
+        if not self.sample_mix_str:
+            return None
+
+        mix = stepwise.MasterMix.from_text(self.sample_mix_str)
+        mix.num_reactions = self.num_samples
+        mix.extra_percent = self.mix_extra_percent
+        mix['sample'].name = self.sample_name
+
+        if x := self.sample_conc:
+            stock_conc = mix['sample'].stock_conc
+            if stock_conc is None:
+                raise ConfigError(f"can't change sample stock concentration, no initial concentration specified.")
+            mix['sample'].hold_conc.stock_conc = x, stock_conc.unit
+
+        if x := self.sample_volume_uL:
+            mix['sample'].volume = x, 'µL'
+
+        if x := self.mix_volume_uL:
+            mix.hold_ratios.volume = x, 'µL'
+
+        if mix.solvent:
+            mix.fix_volumes('sample')
+
+        return mix
+
+    def del_sample_mix(self):
+        pass
 
 if __name__ == '__main__':
     Gel.main()

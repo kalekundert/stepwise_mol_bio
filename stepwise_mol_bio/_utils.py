@@ -6,8 +6,9 @@ import tidyexc
 
 from freezerbox import MakerArgsConfig, iter_combo_makers
 from appdirs import AppDirs
-from inform import format_range
+from inform import format_range, error
 from more_itertools import all_equal
+from functools import partial
 from pathlib import Path
 
 app_dirs = AppDirs("stepwise_mol_bio")
@@ -28,23 +29,10 @@ class Main(appcli.App):
         try:
             app.protocol.print()
         except StepwiseMolBioError as err:
-            print(err, file=sys.stderr)
+            error(err)
 
     @classmethod
     def make(cls, db, products, *, group_by=None, merge_by=None):
-
-        def solo_maker_factory(product):
-            app = cls.from_params()
-            app.db = product.db
-            app.products = [product]
-            app.load(MakerArgsConfig)
-            return app
-
-        def combo_maker_factory():
-            app = cls.from_params()
-            app.db = db
-            return app
-
         if group_by is None:
             group_by = cls.group_by
 
@@ -52,11 +40,25 @@ class Main(appcli.App):
             merge_by = cls.merge_by
 
         yield from iter_combo_makers(
-                combo_maker_factory,
-                map(solo_maker_factory, products),
+                partial(cls._combo_maker_factory, db),
+                map(cls._solo_maker_factory, products),
                 group_by=group_by,
                 merge_by=merge_by,
         )
+
+    @classmethod
+    def _solo_maker_factory(cls, product):
+        app = cls.from_params()
+        app.db = product.db
+        app.products = [product]
+        app.load(MakerArgsConfig)
+        return app
+
+    @classmethod
+    def _combo_maker_factory(cls, db):
+        app = cls.from_params()
+        app.db = db
+        return app
 
 
 class Cleanup(Main):

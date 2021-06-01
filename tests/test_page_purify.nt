@@ -1,0 +1,511 @@
+test_python_protocol:
+  -
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+    expected:
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - A                1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - - Incubate at 70°C for 3 min.
+
+      - Run a gel:
+
+      - gel: 6% TBE/urea PAGE
+      - buffer: 1x TBE
+      - ladder: 1 µL low range ssRNA ladder (NEB N0364S)
+      - samples: 10 µL/lane
+      - run: 180V for 40 min
+
+      - Cut the desired band out of the gel [1].
+
+      - - Place the gel over a TLC plate.
+      - - Use a UV light to visualize the RNA (dark spot).
+      - - Consider visualizing remaining gel to ensure that all desired RNA was excised.
+
+      - Crush the gel slice.
+
+      - - Poke a hole in the bottom of a 0.65 mL tube with a 27 g needle.
+      - - Place gel slice inside the 0.65 mL tube.
+      - - Place the 0.65 mL tube inside a 1.5 mL tube.
+      - - Spin at max speed for 5 min.
+
+      - Resuspend gel in 400 µL PAGE elution buffer:
+
+      - Reagent               Stock     Volume
+      - ──────────────────────────────────────
+      - nuclease-free water          439.00 µL
+      - Tris, pH 7.5            1 M    5.00 µL
+      - NaCl                    5 M   50.00 µL
+      - EDTA                 500 mM    1.00 µL
+      - SDS                     10%    5.00 µL
+      - ──────────────────────────────────────
+      -                              500.00 µL
+
+      - Incubate at 4°C overnight with end-over-end mixing.
+
+      - Remove gel debris by spin filtration:
+
+      - - Load samples onto a 0.22 µm cellose-acetate Spin-X column [2].
+      - - Spin at 13,000g for 5 min.
+
+      - Purify using Zymo Clean & Concentrator-5 kit (R1015) [3,4]:
+
+      - - Perform all spin steps at 16000g.
+      - - Add 800 µL RNA binding buffer to the crude RNA.
+      - - Add 1200 µL 95-100% ethanol to the crude RNA.
+      - - Load on a Zymo-Spin IICR column.
+      - - Spin 30s; discard flow-through.
+
+      - - Add 400 µL RNA prep buffer.
+      - - Spin 30s; discard flow-through.
+      - - Add 700 µL RNA wash buffer.
+      - - Spin 30s; discard flow-through.
+      - - Add 400 µL RNA wash buffer.
+      - - Spin 1m; discard flow-through.
+
+      - - Add 15 µL nuclease-free water.
+      - - Spin 30s; keep flow-through.
+  -
+    id: default_stock_conc
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A'),
+      >     PagePurify.Sample('B', stock_conc=Quantity(2, 'µg/µL')),
+      > ])
+      > app.default_stock_conc = Quantity(1, 'µg/µL')
+    expected:
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - A                1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - B                2 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+  -
+    id: default_volume_uL
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A'),
+      >     PagePurify.Sample('B', volume_uL=6),
+      > ])
+      > app.default_stock_conc = Quantity(1, 'µg/µL')
+      > app.default_volume_uL = 7
+    expected:
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   7.00 µL
+      - A                1 µg/µL   7.00 µL
+      - ──────────────────────────────────
+      -                           14.00 µL
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   6.00 µL
+      - B                1 µg/µL   6.00 µL
+      - ──────────────────────────────────
+      -                           12.00 µL
+  -
+    id: default_molecule
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A'),
+      >     PagePurify.Sample('B', molecule='RNA'),
+      > ])
+      > app.default_stock_conc = Quantity(1, 'µg/µL')
+      > app.default_molecule = 'DNA'
+    expected:
+      - Incubate B at 4°C overnight with end-over-end mixing.
+      - Incubate A at 55°C overnight with 800 rpm mixing.
+      - Purify B using Zymo Clean & Concentrator-5 kit
+      - Purify A using Qiagen MinElute reaction cleanup kit
+  -
+    id: gel_percent
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+      > app.gel_percent = 8
+    expected:
+      - gel: 8% TBE/urea PAGE
+  -
+    id: gel_run_volts
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+      > app.gel_run_volts = 200
+    expected:
+      - run: 200V for 40 min
+  -
+    id: gel_run_time_min
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+      > app.gel_run_time_min = 50
+    expected:
+      - run: 180V for 50 min
+  -
+    id: desired_bands
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+      > app.desired_bands = ['100 nt']
+    expected:
+      - Cut the 100 nt band out of the gel [1].
+  -
+    id: desired_bands
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+      > app.desired_bands = ['100 nt', '200 nt']
+    expected:
+      - Cut the 100 nt and 200 nt bands out of the gel [1].
+  -
+    id: rna_cleanup_preset
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample('A', stock_conc=Quantity(1, 'µg/µL')),
+      > ])
+      > app.rna_cleanup_preset = 'zymo/rna-clean-conc/25'
+    expected:
+      - Purify using Zymo Clean & Concentrator-25 kit
+  -
+    id: dna_cleanup_preset
+    app:
+      > app = PagePurify([
+      >     PagePurify.Sample(
+      >         'A',
+      >         stock_conc=Quantity(1, 'µg/µL'),
+      >         molecule='DNA',
+      >     ),
+      > ])
+      > app.dna_cleanup_preset = 'qiagen/min-elute/pcr'
+    expected:
+      - Purify using Qiagen MinElute PCR purification kit
+
+test_cli_protocol:
+  -
+    cmd: sw page_purify A B -c 2
+    stdout:
+      > {DATE}
+      >
+      > \$ sw page_purify A B -c 2
+      >
+      > 1. Prepare 2 samples for TBE/urea PAGE:
+      >
+      >    Reagent            Stock    Volume
+      >    ──────────────────────────────────
+      >    RNA loading dye       2x   5.00 µL
+      >    A,B              2 µg/µL   5.00 µL
+      >    ──────────────────────────────────
+      >                              10.00 µL
+      >
+      >    - Incubate at 70°C for 3 min.
+      >
+      > 2. Run a gel:
+      >
+      >    gel: 6% TBE/urea PAGE
+      >    buffer: 1x TBE
+      >    ladder: 1 µL low range ssRNA ladder \(NEB N0364S\)
+      >    samples: 10 µL/lane
+      >    run: 180V for 40 min
+      >
+      > 3. Cut the desired bands out of the gel \[1\].
+      >
+      >    - Place the gel over a TLC plate.
+      >    - Use a UV light to visualize the RNA \(dark spot\).
+      >    - Consider visualizing remaining gel to ensure
+      >      that all desired RNA was excised.
+      >
+      > 4. Crush the gel slices.
+      >
+      >    - Poke a hole in the bottom of a 0.65 mL tube with
+      >      a 27 g needle.
+      >    - Place gel slice inside the 0.65 mL tube.
+      >    - Place the 0.65 mL tube inside a 1.5 mL tube.
+      >    - Spin at max speed for 5 min.
+      >
+      > 5. Resuspend gel in 400 µL PAGE elution buffer:
+      >
+      >    Reagent               Stock      Volume
+      >    ───────────────────────────────────────
+      >    nuclease-free water           878.00 µL
+      >    Tris, pH 7.5            1 M    10.00 µL
+      >    NaCl                    5 M   100.00 µL
+      >    EDTA                 500 mM     2.00 µL
+      >    SDS                     10%    10.00 µL
+      >    ───────────────────────────────────────
+      >                                 1000.00 µL
+      >
+      > 6. Incubate at 4°C overnight with end-over-end
+      >    mixing.
+      >
+      > 7. Remove gel debris by spin filtration:
+      >
+      >    - Load samples onto a 0.22 µm cellose-acetate
+      >      Spin-X column \[2\].
+      >    - Spin at 13,000g for 5 min.
+      >
+      > 8. Purify using Zymo Clean & Concentrator-5 kit
+      >    \(R1015\) \[3,4\]:
+      >
+      >    - Perform all spin steps at 16000g.
+      >    - Add 800 µL RNA binding buffer to the crude RNA.
+      >    - Add 1200 µL 95-100% ethanol to the crude RNA.
+      >    - Load on a Zymo-Spin IICR column.
+      >    - Spin 30s; discard flow-through.
+      >
+      >    - Add 400 µL RNA prep buffer.
+      >    - Spin 30s; discard flow-through.
+      >    - Add 700 µL RNA wash buffer.
+      >    - Spin 30s; discard flow-through.
+      >    - Add 400 µL RNA wash buffer.
+      >    - Spin 1m; discard flow-through.
+      >
+      >    - Add 15 µL nuclease-free water.
+      >    - Spin 30s; keep flow-through.
+  -
+    cmd: sw page_purify A B -c 2 -v 6
+    stdout:
+      > .*
+      > 1. Prepare 2 samples for TBE/urea PAGE:
+      >
+      >    Reagent            Stock    Volume
+      >    ──────────────────────────────────
+      >    RNA loading dye       2x   6.00 µL
+      >    A,B              2 µg/µL   6.00 µL
+      >    ──────────────────────────────────
+      >                              12.00 µL
+  -
+    cmd: sw page_purify A:DNA:2:6
+    stdout:
+      > .*
+      > 1. Prepare 1 sample for TBE/urea PAGE:
+      >
+      >    Reagent            Stock    Volume
+      >    ──────────────────────────────────
+      >    RNA loading dye       2x   6.00 µL
+      >    A                2 µg/µL   6.00 µL
+      >    ──────────────────────────────────
+      >                              12.00 µL
+      >
+      >    - Incubate at 70°C for 3 min.
+      >
+      > 2. Run a gel:
+      >
+      >    gel: 6% TBE/urea PAGE
+      >    buffer: 1x TBE
+      >    ladder: 1 µL low range ssRNA ladder \(NEB N0364S\)
+      >    samples: 10 µL/lane
+      >    run: 180V for 40 min
+
+test_freezerbox_protocol:
+  -
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+
+    expected:
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - f1               1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - Incubate at 4°C overnight with end-over-end mixing.
+      - Purify using Zymo Clean & Concentrator-5 kit (R1015)
+  -
+    id: volume
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify volume=6µL'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+
+    expected:
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   6.00 µL
+      - f1               1 µg/µL   6.00 µL
+      - ──────────────────────────────────
+      -                           12.00 µL
+  -
+    id: mw
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µM'),
+        >     mw=1e5,
+        >     molecule='RNA',
+        > )
+
+    expected:
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent          Stock    Volume
+      - ────────────────────────────────
+      - RNA loading dye     2x   5.00 µL
+      - f1                1 µM   5.00 µL
+      - ────────────────────────────────
+      -                         10.00 µL
+  -
+    id: molecule-dna
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='DNA',
+        > )
+
+    expected:
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - f1               1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - Incubate at 55°C overnight with 800 rpm mixing.
+      - Purify using Qiagen MinElute reaction cleanup kit (28204)
+
+  -
+    id: combo
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+
+    expected:
+      - Prepare 2 samples for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - f1,f2            1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - Incubate at 4°C overnight with end-over-end mixing.
+      - Purify using Zymo Clean & Concentrator-5 kit (R1015)
+  -
+    id: combo-conc
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(10, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+
+    expected:
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - f1               1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - Prepare 1 sample for TBE/urea PAGE:
+
+      - Reagent             Stock    Volume
+      - ───────────────────────────────────
+      - RNA loading dye        2x   5.00 µL
+      - f2               10 µg/µL   5.00 µL
+      - ───────────────────────────────────
+      -                            10.00 µL
+
+      - Load the samples in the gel as follows:
+      - - 10 µL f1
+      - - 3.3 µL f2 in each of 3 lanes
+  -
+    id: combo-molecule
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='RNA',
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('page-purify'),
+        >     conc=Quantity(1, 'µg/µL'),
+        >     molecule='DNA',
+        > )
+
+    expected:
+      - Prepare 2 samples for TBE/urea PAGE:
+
+      - Reagent            Stock    Volume
+      - ──────────────────────────────────
+      - RNA loading dye       2x   5.00 µL
+      - f1,f2            1 µg/µL   5.00 µL
+      - ──────────────────────────────────
+      -                           10.00 µL
+
+      - Incubate f1 at 4°C overnight with end-over-end mixing.
+      - Incubate f2 at 55°C overnight with 800 rpm mixing.
+      - Purify f1 using Zymo Clean & Concentrator-5 kit (R1015)
+      - Purify f2 using Qiagen MinElute reaction cleanup kit (28204)
+
+
+

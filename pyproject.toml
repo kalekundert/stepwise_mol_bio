@@ -60,10 +60,12 @@ pcr = "stepwise_mol_bio:Pcr"
 
 aliquot = "stepwise_mol_bio:Aliquot"
 spin-cleanup = "stepwise_mol_bio:SpinCleanup"
+page-purify = "stepwise_mol_bio:PagePurify"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --doctest-glob='*.rst'"
 doctest_optionflags = 'NORMALIZE_WHITESPACE'
+markers = """slow: marks tests as slow (deselect with '-m "not slow"')"""
 
 [tool.pccc]
 header_length = 72
@@ -83,6 +85,7 @@ scopes = [
   "kld",
   "laser_scanner",
   "ligate",
+  "page_purify",
   "pcr",
   "phenol_chloroform",
   "qpcr",
