@@ -4,7 +4,7 @@
 Protocols relating to molecular biology, e.g. PCR.
 """
 
-__version__ = '1.20.0'
+__version__ = '1.21.0'
 
 from ._utils import *
 from ._assembly import Assembly

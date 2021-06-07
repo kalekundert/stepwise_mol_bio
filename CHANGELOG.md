@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.21.0 (2021-06-07)
+### Feature
+* **golden_gate:** Implement freezerbox maker plugin ([`cd53b3e`](https://github.com/kalekundert/stepwise_mol_bio/commit/cd53b3e1f28b4bad105f79e8ce0d0c9afa05ec0b))
+
 ## v1.20.0 (2021-06-02)
 ### Feature
 * **page_purify:** Add protocol ([`ba10309`](https://github.com/kalekundert/stepwise_mol_bio/commit/ba103099dea789390e57b3eea1880ae6d8783578))
