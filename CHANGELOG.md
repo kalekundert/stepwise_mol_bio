@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v1.20.0 (2021-06-02)
+### Feature
+* **page_purify:** Add protocol ([`ba10309`](https://github.com/kalekundert/stepwise_mol_bio/commit/ba103099dea789390e57b3eea1880ae6d8783578))
+* **gel:** Add pre-running options and config docs ([`4911a75`](https://github.com/kalekundert/stepwise_mol_bio/commit/4911a75f548685337f7f9d47b647fd53c586e517))
+
 ## v1.19.0 (2021-05-19)
 ### Feature
 * **spin_cleanup:** Add Zymo RNA Clean & Concentrator protocols ([`713f444`](https://github.com/kalekundert/stepwise_mol_bio/commit/713f444164c4de97ea8605cd94e64869b1139e1d))
