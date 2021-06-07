@@ -54,13 +54,14 @@ molbio = "stepwise_mol_bio:Plugin"
 
 [tool.flit.entrypoints."freezerbox.make"]
 digest = "stepwise_mol_bio:RestrictionDigest"
+golden-gate = "stepwise_mol_bio:GoldenGate"
 inverse-pcr = "stepwise_mol_bio:InversePcr"
 ivt = "stepwise_mol_bio:Ivt"
 pcr = "stepwise_mol_bio:Pcr"
 
 aliquot = "stepwise_mol_bio:Aliquot"
-spin-cleanup = "stepwise_mol_bio:SpinCleanup"
 page-purify = "stepwise_mol_bio:PagePurify"
+spin-cleanup = "stepwise_mol_bio:SpinCleanup"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --doctest-glob='*.rst'"

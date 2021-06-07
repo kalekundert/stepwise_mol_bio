@@ -1,0 +1,385 @@
+test_parse_fragment_attrs:
+  -
+    args:
+      - a
+    expected:
+      x: 'a'
+      y: 'a'
+
+  -
+    args:
+      - x=a
+      - y=b
+    expected:
+      x: 'a'
+      y: 'b'
+  -
+    args:
+      - x=a
+      - b
+    expected:
+      x: 'a'
+      y: 'b'
+  -
+    args:
+      - b
+      - y=a
+    expected:
+      x: 'b'
+      y: 'a'
+  -
+    args:
+      - x=1
+    parse_value: int
+    expected:
+      x: 1
+
+test_parse_assemblies_from_docopt:
+  -
+    id: frags
+    args:
+      <assemblies>: ['A,B']
+      --conc: []
+      --len: []
+    expected:
+      -
+        - Assembly.Fragment('A')
+        - Assembly.Fragment('B')
+  -
+    id: frags
+    args:
+      <assemblies>: ['A,B', 'A,C']
+      --conc: []
+      --len: []
+    expected:
+      -
+        - Assembly.Fragment('A')
+        - Assembly.Fragment('B')
+      -
+        - Assembly.Fragment('A')
+        - Assembly.Fragment('C')
+
+  -
+    id: conc-ng/uL
+    args:
+      <assemblies>: ['A,B']
+      --conc: ['100']
+      --length: []
+    expected:
+      -
+        - Assembly.Fragment('A', conc=Quantity(100, 'ng/µL'))
+        - Assembly.Fragment('B', conc=Quantity(100, 'ng/µL'))
+  -
+    id: conc-ng/uL
+    args:
+      <assemblies>: ['A,B', 'A,C']
+      --conc: ['A=50', '100']
+      --length: []
+    expected:
+      -
+        - Assembly.Fragment('A', conc=Quantity( 50, 'ng/µL'))
+        - Assembly.Fragment('B', conc=Quantity(100, 'ng/µL'))
+      -
+        - Assembly.Fragment('A', conc=Quantity( 50, 'ng/µL'))
+        - Assembly.Fragment('C', conc=Quantity(100, 'ng/µL'))
+  -
+    id: conc-nM
+    args:
+      <assemblies>: ['A,B', 'A,C']
+      --conc: ['A=50nM', '100nM']
+      --length: []
+    expected:
+      -
+        - Assembly.Fragment('A', conc=Quantity( 50, 'nM'))
+        - Assembly.Fragment('B', conc=Quantity(100, 'nM'))
+      -
+        - Assembly.Fragment('A', conc=Quantity( 50, 'nM'))
+        - Assembly.Fragment('C', conc=Quantity(100, 'nM'))
+  -
+    id: len-bp
+    args:
+      <assemblies>: ['A,B']
+      --conc: []
+      --length: ['1000']
+    expected:
+      -
+        - Assembly.Fragment('A', length=1000)
+        - Assembly.Fragment('B', length=1000)
+  -
+    id: len-bp
+    args:
+      <assemblies>: ['A,B', 'A,C']
+      --conc: []
+      --length: ['A=500', '1000']
+    expected:
+      -
+        - Assembly.Fragment('A', length= 500)
+        - Assembly.Fragment('B', length=1000)
+      -
+        - Assembly.Fragment('A', length= 500)
+        - Assembly.Fragment('C', length=1000)
+  -
+    id: len-kb
+    args:
+      <assemblies>: ['A,B', 'A,C']
+      --conc: []
+      --length: ['A=0.5kb', '1kb']
+    expected:
+      -
+        - Assembly.Fragment('A', length= 500)
+        - Assembly.Fragment('B', length=1000)
+      -
+        - Assembly.Fragment('A', length= 500)
+        - Assembly.Fragment('C', length=1000)
+
+test_add_fragments_to_reaction:
+  -
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.40 µL
+      > A        200 nM  0.30 µL
+      > B        200 nM  0.30 µL
+      > ────────────────────────
+      >                  5.00 µL
+  -
+    id: master_mix
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume     2.2x
+      > ─────────────────────────────────
+      > water            4.40 µL  9.68 µL
+      > A        200 nM  0.30 µL  0.66 µL
+      > B,C      200 nM  0.30 µL
+      > ─────────────────────────────────
+      >                  5.00 µL  4.70 µL/rxn
+  -
+    id: master_mix
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.40 µL
+      > A,C      200 nM  0.30 µL
+      > B,D      200 nM  0.30 µL
+      > ────────────────────────
+      >                  5.00 µL
+  -
+    id: master_mix
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume      3.3x
+      > ──────────────────────────────────
+      > water            4.40 µL  14.52 µL
+      > A        200 nM  0.30 µL   0.99 µL
+      > B,C,D    200 nM  0.30 µL
+      > ──────────────────────────────────
+      >                  5.00 µL   4.70 µL/rxn
+  -
+    id: master_mix
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.40 µL
+      > A,B,C    200 nM  0.30 µL
+      > B,C,A    200 nM  0.30 µL
+      > ────────────────────────
+      >                  5.00 µL
+
+  # nM == ng/µL when MW=1e6
+  -
+    id: conc
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('100 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.10 µL
+      > A,C      200 nM  0.30 µL
+      > B,D      100 nM  0.60 µL
+      > ────────────────────────
+      >                  5.00 µL
+  -
+    id: conc
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 ng/µL'), mw=1e6)
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.40 µL
+      > A,C      200 nM  0.30 µL
+      > B,D      200 nM  0.30 µL
+      > ────────────────────────
+      >                  5.00 µL
+  -
+    id: conc
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 ng/µL'), mw=1e6)
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 ng/µL'), mw=1e6)
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent      Stock   Volume
+      > ───────────────────────────
+      > water               4.40 µL
+      > A,C         200 nM  0.30 µL
+      > B,D      200 ng/µL  0.30 µL
+      > ───────────────────────────
+      >                     5.00 µL
+  -
+    id: conc
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('100 ng/µL'), mw=1e6)
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 ng/µL'), mw=1e6)
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+
+    # Show B,D stock conc in nM even though both inputs are ng/µL, because 
+    # concentrations differ.  It's molarity that matters, and the same 
+    # concentration in ng/µL could be very different in nM.
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.10 µL
+      > A,C      200 nM  0.30 µL
+      > B,D      100 nM  0.60 µL
+      > ────────────────────────
+      >                  5.00 µL
+
+  -
+    id: volume
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('8 nM'))
+        - Assembly.Fragment('B', conc=Q('8 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+
+    # 0.02 pmol
+    expected:
+      > Reagent  Stock   Volume
+      > ───────────────────────
+      > A         8 nM  2.50 µL
+      > B         8 nM  2.50 µL
+      > ───────────────────────
+      >                 5.00 µL
+  -
+    id: volume
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('7 nM'))
+        - Assembly.Fragment('B', conc=Q('7 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+
+    # 0.0175 pmol
+    expected:
+      > Reagent  Stock   Volume
+      > ───────────────────────
+      > A         7 nM  2.50 µL
+      > B         7 nM  2.50 µL
+      > ───────────────────────
+      >                 5.00 µL
+    warning:
+      > using 0.018 pmol of B, 0.020 pmol recommended.
+
+  -
+    id: num_frags
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('200 nM'))
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 nM'))
+        - Assembly.Fragment('E', conc=Q('200 nM'))
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            4.10 µL
+      > A,C      200 nM  0.30 µL
+      > B,D      200 nM  0.30 µL
+      > −,E      200 nM  0.30 µL
+      > ────────────────────────
+      >                  5.00 µL

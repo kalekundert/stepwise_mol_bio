@@ -1,0 +1,475 @@
+test_python_protocol:
+  -
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('B', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Setup the Golden Gate reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.35 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - A                   200 nM  0.30 µL
+      - B                   200 nM  0.60 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Run the following thermocycler protocol:
+      - 37°C for 5 min
+      - Or, to maximize the number of transformants:
+      - 37°C for 60 min
+      - 60°C for 5 min
+
+      - https://tinyurl.com/yaa5mqz5
+  -
+    id: master-mix
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('B', conc=Q('200 nM')),
+      >   ], [
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('C', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.35 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - A                   200 nM  0.30 µL
+      - B,C                 200 nM  0.60 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+  -
+    id: incubation
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      > ]])
+
+    expected:
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.95 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - A                   200 nM  0.30 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Run the following thermocycler protocol:
+      - 37°C for 5 min
+      - Or, to maximize the number of transformants:
+      - 37°C for 60 min
+      - 60°C for 5 min
+  -
+    id: incubation
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('B', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('C', conc=Q('200 nM')),
+      > ]])
+
+    expected:
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       2.75 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - A                   200 nM  0.30 µL
+      - B                   200 nM  0.60 µL
+      - C                   200 nM  0.60 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Run the following thermocycler protocol:
+      - 37°C for 60 min
+      - 60°C for 5 min
+  -
+    id: incubation
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('B', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('C', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('D', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('E', conc=Q('200 nM')),
+      > ]])
+
+    expected:
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       1.55 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - A                   200 nM  0.30 µL
+      - B                   200 nM  0.60 µL
+      - C                   200 nM  0.60 µL
+      - D                   200 nM  0.60 µL
+      - E                   200 nM  0.60 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Run the following thermocycler protocol:
+      - Repeat 30 times:
+      - 37°C for 1 min
+      - 16°C for 1 min
+      - 60°C for 5 min
+  -
+    id: incubation
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('B', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('C', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('D', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('E', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('F', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('G', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('H', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('I', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('J', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('K', conc=Q('200 nM')),
+      > ]])
+      > app.volume_uL = 10
+
+    expected:
+      # Note doubled enzyme volume.
+      - Reagent              Stock    Volume
+      - ────────────────────────────────────
+      - water                        1.70 µL
+      - T4 ligase buffer       10x   1.00 µL
+      - T4 DNA ligase     400 U/µL   0.50 µL
+      - BsaI-HFv2          20 U/µL   0.50 µL
+      - A                   200 nM   0.30 µL
+      - B                   200 nM   0.60 µL
+      - C                   200 nM   0.60 µL
+      - D                   200 nM   0.60 µL
+      - E                   200 nM   0.60 µL
+      - F                   200 nM   0.60 µL
+      - G                   200 nM   0.60 µL
+      - H                   200 nM   0.60 µL
+      - I                   200 nM   0.60 µL
+      - J                   200 nM   0.60 µL
+      - K                   200 nM   0.60 µL
+      - ────────────────────────────────────
+      -                             10.00 µL
+
+      - Run the following thermocycler protocol:
+      - Repeat 30 times:
+      - 37°C for 5 min
+      - 16°C for 5 min
+      - 60°C for 5 min
+  -
+    id: enzymes
+    app:
+      > app = GoldenGate([[
+      >     GoldenGate.Fragment('A', conc=Q('200 nM')),
+      >     GoldenGate.Fragment('B', conc=Q('200 nM')),
+      > ]])
+      > app.enzymes = ['BsaI-HFv2', 'BsmBI-v2']
+    expected:
+      - Setup the Golden Gate reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.23 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - BsmBI-v2           10 U/µL  0.12 µL
+      - A                   200 nM  0.30 µL
+      - B                   200 nM  0.60 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+test_cli_protocol:
+  -
+    id: conc
+    cmd: sw golden_gate A,B -c 200nM
+    stdout:
+      > {DATE}
+      >
+      > \$ sw golden_gate A,B -c 200nM
+      >
+      > 1. Setup the Golden Gate reaction \[1\]:
+      >
+      >    Reagent              Stock   Volume
+      >    ───────────────────────────────────
+      >    water                       3.35 µL
+      >    T4 ligase buffer       10x  0.50 µL
+      >    T4 DNA ligase     400 U/µL  0.12 µL
+      >    BsaI-HFv2          20 U/µL  0.12 µL
+      >    A                   200 nM  0.30 µL
+      >    B                   200 nM  0.60 µL
+      >    ───────────────────────────────────
+      >                                5.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 5 min
+      >
+      >    Or, to maximize the number of transformants:
+      >
+      >    - 37°C for 60 min
+      >    - 60°C for 5 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/yaa5mqz5
+  -
+    id: length
+    cmd: sw golden_gate A,B -c 100 -l 1kb
+    stdout:
+      # 0.06 pmol * (1 nmol / 1e3 pmol) * (607558 ng / 1 nmol) * (1 µL / 100 
+      # ng) = 0.36 µL
+      > {DATE}
+      >
+      > \$ sw golden_gate A,B -c 100 -l 1kb
+      >
+      > 1. Setup the Golden Gate reaction \[1\]:
+      >
+      >    Reagent               Stock   Volume
+      >    ────────────────────────────────────
+      >    water                        3.16 µL
+      >    T4 ligase buffer        10x  0.50 µL
+      >    T4 DNA ligase      400 U/µL  0.12 µL
+      >    BsaI-HFv2           20 U/µL  0.12 µL
+      >    A                 100 ng/µL  0.36 µL
+      >    B                 100 ng/µL  0.73 µL
+      >    ────────────────────────────────────
+      >                                 5.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 5 min
+      >
+      >    Or, to maximize the number of transformants:
+      >
+      >    - 37°C for 60 min
+      >    - 60°C for 5 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/yaa5mqz5
+  -
+    id: volume
+    cmd: sw golden_gate A,B -c 200nM -v 10
+    stdout:
+      > {DATE}
+      >
+      > \$ sw golden_gate A,B -c 200nM -v 10
+      >
+      > 1. Setup the Golden Gate reaction \[1\]:
+      >
+      >    Reagent              Stock    Volume
+      >    ────────────────────────────────────
+      >    water                        7.60 µL
+      >    T4 ligase buffer       10x   1.00 µL
+      >    T4 DNA ligase     400 U/µL   0.25 µL
+      >    BsaI-HFv2          20 U/µL   0.25 µL
+      >    A                   200 nM   0.30 µL
+      >    B                   200 nM   0.60 µL
+      >    ────────────────────────────────────
+      >                                10.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 5 min
+      >
+      >    Or, to maximize the number of transformants:
+      >
+      >    - 37°C for 60 min
+      >    - 60°C for 5 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/yaa5mqz5
+  -
+    id: excess-insert
+    cmd: sw golden_gate A,B -c 200nM -x 1
+    stdout:
+      > {DATE}
+      >
+      > \$ sw golden_gate A,B -c 200nM -x 1
+      >
+      > 1. Setup the Golden Gate reaction \[1\]:
+      >
+      >    Reagent              Stock   Volume
+      >    ───────────────────────────────────
+      >    water                       3.65 µL
+      >    T4 ligase buffer       10x  0.50 µL
+      >    T4 DNA ligase     400 U/µL  0.12 µL
+      >    BsaI-HFv2          20 U/µL  0.12 µL
+      >    A                   200 nM  0.30 µL
+      >    B                   200 nM  0.30 µL
+      >    ───────────────────────────────────
+      >                                5.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 5 min
+      >
+      >    Or, to maximize the number of transformants:
+      >
+      >    - 37°C for 60 min
+      >    - 60°C for 5 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/yaa5mqz5
+  -
+    id: enzyme
+    cmd: sw golden_gate A,B -c 200nM -e BsmBI-v2
+    stdout:
+      > {DATE}
+      >
+      > \$ sw golden_gate A,B -c 200nM -e BsmBI-v2
+      >
+      > 1. Setup the Golden Gate reaction \[1\]:
+      >
+      >    Reagent              Stock   Volume
+      >    ───────────────────────────────────
+      >    water                       3.35 µL
+      >    T4 ligase buffer       10x  0.50 µL
+      >    T4 DNA ligase     400 U/µL  0.12 µL
+      >    BsmBI-v2           10 U/µL  0.12 µL
+      >    A                   200 nM  0.30 µL
+      >    B                   200 nM  0.60 µL
+      >    ───────────────────────────────────
+      >                                5.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 5 min
+      >
+      >    Or, to maximize the number of transformants:
+      >
+      >    - 37°C for 60 min
+      >    - 60°C for 5 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/yaa5mqz5
+
+test_freezerbox_protocol:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('golden-gate p1,p2'),
+        > )
+
+    tags:
+      - p3
+
+    expected:
+      - Setup the Golden Gate reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.35 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL
+      - p1                  200 nM  0.30 µL
+      - p2                  200 nM  0.60 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Run the following thermocycler protocol:
+      - 37°C for 5 min
+      - Or, to maximize the number of transformants:
+      - 37°C for 60 min
+      - 60°C for 5 min
+
+      - Label the product: p3
+
+      - https://tinyurl.com/yaa5mqz5
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p4:
+        > Plasmid(
+        >     synthesis=parse_fields('golden-gate p1,p2'),
+        > )
+      p5:
+        > Plasmid(
+        >     synthesis=parse_fields('golden-gate p1,p3'),
+        > )
+
+    tags:
+      - p4
+      - p5
+
+    expected:
+      - Setup the Golden Gate reactions [1]:
+
+      # Note that the master mix is affected by `extra_min_volume = '0.5 µL'`.
+      - Reagent              Stock   Volume        4x
+      - ─────────────────────────────────────────────
+      - water                       3.35 µL  13.40 µL
+      - T4 ligase buffer       10x  0.50 µL   2.00 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL   0.50 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL   0.50 µL
+      - p1                  200 nM  0.30 µL   1.20 µL
+      - p2,p3               200 nM  0.60 µL
+      - ─────────────────────────────────────────────
+      -                             5.00 µL   4.40 µL/rxn
+
+
+      - Run the following thermocycler protocol:
+      - 37°C for 5 min
+      - Or, to maximize the number of transformants:
+      - 37°C for 60 min
+      - 60°C for 5 min
+
+      - Label the products: p4, p5
+
+      - https://tinyurl.com/yaa5mqz5
+
+test_freezerbox_attrs:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('golden-gate p1,p2'),
+        > )
+    expected:
+      p3:
+        dependencies: {'p1', 'p2'}
+        conc: Quantity(12, 'nM')
+

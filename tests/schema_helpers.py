@@ -17,6 +17,10 @@ class do_with:
         self.globals = globals or {}
         self.globals.update(kw_globals)
 
+    def use(self, **kw_globals):
+        self.globals.update(kw_globals)
+        return self
+
     def all(self, module):
         try:
             keys = module.__all__
@@ -148,7 +152,7 @@ def eval_db(reagents):
     reagents = Schema(empty_ok({str: str}))(reagents)
 
     for tag, reagent in reagents.items():
-        db[tag] = eval_freezerbox(reagent)
+        db[tag] = eval_swmb(reagent)
 
     return db
 
@@ -160,7 +164,7 @@ def exec_app(src):
 
     return app
 
-eval_freezerbox = eval_with().all(freezerbox)
+eval_swmb = eval_with().all(stepwise).all(freezerbox).all(stepwise_mol_bio)
 
 app_expected = Schema({
     'app': exec_app,
@@ -182,10 +186,15 @@ app_expected_error = Schema({
 })
 db_expected = Schema({
     'db': eval_db,
-    'expected': eval_with(),
+    'expected': eval_swmb,
 })
 db_expected_protocol = Schema({
     'db': eval_db,
+    'expected': [str],
+})
+db_tags_expected_protocol = Schema({
+    'db': eval_db,
+    'tags': [str],
     'expected': [str],
 })
 cmd_stdout_stderr = Schema({
