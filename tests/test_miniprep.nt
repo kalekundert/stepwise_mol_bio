@@ -1,0 +1,42 @@
+test_python_protocol:
+  -
+    app:
+      > app = Miniprep()
+    expected:
+      - Miniprep.
+
+test_cli_protocol:
+  -
+    cmd: sw miniprep
+    stdout:
+      > {DATE}
+      >
+      > \$ sw miniprep
+      >
+      > 1. Miniprep.
+
+test_freezerbox_protocol:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   synthesis=parse_fields('order vendor=IDT'),
+        >   cleanups=parse_fields_list('miniprep'),
+        > )
+
+    expected:
+      - Order p1 from IDT.
+      - Miniprep.
+
+test_freezerbox_attrs:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   synthesis=parse_fields('order vendor=IDT'),
+        >   cleanups=parse_fields_list('miniprep'),
+        > )
+    expected:
+      p1:
+        conc: Quantity(200, 'ng/µL')
+

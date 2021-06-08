@@ -62,6 +62,7 @@ ligate = "stepwise_mol_bio:Ligate"
 pcr = "stepwise_mol_bio:Pcr"
 
 aliquot = "stepwise_mol_bio:Aliquot"
+miniprep = "stepwise_mol_bio:Miniprep"
 page-purify = "stepwise_mol_bio:PagePurify"
 spin-cleanup = "stepwise_mol_bio:SpinCleanup"
 
@@ -88,6 +89,7 @@ scopes = [
   "kld",
   "laser_scanner",
   "ligate",
+  "miniprep",
   "page_purify",
   "pcr",
   "phenol_chloroform",
