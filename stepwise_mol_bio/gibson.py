@@ -57,7 +57,7 @@ Database:
 
         f = "https://tinyurl.com/ychbvkra"
         p += pl(
-                f"Setup the Gibson assembly {plural(n):reaction/s}{p.add_footnotes(f)}:",
+                f"Setup {plural(n):# Gibson assembl/y/ies}{p.add_footnotes(f)}:",
                 rxn,
         )
 

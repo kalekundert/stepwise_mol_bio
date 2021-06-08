@@ -6,7 +6,7 @@ test_python_protocol:
       >     Gibson.Fragment('B', conc=Q('200 nM')),
       > ]])
     expected:
-      - Setup the Gibson assembly reaction [1]:
+      - Setup 1 Gibson assembly [1]:
 
       - Reagent             Stock   Volume
       - ──────────────────────────────────
@@ -31,7 +31,7 @@ test_python_protocol:
       >     Gibson.Fragment('C', conc=Q('200 nM')),
       > ]])
     expected:
-      - Setup the Gibson assembly reactions [1]:
+      - Setup 2 Gibson assemblies [1]:
 
       - Reagent             Stock   Volume     2.2x
       - ───────────────────────────────────────────
@@ -52,7 +52,7 @@ test_python_protocol:
       > ]])
 
     expected:
-      - Setup the Gibson assembly reaction [1]:
+      - Setup 1 Gibson assembly [1]:
 
       - Reagent             Stock   Volume
       - ──────────────────────────────────
@@ -75,7 +75,7 @@ test_python_protocol:
       >     Gibson.Fragment('D', conc=Q('200 nM')),
       > ]])
     expected:
-      - Setup the Gibson assembly reaction [1]:
+      - Setup 1 Gibson assembly [1]:
 
       - Reagent             Stock   Volume
       - ──────────────────────────────────
@@ -99,7 +99,7 @@ test_cli_protocol:
       >
       > \$ sw gibson A,B -c 200nM
       >
-      > 1. Setup the Gibson assembly reaction \[1\]:
+      > 1. Setup 1 Gibson assembly \[1\]:
       >
       >    Reagent             Stock   Volume
       >    ──────────────────────────────────
@@ -124,7 +124,7 @@ test_cli_protocol:
       >
       > \$ sw gibson A,B -c 100 -l 1kb
       >
-      > 1. Setup the Gibson assembly reaction \[1\]:
+      > 1. Setup 1 Gibson assembly \[1\]:
       >
       >    Reagent                Stock   Volume
       >    ─────────────────────────────────────
@@ -147,7 +147,7 @@ test_cli_protocol:
       >
       > \$ sw gibson A,B -c 200nM -v 10
       >
-      > 1. Setup the Gibson assembly reaction \[1\]:
+      > 1. Setup 1 Gibson assembly \[1\]:
       >
       >    Reagent             Stock    Volume
       >    ───────────────────────────────────
@@ -170,7 +170,7 @@ test_cli_protocol:
       >
       > \$ sw gibson A,B -c 200nM -x 1
       >
-      > 1. Setup the Gibson assembly reaction \[1\]:
+      > 1. Setup 1 Gibson assembly \[1\]:
       >
       >    Reagent             Stock   Volume
       >    ──────────────────────────────────
@@ -206,7 +206,7 @@ test_freezerbox_protocol:
       - p3
 
     expected:
-      - Setup the Gibson assembly reaction [1]:
+      - Setup 1 Gibson assembly [1]:
 
       - Reagent             Stock   Volume
       - ──────────────────────────────────
@@ -250,7 +250,7 @@ test_freezerbox_protocol:
       - p5
 
     expected:
-      - Setup the Gibson assembly reactions [1]:
+      - Setup 2 Gibson assemblies [1]:
 
       - Reagent             Stock   Volume     2.2x
       - ───────────────────────────────────────────

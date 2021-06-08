@@ -6,7 +6,7 @@ test_python_protocol:
       >     GoldenGate.Fragment('B', conc=Q('200 nM')),
       > ]])
     expected:
-      - Setup the Golden Gate reaction [1]:
+      - Setup 1 Golden Gate assembly [1]:
 
       - Reagent              Stock   Volume
       - ───────────────────────────────────
@@ -37,7 +37,7 @@ test_python_protocol:
       >     GoldenGate.Fragment('C', conc=Q('200 nM')),
       > ]])
     expected:
-      - Setup the Golden Gate reactions [1]:
+      - Setup 2 Golden Gate assemblies [1]:
 
       - Reagent              Stock   Volume        4x
       - ─────────────────────────────────────────────
@@ -182,7 +182,7 @@ test_python_protocol:
       > ]])
       > app.enzymes = ['BsaI-HFv2', 'BsmBI-v2']
     expected:
-      - Setup the Golden Gate reaction [1]:
+      - Setup 1 Golden Gate assembly [1]:
 
       - Reagent              Stock   Volume
       - ───────────────────────────────────
@@ -205,7 +205,7 @@ test_cli_protocol:
       >
       > \$ sw golden_gate A,B -c 200nM
       >
-      > 1. Setup the Golden Gate reaction \[1\]:
+      > 1. Setup 1 Golden Gate assembly \[1\]:
       >
       >    Reagent              Stock   Volume
       >    ───────────────────────────────────
@@ -239,7 +239,7 @@ test_cli_protocol:
       >
       > \$ sw golden_gate A,B -c 100 -l 1kb
       >
-      > 1. Setup the Golden Gate reaction \[1\]:
+      > 1. Setup 1 Golden Gate assembly \[1\]:
       >
       >    Reagent               Stock   Volume
       >    ────────────────────────────────────
@@ -271,7 +271,7 @@ test_cli_protocol:
       >
       > \$ sw golden_gate A,B -c 200nM -v 10
       >
-      > 1. Setup the Golden Gate reaction \[1\]:
+      > 1. Setup 1 Golden Gate assembly \[1\]:
       >
       >    Reagent              Stock    Volume
       >    ────────────────────────────────────
@@ -303,7 +303,7 @@ test_cli_protocol:
       >
       > \$ sw golden_gate A,B -c 200nM -x 1
       >
-      > 1. Setup the Golden Gate reaction \[1\]:
+      > 1. Setup 1 Golden Gate assembly \[1\]:
       >
       >    Reagent              Stock   Volume
       >    ───────────────────────────────────
@@ -335,7 +335,7 @@ test_cli_protocol:
       >
       > \$ sw golden_gate A,B -c 200nM -e BsmBI-v2
       >
-      > 1. Setup the Golden Gate reaction \[1\]:
+      > 1. Setup 1 Golden Gate assembly \[1\]:
       >
       >    Reagent              Stock   Volume
       >    ───────────────────────────────────
@@ -380,7 +380,7 @@ test_freezerbox_protocol:
       - p3
 
     expected:
-      - Setup the Golden Gate reaction [1]:
+      - Setup 1 Golden Gate assembly [1]:
 
       - Reagent              Stock   Volume
       - ───────────────────────────────────
@@ -430,7 +430,7 @@ test_freezerbox_protocol:
       - p5
 
     expected:
-      - Setup the Golden Gate reactions [1]:
+      - Setup 2 Golden Gate assemblies [1]:
 
       # Note that the master mix is affected by `extra_min_volume = '0.5 µL'`.
       - Reagent              Stock   Volume        4x

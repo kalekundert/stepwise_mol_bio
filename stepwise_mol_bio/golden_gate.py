@@ -99,7 +99,7 @@ Database:
 
         f = 'https://tinyurl.com/yaa5mqz5'
         p += pl(
-                f"Setup the Golden Gate {plural(n):reaction/s}{p.add_footnotes(f)}:",
+                f"Setup {plural(n):# Golden Gate assembl/y/ies}{p.add_footnotes(f)}:",
                 rxn,
         )
         if n_frags <= 2:
