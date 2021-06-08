@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 # vim: tw=50
 
-import stepwise, appcli, autoprop
-from inform import plural
-from stepwise_mol_bio import Assembly
+import stepwise
+import autoprop
+import appcli
 
-@autoprop
+from stepwise import pl, ul
+from stepwise_mol_bio import Assembly
+from stepwise_mol_bio._assembly import ARGUMENT_DOC, OPTION_DOC
+from inform import plural
+
+@autoprop.cache
 class Ligate(Assembly):
-    """\
-Assemble restrictions digested DNA fragments using T4 DNA ligase.
+    __doc__ = f"""\
+Assemble restriction-digested DNA fragments using T4 DNA ligase.
 
 Usage:
-    ligate <backbone> <inserts>... [-n <int>] [-v <µL>] [-k] [options]
+    ligate <assemblies>... [-c <conc>]... [-l <length>]... [options]
 
 Arguments:
-{FRAGMENT_DOC}
+{ARGUMENT_DOC}
 
 Options:
 {OPTION_DOC}
@@ -23,6 +28,21 @@ Options:
         Add T4 polynucleotide kinase (PNK) to the reaction.  This is necessary 
         to ligate ends that are not already 5' phosphorylated (e.g. annealed 
         oligos, PCR products).
+
+Database:
+    Ligation reactions can appear in the "Synthesis" column of a FreezerBox 
+    database:
+        
+        ligate <assembly> [volume=<µL>] [kinase=<bool>]
+
+    <assembly>
+        See the <assemblies>... command-line argument.
+
+    volume=<µL>
+        See --volume.  You must include a unit.
+
+    kinase=<bool>
+        See --kinase.  Specify "yes" or "no".
 """
 
     excess_insert = appcli.param(
@@ -49,26 +69,28 @@ Options:
 
         return self._add_fragments_to_reaction(rxn)
 
+    def del_reaction(self):
+        pass
+
     def get_protocol(self):
-        p= stepwise.Protocol()
-        p+= f"""\
-Run {plural(self.num_reactions):# ligation reaction/s} [1]:
+        p = stepwise.Protocol()
+        rxn = self.reaction
 
-{self.reaction}
-"""
-        p += """\
-Incubate at the following temperatures:
-
-- 25°C for 15 min
-- 65°C for 10 min
-"""
-        p += """\
-Transform 2 µL.
-"""
-        p.footnotes[1] = """\
-https://preview.tinyurl.com/y7gxfv5m
-"""
+        p += pl(
+                f"Setup {plural(rxn.num_reactions):# ligation reaction/s}{p.add_footnotes('https://tinyurl.com/y7gxfv5m')}:",
+                rxn,
+        )
+        p += pl(
+                "Incubate at the following temperatures:",
+                ul(
+                    "25°C for 15 min",
+                    "65°C for 10 min",
+                ),
+        )
         return p
+
+    def del_protocol(self):
+        pass
 
 if __name__ == '__main__':
     Ligate.main()

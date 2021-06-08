@@ -30,6 +30,10 @@ from math import inf
 #   A list of assemblies that may be performed simultaneously, e.g. using 
 #   master mixes.
 
+# Right now all the assembly reactions used a fixed quantity of DNA, typically 
+# 0.06 pmol.  I kinda think it might be better to just use presets, and to 
+# scale the reaction volume normally.  But I'm not totally sure...
+
 def parse_assemblies_from_docopt(args):
     assemblies = args['<assemblies>']
     concs = parse_fragment_attrs(

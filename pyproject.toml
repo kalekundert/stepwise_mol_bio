@@ -58,6 +58,7 @@ gibson = "stepwise_mol_bio:Gibson"
 golden-gate = "stepwise_mol_bio:GoldenGate"
 inverse-pcr = "stepwise_mol_bio:InversePcr"
 ivt = "stepwise_mol_bio:Ivt"
+ligate = "stepwise_mol_bio:Ligate"
 pcr = "stepwise_mol_bio:Pcr"
 
 aliquot = "stepwise_mol_bio:Aliquot"

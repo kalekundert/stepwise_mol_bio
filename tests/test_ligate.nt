@@ -1,0 +1,312 @@
+test_python_protocol:
+  -
+    app:
+      > app = Ligate([[
+      >     Ligate.Fragment('A', conc=Q('200 nM')),
+      >     Ligate.Fragment('B', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Setup 1 ligation reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.05 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.25 µL
+      - A                   200 nM  0.30 µL
+      - B                   200 nM  0.90 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Incubate at the following temperatures:
+      - 25°C for 15 min
+      - 65°C for 10 min
+
+      - https://tinyurl.com/y7gxfv5m
+  -
+    id: master-mix
+    app:
+      > app = Ligate([[
+      >     Ligate.Fragment('A', conc=Q('200 nM')),
+      >     Ligate.Fragment('B', conc=Q('200 nM')),
+      >   ], [
+      >     Ligate.Fragment('A', conc=Q('200 nM')),
+      >     Ligate.Fragment('C', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Setup 2 ligation reactions [1]:
+
+      - Reagent              Stock   Volume     2.2x
+      - ────────────────────────────────────────────
+      - water                       3.05 µL  6.71 µL
+      - T4 ligase buffer       10x  0.50 µL  1.10 µL
+      - T4 DNA ligase     400 U/µL  0.25 µL  0.55 µL
+      - A                   200 nM  0.30 µL  0.66 µL
+      - B,C                 200 nM  0.90 µL
+      - ────────────────────────────────────────────
+      -                             5.00 µL  4.10 µL/rxn
+
+  -
+    app:
+      > app = Ligate([[
+      >     Ligate.Fragment('A', conc=Q('200 nM')),
+      >     Ligate.Fragment('B', conc=Q('200 nM')),
+      > ]])
+      > app.use_kinase = True
+    expected:
+      - Setup 1 ligation reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       2.80 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.25 µL
+      - T4 PNK             10 U/µL  0.25 µL
+      - A                   200 nM  0.30 µL
+      - B                   200 nM  0.90 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+test_cli_protocol:
+  -
+    id: conc
+    cmd: sw ligate A,B -c 200nM
+    stdout:
+      > {DATE}
+      >
+      > \$ sw ligate A,B -c 200nM
+      >
+      > 1. Setup 1 ligation reaction \[1\]:
+      >
+      >    Reagent              Stock   Volume
+      >    ───────────────────────────────────
+      >    water                       3.05 µL
+      >    T4 ligase buffer       10x  0.50 µL
+      >    T4 DNA ligase     400 U/µL  0.25 µL
+      >    A                   200 nM  0.30 µL
+      >    B                   200 nM  0.90 µL
+      >    ───────────────────────────────────
+      >                                5.00 µL
+      >
+      > 2. Incubate at the following temperatures:
+      >
+      >    - 25°C for 15 min
+      >    - 65°C for 10 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/y7gxfv5m
+  -
+    id: length
+    cmd: sw ligate A,B -c 100 -l 1kb
+    stdout:
+      # 0.06 pmol * (1 nmol / 1e3 pmol) * (607558 ng / 1 nmol) * (1 µL / 100 
+      # ng) = 0.36 µL
+      > {DATE}
+      >
+      > \$ sw ligate A,B -c 100 -l 1kb
+      >
+      > 1. Setup 1 ligation reaction \[1\]:
+      >
+      >    Reagent               Stock   Volume
+      >    ────────────────────────────────────
+      >    water                        2.79 µL
+      >    T4 ligase buffer        10x  0.50 µL
+      >    T4 DNA ligase      400 U/µL  0.25 µL
+      >    A                 100 ng/µL  0.36 µL
+      >    B                 100 ng/µL  1.09 µL
+      >    ────────────────────────────────────
+      >                                 5.00 µL
+      >
+      > 2. Incubate at the following temperatures:
+      >
+      >    - 25°C for 15 min
+      >    - 65°C for 10 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/y7gxfv5m
+  -
+    id: volume
+    cmd: sw ligate A,B -c 200nM -v 10
+    stdout:
+      > {DATE}
+      >
+      > \$ sw ligate A,B -c 200nM -v 10
+      >
+      > 1. Setup 1 ligation reaction \[1\]:
+      >
+      >    Reagent              Stock    Volume
+      >    ────────────────────────────────────
+      >    water                        7.30 µL
+      >    T4 ligase buffer       10x   1.00 µL
+      >    T4 DNA ligase     400 U/µL   0.50 µL
+      >    A                   200 nM   0.30 µL
+      >    B                   200 nM   0.90 µL
+      >    ────────────────────────────────────
+      >                                10.00 µL
+      >
+      > 2. Incubate at the following temperatures:
+      >
+      >    - 25°C for 15 min
+      >    - 65°C for 10 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/y7gxfv5m
+  -
+    id: excess-insert
+    cmd: sw ligate A,B -c 200nM -x 1
+    stdout:
+      > {DATE}
+      >
+      > \$ sw ligate A,B -c 200nM -x 1
+      >
+      > 1. Setup 1 ligation reaction \[1\]:
+      >
+      >    Reagent              Stock   Volume
+      >    ───────────────────────────────────
+      >    water                       3.65 µL
+      >    T4 ligase buffer       10x  0.50 µL
+      >    T4 DNA ligase     400 U/µL  0.25 µL
+      >    A                   200 nM  0.30 µL
+      >    B                   200 nM  0.30 µL
+      >    ───────────────────────────────────
+      >                                5.00 µL
+      >
+      > 2. Incubate at the following temperatures:
+      >
+      >    - 25°C for 15 min
+      >    - 65°C for 10 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/y7gxfv5m
+  -
+    id: kinase
+    cmd: sw ligate A,B -c 200nM -k
+    stdout:
+      > {DATE}
+      >
+      > \$ sw ligate A,B -c 200nM -k
+      >
+      > 1. Setup 1 ligation reaction \[1\]:
+      >
+      >    Reagent              Stock   Volume
+      >    ───────────────────────────────────
+      >    water                       2.80 µL
+      >    T4 ligase buffer       10x  0.50 µL
+      >    T4 DNA ligase     400 U/µL  0.25 µL
+      >    T4 PNK             10 U/µL  0.25 µL
+      >    A                   200 nM  0.30 µL
+      >    B                   200 nM  0.90 µL
+      >    ───────────────────────────────────
+      >                                5.00 µL
+      >
+      > 2. Incubate at the following temperatures:
+      >
+      >    - 25°C for 15 min
+      >    - 65°C for 10 min
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/y7gxfv5m
+
+test_freezerbox_protocol:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('ligate p1,p2'),
+        > )
+
+    tags:
+      - p3
+
+    expected:
+      - Setup 1 ligation reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       3.05 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.25 µL
+      - p1                  200 nM  0.30 µL
+      - p2                  200 nM  0.90 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Incubate at the following temperatures:
+      - 25°C for 15 min
+      - 65°C for 10 min
+
+      - Label the product: p3
+
+      - https://tinyurl.com/y7gxfv5m
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p4:
+        > Plasmid(
+        >     synthesis=parse_fields('ligate p1,p2'),
+        > )
+      p5:
+        > Plasmid(
+        >     synthesis=parse_fields('ligate p1,p3'),
+        > )
+
+    tags:
+      - p4
+      - p5
+
+    expected:
+      - Setup 2 ligation reactions [1]:
+
+      - Reagent              Stock   Volume     2.2x
+      - ────────────────────────────────────────────
+      - water                       3.05 µL  6.71 µL
+      - T4 ligase buffer       10x  0.50 µL  1.10 µL
+      - T4 DNA ligase     400 U/µL  0.25 µL  0.55 µL
+      - p1                  200 nM  0.30 µL  0.66 µL
+      - p2,p3               200 nM  0.90 µL
+      - ────────────────────────────────────────────
+      -                             5.00 µL  4.10 µL/rxn
+
+      - Label the products: p4, p5
+
+      - https://tinyurl.com/y7gxfv5m
+
+test_freezerbox_attrs:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('ligate p1,p2'),
+        > )
+    expected:
+      p3:
+        dependencies: {'p1', 'p2'}
+        conc: Quantity(12, 'nM')
+
