@@ -37,16 +37,18 @@ test_python_protocol:
       >     GoldenGate.Fragment('C', conc=Q('200 nM')),
       > ]])
     expected:
-      - Reagent              Stock   Volume
-      - ───────────────────────────────────
-      - water                       3.35 µL
-      - T4 ligase buffer       10x  0.50 µL
-      - T4 DNA ligase     400 U/µL  0.12 µL
-      - BsaI-HFv2          20 U/µL  0.12 µL
-      - A                   200 nM  0.30 µL
+      - Setup the Golden Gate reactions [1]:
+
+      - Reagent              Stock   Volume        4x
+      - ─────────────────────────────────────────────
+      - water                       3.35 µL  13.40 µL
+      - T4 ligase buffer       10x  0.50 µL   2.00 µL
+      - T4 DNA ligase     400 U/µL  0.12 µL   0.50 µL
+      - BsaI-HFv2          20 U/µL  0.12 µL   0.50 µL
+      - A                   200 nM  0.30 µL   1.20 µL
       - B,C                 200 nM  0.60 µL
-      - ───────────────────────────────────
-      -                             5.00 µL
+      - ─────────────────────────────────────────────
+      -                             5.00 µL   4.40 µL/rxn
   -
     id: incubation
     app:

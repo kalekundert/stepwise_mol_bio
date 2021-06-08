@@ -5,14 +5,14 @@ import appcli
 import autoprop
 
 from stepwise import pl, ul
-from stepwise_mol_bio import UsageError, Assembly
+from stepwise_mol_bio import Assembly
 from stepwise_mol_bio.digest import NebRestrictionEnzymeDatabase
 from stepwise_mol_bio._assembly import ARGUMENT_DOC, OPTION_DOC
 from freezerbox import MakerArgsConfig, group_by_identity
 from appcli import Key, DocoptConfig
 from inform import plural
 
-@autoprop
+@autoprop.cache
 class GoldenGate(Assembly):
     __doc__ = f"""\
 Perform a Golden Gate assembly reaction.
@@ -86,6 +86,9 @@ Database:
 
         return self._add_fragments_to_reaction(rxn)
 
+    def del_reaction(self):
+        pass
+
     def get_protocol(self):
         # Maybe this should be the getter function for the assembly param...
 
@@ -148,6 +151,9 @@ Database:
             )
 
         return p
+
+    def del_protocol(self):
+        pass
 
 if __name__ == '__main__':
     GoldenGate.main()

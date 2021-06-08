@@ -1,0 +1,287 @@
+test_python_protocol:
+  -
+    app:
+      > app = Gibson([[
+      >     Gibson.Fragment('A', conc=Q('200 nM')),
+      >     Gibson.Fragment('B', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Setup the Gibson assembly reaction [1]:
+
+      - Reagent             Stock   Volume
+      - ──────────────────────────────────
+      - water                      1.60 µL
+      - Gibson master mix      2x  2.50 µL
+      - A                  200 nM  0.30 µL
+      - B                  200 nM  0.60 µL
+      - ──────────────────────────────────
+      -                            5.00 µL
+
+      - Incubate at 50°C for 15 min.
+
+      - https://tinyurl.com/ychbvkra
+  -
+    id: master-mix
+    app:
+      > app = Gibson([[
+      >     Gibson.Fragment('A', conc=Q('200 nM')),
+      >     Gibson.Fragment('B', conc=Q('200 nM')),
+      >   ], [
+      >     Gibson.Fragment('A', conc=Q('200 nM')),
+      >     Gibson.Fragment('C', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Setup the Gibson assembly reactions [1]:
+
+      - Reagent             Stock   Volume     2.2x
+      - ───────────────────────────────────────────
+      - water                      1.60 µL  3.52 µL
+      - Gibson master mix      2x  2.50 µL  5.50 µL
+      - A                  200 nM  0.30 µL  0.66 µL
+      - B,C                200 nM  0.60 µL
+      - ───────────────────────────────────────────
+      -                            5.00 µL  4.40 µL/rxn
+
+  -
+    id: incubation
+    app:
+      > app = Gibson([[
+      >     Gibson.Fragment('A', conc=Q('200 nM')),
+      >     Gibson.Fragment('B', conc=Q('200 nM')),
+      >     Gibson.Fragment('C', conc=Q('200 nM')),
+      > ]])
+
+    expected:
+      - Setup the Gibson assembly reaction [1]:
+
+      - Reagent             Stock   Volume
+      - ──────────────────────────────────
+      - water                      1.00 µL
+      - Gibson master mix      2x  2.50 µL
+      - A                  200 nM  0.30 µL
+      - B                  200 nM  0.60 µL
+      - C                  200 nM  0.60 µL
+      - ──────────────────────────────────
+      -                            5.00 µL
+
+      - Incubate at 50°C for 15 min.
+  -
+    id: incubation
+    app:
+      > app = Gibson([[
+      >     Gibson.Fragment('A', conc=Q('200 nM')),
+      >     Gibson.Fragment('B', conc=Q('200 nM')),
+      >     Gibson.Fragment('C', conc=Q('200 nM')),
+      >     Gibson.Fragment('D', conc=Q('200 nM')),
+      > ]])
+    expected:
+      - Setup the Gibson assembly reaction [1]:
+
+      - Reagent             Stock   Volume
+      - ──────────────────────────────────
+      - water                      0.40 µL
+      - Gibson master mix      2x  2.50 µL
+      - A                  200 nM  0.30 µL
+      - B                  200 nM  0.60 µL
+      - C                  200 nM  0.60 µL
+      - D                  200 nM  0.60 µL
+      - ──────────────────────────────────
+      -                            5.00 µL
+
+      - Incubate at 50°C for 1h.
+
+test_cli_protocol:
+  -
+    id: conc
+    cmd: sw gibson A,B -c 200nM
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gibson A,B -c 200nM
+      >
+      > 1. Setup the Gibson assembly reaction \[1\]:
+      >
+      >    Reagent             Stock   Volume
+      >    ──────────────────────────────────
+      >    water                      1.60 µL
+      >    Gibson master mix      2x  2.50 µL
+      >    A                  200 nM  0.30 µL
+      >    B                  200 nM  0.60 µL
+      >    ──────────────────────────────────
+      >                               5.00 µL
+      >
+      > 2. Incubate at 50°C for 15 min.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/ychbvkra
+  -
+    id: length
+    cmd: sw gibson A,B -c 100 -l 1kb
+    stdout:
+      # 0.06 pmol * (1 nmol / 1e3 pmol) * (607558 ng / 1 nmol) * (1 µL / 100 
+      # ng) = 0.36 µL
+      > {DATE}
+      >
+      > \$ sw gibson A,B -c 100 -l 1kb
+      >
+      > 1. Setup the Gibson assembly reaction \[1\]:
+      >
+      >    Reagent                Stock   Volume
+      >    ─────────────────────────────────────
+      >    water                         1.41 µL
+      >    Gibson master mix         2x  2.50 µL
+      >    A                  100 ng/µL  0.36 µL
+      >    B                  100 ng/µL  0.73 µL
+      >    ─────────────────────────────────────
+      >                                  5.00 µL
+      >
+      > 2. Incubate at 50°C for 15 min.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/ychbvkra
+  -
+    id: volume
+    cmd: sw gibson A,B -c 200nM -v 10
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gibson A,B -c 200nM -v 10
+      >
+      > 1. Setup the Gibson assembly reaction \[1\]:
+      >
+      >    Reagent             Stock    Volume
+      >    ───────────────────────────────────
+      >    water                       4.10 µL
+      >    Gibson master mix      2x   5.00 µL
+      >    A                  200 nM   0.30 µL
+      >    B                  200 nM   0.60 µL
+      >    ───────────────────────────────────
+      >                               10.00 µL
+      >
+      > 2. Incubate at 50°C for 15 min.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/ychbvkra
+  -
+    id: excess-insert
+    cmd: sw gibson A,B -c 200nM -x 1
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gibson A,B -c 200nM -x 1
+      >
+      > 1. Setup the Gibson assembly reaction \[1\]:
+      >
+      >    Reagent             Stock   Volume
+      >    ──────────────────────────────────
+      >    water                      1.90 µL
+      >    Gibson master mix      2x  2.50 µL
+      >    A                  200 nM  0.30 µL
+      >    B                  200 nM  0.30 µL
+      >    ──────────────────────────────────
+      >                               5.00 µL
+      >
+      > 2. Incubate at 50°C for 15 min.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/ychbvkra
+
+test_freezerbox_protocol:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('gibson p1,p2'),
+        > )
+
+    tags:
+      - p3
+
+    expected:
+      - Setup the Gibson assembly reaction [1]:
+
+      - Reagent             Stock   Volume
+      - ──────────────────────────────────
+      - water                      1.60 µL
+      - Gibson master mix      2x  2.50 µL
+      - p1                 200 nM  0.30 µL
+      - p2                 200 nM  0.60 µL
+      - ──────────────────────────────────
+      -                            5.00 µL
+
+      - Incubate at 50°C for 15 min.
+
+      - Label the product: p3
+
+      - https://tinyurl.com/ychbvkra
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p4:
+        > Plasmid(
+        >     synthesis=parse_fields('gibson p1,p2'),
+        > )
+      p5:
+        > Plasmid(
+        >     synthesis=parse_fields('gibson p1,p3'),
+        > )
+
+    tags:
+      - p4
+      - p5
+
+    expected:
+      - Setup the Gibson assembly reactions [1]:
+
+      - Reagent             Stock   Volume     2.2x
+      - ───────────────────────────────────────────
+      - water                      1.60 µL  3.52 µL
+      - Gibson master mix      2x  2.50 µL  5.50 µL
+      - p1                 200 nM  0.30 µL  0.66 µL
+      - p2,p3              200 nM  0.60 µL
+      - ───────────────────────────────────────────
+      -                            5.00 µL  4.40 µL/rxn
+
+      - Label the products: p4, p5
+
+      - https://tinyurl.com/ychbvkra
+
+test_freezerbox_attrs:
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('gibson p1,p2'),
+        > )
+    expected:
+      p3:
+        dependencies: {'p1', 'p2'}
+        conc: Quantity(12, 'nM')
+
