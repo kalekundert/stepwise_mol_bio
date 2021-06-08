@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v1.22.0 (2021-06-08)
+### Feature
+* Tweak wording ([`f53013d`](https://github.com/kalekundert/stepwise_mol_bio/commit/f53013dc3c3bdbabd4f793c68989aec6fb9426d8))
+* **ligate:** Implement freezerbox maker plugin ([`5a98321`](https://github.com/kalekundert/stepwise_mol_bio/commit/5a98321cb57b23decb76de72e9bd654ce9b7ae50))
+* **gibson:** Implement freezerbox maker plugin ([`ec5df7d`](https://github.com/kalekundert/stepwise_mol_bio/commit/ec5df7da03d3fc148b1df0f5663d4b7f57ad372e))
+
 ## v1.21.0 (2021-06-07)
 ### Feature
 * **golden_gate:** Implement freezerbox maker plugin ([`cd53b3e`](https://github.com/kalekundert/stepwise_mol_bio/commit/cd53b3e1f28b4bad105f79e8ce0d0c9afa05ec0b))
