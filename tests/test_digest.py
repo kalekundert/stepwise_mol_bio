@@ -146,8 +146,11 @@ def test_protocol(app, expected):
         assert x in actual
 
 @parametrize_from_file(schema=db_expected)
-def test_make(db, expected):
+def test_freezerbox_attrs(db, expected):
     for tag in expected:
+        print(db[tag].synthesis_maker.reaction)
         assert db[tag].seq == expected[tag]['seq']
         assert db[tag].dependencies == expected[tag]['dependencies']
+        assert db[tag].conc == expected[tag]['conc']
+        assert db[tag].volume == expected[tag]['volume']
 

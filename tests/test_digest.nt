@@ -434,7 +434,7 @@ test_protocol:
       - 55°C for 5–15 min
       - 80°C for 20 min
 
-test_make:
+test_freezerbox_attrs:
   -
     db:
       p1:
@@ -449,7 +449,8 @@ test_make:
       f1:
         seq: 'AATTCAAGCTTG'
         dependencies: {'p1'}
-
+        volume: Quantity(10, 'µL')
+        conc: Quantity(100, 'ng/µL')
   -
     db:
       f1:
@@ -464,3 +465,22 @@ test_make:
       f2:
         seq: 'AGCTT'
         dependencies: {'f1'}
+        volume: Quantity(10, 'µL')
+        conc: Quantity(100, 'ng/µL')
+  -
+    db:
+      p1:
+        > Plasmid(
+        >     seq='GAATTCAAGCTT',
+        > )
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('digest template=p1 enzymes=EcoRI volume=20µL'),
+        > )
+    expected:
+      f1:
+        seq: 'AATTCAAGCTTG'
+        dependencies: {'p1'}
+        volume: Quantity(20, 'µL')
+        conc: Quantity(50, 'ng/µL')
+

@@ -46,6 +46,9 @@ class Main(appcli.App):
                 merge_by=merge_by,
         )
 
+    def refresh(self):
+        autoprop.clear_cache(self)
+
     @classmethod
     def _solo_maker_factory(cls, product):
         app = cls.from_params()

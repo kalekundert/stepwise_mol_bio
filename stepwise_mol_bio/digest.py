@@ -21,7 +21,7 @@ from appcli import Key, Method, DocoptConfig
 from inform import Error, plural, did_you_mean
 from pathlib import Path
 
-@autoprop
+@autoprop.cache
 class RestrictionDigest(Main):
     """\
 Perform restriction digests using the protocol recommended by NEB.
@@ -256,6 +256,9 @@ Options:
 
         return rxn
 
+    def del_reaction(self):
+        pass
+
     def get_protocol(self):
         from itertools import groupby
         from operator import itemgetter
@@ -312,6 +315,9 @@ the DNA will be purified before use.
 """
         return protocol
 
+    def del_protocol(self):
+        pass
+
     def get_dependencies(self):
         return self.templates
 
@@ -330,6 +336,11 @@ the DNA will be purified before use.
                         target_size=target_size,
                         is_circular=is_circular,
                 )
+    def get_product_conc(self):
+        return self.reaction['DNA'].conc
+
+    def get_product_volume(self):
+        return self.reaction.volume
 
 
 class NebRestrictionEnzymeDatabase:
