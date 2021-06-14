@@ -83,7 +83,7 @@ Options:
 
     -x --extra-percent <percent>
         How much extra master mix to prepare, as a percentage of the minimum 
-        required  master mix volume.
+        required master mix volume.
 
     -c --template-conc <nM>
         The desired final concentration of template in the reaction.  
