@@ -15,10 +15,10 @@ Usage:
     {pcr}
 """
     __config__ = [
-            DocoptConfig(usage_getter=lambda self: self.format_usage()),
-            PresetConfig(),
-            StepwiseConfig('molbio.qpcr'),
-            StepwiseConfig('molbio.pcr'),
+            DocoptConfig.setup(usage_getter=lambda self: self.format_usage()),
+            PresetConfig,
+            StepwiseConfig.setup('molbio.qpcr'),
+            StepwiseConfig.setup('molbio.pcr'),
     ]
     def format_usage(self):
         return self.__doc__.format(

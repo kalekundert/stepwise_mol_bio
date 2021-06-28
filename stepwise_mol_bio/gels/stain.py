@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 from appcli import Key, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, pl, ul
-from stepwise_mol_bio import Main, merge_dicts, format_min, format_sec
+from stepwise_mol_bio import Main, format_min, format_sec
 from inform import plural
 from collections import defaultdict
 from operator import not_
@@ -34,15 +34,15 @@ Options:
         a customized alternative).
 """
     __config__ = [
-            DocoptConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.stain'),
+            DocoptConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.stain'),
     ]
     preset_briefs = appcli.config_attr()
 
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '<preset>'),

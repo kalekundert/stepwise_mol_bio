@@ -23,7 +23,7 @@ Database:
     unless otherwise specified.
 """
     __config__ = [
-            DocoptConfig(),
+            DocoptConfig,
     ]
 
     def get_protocol(self):

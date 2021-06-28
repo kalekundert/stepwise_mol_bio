@@ -8,18 +8,105 @@ import json
 import requests
 
 from stepwise_mol_bio import (
-        Main, UsageError, ConfigError,
-        app_dirs, comma_list, match_len,
+        Main, Argument, ShareConfigs, UsageError, ConfigError,
+        bind_arguments, app_dirs, comma_list, match_len, int_or_expr,
 )
 from stepwise import StepwiseConfig, pl, ul
 from freezerbox import (
-        ReagentConfig, MakerArgsConfig,
-        parse_mass_ug, parse_volume_uL, parse_size_bp,
+        ReagentConfig, MakerConfig,
+        parse_mass_ug, parse_volume_uL, parse_size_bp, parse_time,
         group_by_identity, join_lists,
 )
 from appcli import Key, Method, DocoptConfig
 from inform import Error, plural, did_you_mean
+from functools import partial
 from pathlib import Path
+
+def parse_templates_from_csv(string):
+    return [
+            RestrictionDigest.Template(x)
+            for x in comma_list(string)
+    ]
+
+def parse_template_from_freezerbox(string):
+    return [RestrictionDigest.Template(string)]
+
+def pick_compatible_buffer(enzymes):
+    if len(enzymes) == 1:
+        return enzymes[0]['recommBuffer']
+
+    # Don't consider `buf5`.  This is the code for buffers that are unique to a 
+    # specific enzyme, so even if two enzymes both want `buf5`, it's not the 
+    # same buffer.
+
+    buffer_names = {
+            '1': "NEBuffer r1.1",
+            '2': "NEBuffer r2.1",
+            '3': "NEBuffer r3.1",
+            '4': "rCutSmart Buffer",
+    }
+    buffer_scores = {
+            k: (
+                sum(not x[f'star{k}'] for x in enzymes),  # Star activity?
+                sum(x[f'buf{k}'] for x in enzymes),       # Cutting activity?
+                k == '4',                                 # Prefer CutSmart
+            )
+            for k in buffer_names
+    }
+    best_buffer = max(
+            buffer_scores,
+            key=lambda k: buffer_scores[k],
+    )
+
+    return buffer_names[best_buffer]
+
+def calc_digest_products(seq, enzymes, *, is_circular):
+    from more_itertools import pairwise, flatten
+    from Bio.Restriction import RestrictionBatch
+    from Bio.Seq import Seq
+
+    if not enzymes:
+        raise UsageError("no enzymes specified", enzymes=enzymes)
+
+    enzymes = [
+            re.sub('-HF(v2)?$', '', x)
+            for x in enzymes
+    ]
+
+    try:
+        batch = RestrictionBatch(enzymes)
+    except ValueError:
+        raise ConfigError(
+                lambda e: f"unknown enzyme(s): {','.join(map(repr, e.enzymes))}",
+                enzymes=enzymes,
+        ) from None
+
+    sites = [x-1 for x in flatten(batch.search(Seq(seq)).values())]
+
+    if not sites:
+        raise ConfigError(
+                lambda e: f"{','.join(map(repr, e.enzymes))} {plural(enzymes):/does/do} not cut template.",
+                enzymes=enzymes,
+                seq=seq,
+        )
+
+    sites += [] if is_circular else [0, len(seq)]
+    sites = sorted(sites)
+
+    seqs = []
+    for i,j in pairwise(sorted(sites)):
+        seqs.append(seq[i:j])
+
+    if is_circular:
+        wrap_around = seq[sites[-1]:] + seq[:sites[0]]
+        seqs.append(wrap_around)
+
+    return seqs
+
+def calc_digest_product(seq, enzymes, *, is_circular, target_size=None):
+    target_size = target_size or len(seq)
+    product_seqs = calc_digest_products(seq, enzymes, is_circular=is_circular)
+    return min(product_seqs, key=lambda x: abs(target_size - len(x)))
 
 @autoprop.cache
 class RestrictionDigest(Main):
@@ -29,6 +116,7 @@ Perform restriction digests using the protocol recommended by NEB.
 Usage:
     digest <templates> <enzymes> [-d <ng>] [-D <ng/µL>] [-v <µL>] [-n <rxns>]
         [-g]
+    digest <product> [-e <enzymes>] [options]
 
 Arguments:
     <templates>
@@ -42,11 +130,17 @@ Arguments:
         Enzyme names are case-insensitive, and multiple enzymes can be 
         specified using commas.
 
+    <product>
+        A product in the FreezerBox database that was synthesized by 
+        restriction digest.  If this form of the command is given, the protocol 
+        will take all default values (including the template and enzymes) from 
+        the reaction used to synthesize the given product.
+
 Options:
     -d --dna <µg>               [default: ${app.dna_ug}]
         The amount of DNA to digest, in µg.
 
-    -D --dna-stock <ng/µL>      [default: ${app.dna_stock_ng_uL}]
+    -D --dna-stock <ng/µL>
         The stock concentration of the DNA template, in ng/µL.
 
     -v --target-volume <µL>     [default: ${app.target_volume_uL}]
@@ -55,6 +149,10 @@ Options:
         (which is determined by the amount of DNA to digest, see --dna) is less 
         than 10% of the total reaction volume, as recommended by NEB.
 
+    -t --time <min>
+        Incubate the digestion reaction for a non-standard amount of time.  You 
+        may optionally specify a unit.  If you don't, minutes are assumed.
+
     -n --num-reactions <int>
         The number of reactions to setup.  By default, this is inferred from 
         the number of templates.
@@ -62,76 +160,108 @@ Options:
     -g --genomic
         Indicate that genomic DNA is being digested.  This will double the 
         amount of enzyme used, as recommended by NEB.
-"""
+
+    -e --enzymes <list>
+        The same as <enzymes>, but for when a product is specified.  
+    """
     __config__ = [
-            DocoptConfig(),
-            MakerArgsConfig(),
-            ReagentConfig(lambda self: self.templates),
-            StepwiseConfig('molbio.digest'),
+            DocoptConfig,
+            MakerConfig,
+            StepwiseConfig.setup('molbio.digest'),
     ]
+
+    class Template(ShareConfigs, Argument):
+        __config__ = [ReagentConfig]
+
+        seq = appcli.param(
+                Key(ReagentConfig, 'seq'),
+        )
+        stock_ng_uL = appcli.param(
+                Key(DocoptConfig, '--dna-stock'),
+                Key(ReagentConfig, 'conc_ng_uL'),
+                Key(StepwiseConfig, 'dna_stock_ng_uL'),
+                cast=float,
+        )
+        is_circular = appcli.param(
+                Key(ReagentConfig, 'is_circular'),
+                default=True,
+        )
+        is_genomic = appcli.param(
+                Key(DocoptConfig, '--genomic'),
+                default=False,
+        )
+        target_size_bp = appcli.param(
+                Key(MakerConfig, 'size', cast=parse_size_bp),
+                default=None,
+        )
+
     templates = appcli.param(
-            Key(DocoptConfig, '<templates>'),
-            Key(MakerArgsConfig, 'template'),
-            cast=comma_list,
-    )
-    template_seqs = appcli.param(
-            Key(ReagentConfig, 'seq'),
+            Key(DocoptConfig, '<templates>', cast=parse_templates_from_csv),
+            Key(MakerConfig, 'template', cast=parse_template_from_freezerbox),
+            get=bind_arguments,
     )
     enzyme_names = appcli.param(
-            Key(DocoptConfig, '<enzymes>'),
-            Key(MakerArgsConfig, 'enzymes'),
-            cast=comma_list,
+            Key(DocoptConfig, '<enzymes>', cast=comma_list),
+            Key(DocoptConfig, '--enzymes', cast=comma_list),
+            Key(MakerConfig, 'enzymes', cast=comma_list),
+    )
+    product_tag = appcli.param(
+            Key(DocoptConfig, '<product>'),
+    )
+    products = appcli.param(
+            Method(lambda self: [
+                self.db[self.product_tag].make_intermediate(0)
+            ]),
     )
     num_reactions = appcli.param(
-            Key(DocoptConfig, '--num-reactions'),
+            Key(DocoptConfig, '--num-reactions', cast=int_or_expr),
             Method(lambda self: len(self.templates)),
-            cast=int,
     )
     dna_ug = appcli.param(
-            Key(DocoptConfig, '--dna'),
-            Key(MakerArgsConfig, 'mass', cast=parse_mass_ug),
-            Key(StepwiseConfig, 'dna_ug'),
+            Key(DocoptConfig, '--dna', cast=partial(parse_mass_ug, default_unit='µg')),
+            Key(MakerConfig, 'mass', cast=parse_mass_ug),
+            Key(StepwiseConfig),
             cast=float,
             default=1,
     )
-    dna_stock_ng_uL = appcli.param(
-            Key(DocoptConfig, '--dna-stock'),
-            Key(ReagentConfig, 'conc_ng_uL', cast=min),
-            Key(StepwiseConfig, 'dna_stock_ng_uL'),
-            cast=float,
-            default=200,
-    )
     target_volume_uL = appcli.param(
-            Key(DocoptConfig, '--target-volume'),
-            Key(MakerArgsConfig, 'volume', cast=parse_volume_uL),
-            Key(StepwiseConfig, 'target_volume_uL'),
-            cast=float,
+            Key(DocoptConfig, '--target-volume', cast=partial(parse_volume_uL, default_unit='µL')),
+            Key(MakerConfig, 'volume', cast=parse_volume_uL),
+            Key(StepwiseConfig),
             default=10,
     )
     target_size_bp = appcli.param(
-            Key(MakerArgsConfig, 'size', cast=parse_size_bp),
+            Key(MakerConfig, 'size', cast=parse_size_bp),
             default=None,
     )
-    is_genomic = appcli.param(
-            Key(DocoptConfig, '--genomic'),
-            default=False,
-    )
-    is_circular = appcli.param(
-            Key(ReagentConfig, 'is_circular'),
-            default=True,
-            get=lambda self, x: \
-                    x if isinstance(x, list) else [x] * len(self.templates)
+    time = appcli.param(
+            Key(DocoptConfig, '--time', cast=partial(parse_time, default_unit='min')),
+            Key(MakerConfig, 'time', cast=parse_time),
+            default=None,
     )
 
     group_by = {
         'enzyme_names': group_by_identity,
         'dna_ug': group_by_identity,
         'target_volume_uL': group_by_identity,
+        'time': group_by_identity,
     }
     merge_by = {
         'templates': join_lists,
-        'target_size_bp': list,
     }
+
+    @classmethod
+    def from_tags(cls, template_tags, enzyme_names, db=None):
+        templates = [cls.Template(x) for x in template_tags]
+        return cls(templates, enzyme_names, db)
+
+    @classmethod
+    def from_product(cls, product_tag):
+        self = cls.from_params()
+        self.product_tag = product_tag
+        self.load(MakerConfig)
+        return self
+
 
     def __bareinit__(self):
         self._enzyme_db = None
@@ -172,8 +302,9 @@ Options:
 
         rxn.num_reactions = self.num_reactions
 
-        rxn['DNA'].name = ','.join(self.templates)
-        rxn['DNA'].hold_conc.stock_conc = self.dna_stock_ng_uL, 'ng/µL'
+        rxn['DNA'].name = ','.join(x.tag for x in self.templates)
+        rxn['DNA'].hold_conc.stock_conc = min(
+                x.stock_ng_uL for x in self.templates), 'ng/µL'
 
         if len(self.templates) > 1:
             rxn['DNA'].order = -1
@@ -182,13 +313,14 @@ Options:
         for enz in self.enzymes:
             key = enz['name']
             stock = enz['concentration'] / 1000
+            is_genomic = any(x.is_genomic for x in self.templates)
 
             # The prototype reaction has 1 µg of DNA.  NEB recommends 10 U/µg 
             # (20 U/µg for genomic DNA), so set the initial enzyme volume 
             # according to that.  This will be adjusted later on.
 
             rxn[key].stock_conc = stock, 'U/µL'
-            rxn[key].volume = (20 if self.is_genomic else 10) / stock, 'µL'
+            rxn[key].volume = (20 if is_genomic else 10) / stock, 'µL'
             rxn[key].master_mix = True
 
         rxn['buffer'].name = pick_compatible_buffer(self.enzymes)
@@ -281,11 +413,19 @@ Options:
                     for temp, time in sorted(incubate_params)
             ]
 
-        digest_steps = incubate(
-                itemgetter('incubateTemp'),
-                lambda x: 15 if x['timeSaver'] else 60,
-                lambda x: '5–15 min' if x == 15 else '1 hour',
-        )
+        if self.time:
+            digest_steps = incubate(
+                    itemgetter('incubateTemp'),
+                    lambda x: self.time,
+                    lambda x: x,
+            )
+        else:
+            digest_steps = incubate(
+                    itemgetter('incubateTemp'),
+                    lambda x: 15 if x['timeSaver'] else 60,
+                    lambda x: '5–15 min' if x == 15 else '1 hour',
+            )
+
         inactivate_steps = incubate(
                 itemgetter('heatInactivationTemp'),
                 itemgetter('heatInactivationTime'),
@@ -319,23 +459,18 @@ the DNA will be purified before use.
         pass
 
     def get_dependencies(self):
-        return self.templates
+        return {x.tag for x in self.templates}
 
     def get_product_seqs(self):
-        n = len(self.templates)
-        iter_templates = zip(
-                self.templates,
-                self.template_seqs,
-                match_len(self.target_size_bp, n),
-                match_len(self.is_circular, n),
-        )
-        for tag, seq, target_size, is_circular in iter_templates:
-            with ConfigError.add_info("tag: {tag}", tag=tag):
+        for template in self.templates:
+            with ConfigError.add_info("tag: {tag}", tag=template.tag):
                 yield calc_digest_product(
-                        seq, self.enzyme_names,
-                        target_size=target_size,
-                        is_circular=is_circular,
+                        seq=template.seq,
+                        enzymes=self.enzyme_names,
+                        target_size=template.target_size_bp,
+                        is_circular=template.is_circular,
                 )
+
     def get_product_conc(self):
         return self.reaction['DNA'].conc
 
@@ -403,84 +538,6 @@ class NebRestrictionEnzymeDatabase:
 
             with self.cache_path.open('w') as f:
                 json.dump(data, f)
-
-def pick_compatible_buffer(enzymes):
-    if len(enzymes) == 1:
-        return enzymes[0]['recommBuffer']
-
-    # Don't consider `buf5`.  This is the code for buffers that are unique to a 
-    # specific enzyme, so even if two enzymes both want `buf5`, it's not the 
-    # same buffer.
-
-    buffer_names = {
-            '1': "NEBuffer r1.1",
-            '2': "NEBuffer r2.1",
-            '3': "NEBuffer r3.1",
-            '4': "rCutSmart Buffer",
-    }
-    buffer_scores = {
-            k: (
-                sum(not x[f'star{k}'] for x in enzymes),  # Star activity?
-                sum(x[f'buf{k}'] for x in enzymes),       # Cutting activity?
-                k == '4',                                 # Prefer CutSmart
-            )
-            for k in buffer_names
-    }
-    best_buffer = max(
-            buffer_scores,
-            key=lambda k: buffer_scores[k],
-    )
-
-    return buffer_names[best_buffer]
-
-def calc_digest_products(seq, enzymes, *, is_circular):
-    from more_itertools import pairwise, flatten
-    from Bio.Restriction import RestrictionBatch
-    from Bio.Seq import Seq
-
-    if not enzymes:
-        raise UsageError("no enzymes specified", enzymes=enzymes)
-
-    enzymes = [
-            re.sub('-HF(v2)?$', '', x)
-            for x in enzymes
-    ]
-
-    try:
-        batch = RestrictionBatch(enzymes)
-    except ValueError:
-        raise ConfigError(
-                lambda e: f"unknown enzyme(s): {','.join(map(repr, e.enzymes))}",
-                enzymes=enzymes,
-        ) from None
-
-    sites = [x-1 for x in flatten(batch.search(Seq(seq)).values())]
-
-    if not sites:
-        raise ConfigError(
-                lambda e: f"{','.join(map(repr, e.enzymes))} {plural(enzymes):/does/do} not cut template.",
-                enzymes=enzymes,
-                seq=seq,
-        )
-
-    sites += [] if is_circular else [0, len(seq)]
-    sites = sorted(sites)
-
-    seqs = []
-    for i,j in pairwise(sorted(sites)):
-        seqs.append(seq[i:j])
-
-    if is_circular:
-        wrap_around = seq[sites[-1]:] + seq[:sites[0]]
-        seqs.append(wrap_around)
-
-    return seqs
-
-def calc_digest_product(seq, enzymes, *, is_circular, target_size=None):
-    target_size = target_size or len(seq)
-    product_seqs = calc_digest_products(seq, enzymes, is_circular=is_circular)
-    return min(product_seqs, key=lambda x: abs(target_size - len(x)))
-
 
 if __name__ == '__main__':
     RestrictionDigest.main()

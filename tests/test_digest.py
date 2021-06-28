@@ -2,10 +2,14 @@
 
 import pytest
 import parametrize_from_file
+
+from stepwise.testing import disable_capture
 from stepwise_mol_bio.digest import *
 from freezerbox import Database, Plasmid
-from schema_helpers import *
+from freezerbox.stepwise import Make
+from more_itertools import one
 from warnings import catch_warnings, simplefilter
+from param_helpers import *
 
 with catch_warnings():
     simplefilter('ignore', DeprecationWarning)
@@ -131,7 +135,7 @@ def test_reaction_unknown_supplement():
                 },
             },
     }
-    app = RestrictionDigest(['x1'], ['XyzX'], mock_db)
+    app = RestrictionDigest.from_tags(['x1'], ['XyzX'], mock_db)
 
     with pytest.raises(ConfigError) as err:
         app.reaction
@@ -144,6 +148,24 @@ def test_protocol(app, expected):
     print(actual)
     for x in expected:
         assert x in actual
+
+@parametrize_from_file(
+        key='test_freezerbox_make',
+        schema=db_tags_expected_protocol,
+)
+def test_protocol_product(db, tags, expected):
+    if len(tags) != 1:
+        pytest.skip()
+
+    app = RestrictionDigest.from_product(one(tags))
+    app.db = db
+
+    assert match_protocol(app, expected)
+
+@parametrize_from_file(schema=db_tags_expected_protocol)
+def test_freezerbox_make(db, tags, expected, disable_capture):
+    app = Make(db, tags)
+    assert match_protocol(app, expected, disable_capture)
 
 @parametrize_from_file(schema=db_expected)
 def test_freezerbox_attrs(db, expected):

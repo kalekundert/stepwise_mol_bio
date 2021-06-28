@@ -49,7 +49,7 @@ Options:
         reagents, separate the two names with a comma.
 """
     __config__ = [
-            appcli.DocoptConfig(),
+            appcli.DocoptConfig,
     ]
     oligo_1 = appcli.param('<oligo_1>')
     oligo_2 = appcli.param('<oligo_2>')

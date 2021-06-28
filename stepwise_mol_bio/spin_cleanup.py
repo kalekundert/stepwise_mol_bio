@@ -2,10 +2,10 @@
 
 import stepwise, appcli, autoprop
 from inform import warn
-from appcli import Key, DocoptConfig
+from appcli import Key, Method, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, Quantity, oxford_comma
-from stepwise_mol_bio import Cleanup, format_sec, merge_dicts
-from freezerbox import MakerArgsConfig, group_by_identity, parse_volume_uL
+from stepwise_mol_bio import Cleanup, format_sec
+from freezerbox import MakerConfig, group_by_identity, parse_volume_uL, unanimous
 from more_itertools import always_iterable
 
 def ng_uL(x):
@@ -182,10 +182,10 @@ Database:
         See `--elute-buffer`.
 """
     __config__ = [
-            DocoptConfig(),
-            MakerArgsConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.spin_cleanup'),
+            DocoptConfig,
+            MakerConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.spin_cleanup'),
     ]
     preset_briefs = appcli.config_attr()
     config_paths = appcli.config_attr()
@@ -193,11 +193,11 @@ Database:
 
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '<preset>'),
-            Key(MakerArgsConfig, 1),
+            Key(MakerConfig, 1),
             Key(StepwiseConfig, 'default_preset'),
     )
     protocol_name = appcli.param(
@@ -285,12 +285,12 @@ Database:
     )
     elute_buffer = appcli.param(
             Key(DocoptConfig, '--elute-buffer'),
-            Key(MakerArgsConfig, 'buffer'),
+            Key(MakerConfig, 'buffer'),
             Key(PresetConfig, 'elute_buffer'),
     )
     elute_volume_uL = appcli.param(
             Key(DocoptConfig, '--elute-volume', cast=float),
-            Key(MakerArgsConfig, 'volume', cast=parse_volume_uL),
+            Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(PresetConfig, 'elute_volume_uL'),
     )
     elute_min_volume_uL = appcli.param(
@@ -332,13 +332,13 @@ Database:
         if self.column_capacity_ug:
             footnotes.append(f"Column capacity: {self.column_capacity_ug} µg")
 
-        if self.products and self.show_product_names:
-            product_names = oxford_comma(self.products) + ' '
+        if self.product_tags and self.show_product_tags:
+            product_tags = oxford_comma(self.product_tags) + ' '
         else:
-            product_names = ''
+            product_tags = ''
 
         p += pl
-        pl += f"Purify {product_names}using {self.protocol_name}{p.add_footnotes(*footnotes)}:"
+        pl += f"Purify {product_tags}using {self.protocol_name}{p.add_footnotes(*footnotes)}:"
         pl += ul
 
         if self.spin_speed_g:
@@ -410,6 +410,14 @@ Database:
         ul += flush_column(self.elute_spin_sec, keep_flowthrough=True)
 
         return p
+
+    def get_product_conc(self):
+        v0 = unanimous(x.precursor.volume for x in self.products)
+        c0 = unanimous(x.precursor.conc for x in self.products)
+        return c0 * (v0 / self.product_volume)
+
+    def get_product_volume(self):
+        return Quantity(self.elute_volume_uL, 'µL')
 
 def zip_params(*params):
     from itertools import repeat

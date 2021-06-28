@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from stepwise_mol_bio._assembly import *
-from schema_helpers import *
+from param_helpers import *
 
 @parametrize_from_file(
         schema=Schema({

@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 from appcli import Key, Method, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, dl
-from stepwise_mol_bio import Main, ConfigError, merge_dicts
+from stepwise_mol_bio import Main, ConfigError
 from inform import plural
 
 def parse_num_samples(name):
@@ -196,16 +196,16 @@ Configuration:
 """
 
     __config__ = [
-            DocoptConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.gel'),
+            DocoptConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.gel'),
     ]
     preset_briefs = appcli.config_attr()
     config_paths = appcli.config_attr()
 
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '<preset>'),

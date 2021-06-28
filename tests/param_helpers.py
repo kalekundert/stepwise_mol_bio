@@ -148,7 +148,7 @@ def empty_ok(x):
     return Or(x, And('', lambda y: type(x)()))
 
 def eval_db(reagents):
-    db = freezerbox.Database()
+    db = freezerbox.Database('TEST_DB')
     reagents = Schema(empty_ok({str: str}))(reagents)
 
     for tag, reagent in reagents.items():
@@ -157,10 +157,10 @@ def eval_db(reagents):
     return db
 
 def exec_app(src):
-    app = exec_with('app').all(stepwise).all(stepwise_mol_bio)(src)
-
-    # Make sure the app doesn't try to access a real database.
-    app.db = freezerbox.Database()
+    app = exec_with('app', stepwise=stepwise)\
+            .all(stepwise)\
+            .all(freezerbox)\
+            .all(stepwise_mol_bio)(src)
 
     return app
 

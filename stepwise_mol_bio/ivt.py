@@ -6,11 +6,10 @@ from stepwise import (
         paragraph_list, unordered_list,
 )
 from stepwise_mol_bio import (
-        Main, UsageError,
-        merge_dicts, format_min,
+        Main, Argument, ShareConfigs, UsageError, bind_arguments, format_min,
 )
 from freezerbox import (
-        ReagentConfig, MakerArgsConfig,
+        ReagentConfig, MakerConfig,
         parse_volume_uL, parse_time_m, parse_temp_C, convert_conc_unit,
         unanimous, group_by_identity, normalize_seq, join_lists,
 )
@@ -34,6 +33,18 @@ def affected_by_short(values):
         return False
     else:
         return values['short'] != values['long']
+
+def transcribe(template_seq):
+    t7_promoter = 'TAATACGACTCACTATA'
+    template_seq = normalize_seq(template_seq)
+
+    i = template_seq.find(t7_promoter)
+    j = i + len(t7_promoter)
+
+    if i < 0:
+        raise ValueError(f"no T7 promoter found")
+
+    return template_seq[j:].translate(str.maketrans('Tt', 'Uu'))
 
 class TemplateConfig(ReagentConfig):
     tag_getter = lambda app: app.templates
@@ -252,19 +263,35 @@ Template Preparation:
         sequence, purity, and preparation of the synthetic oligonucleotides.
 """
     __config__ = [
-            DocoptConfig(),
-            MakerArgsConfig(),
-            TemplateConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.ivt'),
+            DocoptConfig,
+            MakerConfig,
+            TemplateConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.ivt'),
     ]
     preset_briefs = appcli.config_attr()
     config_paths = appcli.config_attr()
 
+    class Template(ShareConfigs, Argument):
+        __config__ = [ReagentConfig]
+
+        seq = appcli.param(
+                Key(ReagentConfig, 'seq'),
+        )
+        length = appcli.param(
+                Key(ReagentConfig, 'length'),
+                Method(lambda self: len(self.seq)),
+        )
+        stock_ng_uL = appcli.param(
+                Key(DocoptConfig, '--template-stock', cast=float),
+                Key(ReagentConfig, 'conc_ng_uL'),
+                default=None,
+        )
+
     def _calc_short(self):
         return all(
-                x <= self.template_length_threshold
-                for x in self.template_lengths
+                x.length <= self.template_length_threshold
+                for x in self.templates
         )
 
     def _pick_by_short(self, values):
@@ -272,11 +299,11 @@ Template Preparation:
 
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '--preset'),
-            Key(MakerArgsConfig, 'preset'),
+            Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
     reaction_prototype = appcli.param(
@@ -284,14 +311,9 @@ Template Preparation:
             get=_pick_by_short,
     )
     templates = appcli.param(
-            Key(DocoptConfig, '<templates>'),
-            Key(MakerArgsConfig, 'template', cast=lambda x: [x]),
-    )
-    template_seqs = appcli.param(
-            Key(TemplateConfig, 'seq'),
-    )
-    template_lengths = appcli.param(
-            Key(TemplateConfig, 'length'),
+            Key(DocoptConfig, '<templates>', cast=lambda tags: [Ivt.Template(x) for x in tags]),
+            Key(MakerConfig, 'template', cast=lambda x: [Ivt.Template(x)]),
+            get=bind_arguments,
     )
     template_length_threshold = appcli.param(
             Key(PresetConfig, 'length_threshold'),
@@ -304,11 +326,6 @@ Template Preparation:
             Key(DocoptConfig, '--template-mass', cast=float),
             default=None,
     )
-    template_stock_ng_uL = appcli.param(
-            Key(DocoptConfig, '--template-stock', cast=float),
-            Key(TemplateConfig, 'conc_ng_uL', cast=min),
-            default=None,
-    )
     short = appcli.param(
             Key(DocoptConfig, '--short'),
             Method(_calc_short),
@@ -316,7 +333,7 @@ Template Preparation:
     )
     volume_uL = appcli.param(
             Key(DocoptConfig, '--volume-uL', cast=float),
-            Key(MakerArgsConfig, 'volume', cast=parse_volume_uL),
+            Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(PresetConfig, 'volume_uL'),
             default=None,
     )
@@ -337,12 +354,12 @@ Template Preparation:
     )
     incubation_times_min = appcli.param(
             Key(DocoptConfig, '--incubation-time'),
-            Key(MakerArgsConfig, 'time', cast=parse_time_m),
+            Key(MakerConfig, 'time', cast=parse_time_m),
             Key(PresetConfig, 'incubation_time_min'),
     )
     incubation_temp_C = appcli.param(
             Key(DocoptConfig, '--incubation-temp'),
-            Key(MakerArgsConfig, 'temp', cast=parse_temp_C),
+            Key(MakerConfig, 'temp', cast=parse_temp_C),
             Key(PresetConfig, 'incubation_temp_C'),
     )
     dnase = appcli.toggle_param(
@@ -381,64 +398,6 @@ Template Preparation:
     def __repr__(self):
         return f'Ivt(templates={self.templates!r})'
 
-    def get_reaction(self):
-        rxn = self.reaction_prototype.copy()
-        rxn.num_reactions = len(self.templates)
-        rxn.extra_percent = self.extra_percent
-
-        if self.volume_uL:
-            rxn.hold_ratios.volume = self.volume_uL, 'µL'
-
-        if self.rntp_mix:
-            rntps = []
-            
-            for i, reagent in enumerate(rxn):
-                reagent.order = i
-                if 'rntp' in reagent.flags:
-                    rntps.append(reagent)
-
-            if not rntps:
-                err = ConfigError("cannot make rNTP mix", preset=self.preset)
-                err.blame += "no reagents flagged as 'rntp'"
-                err.hints += "you may need to add this information to the [molbio.ivt.{preset}] preset"
-                raise err
-
-            rxn['rNTP mix'].volume = sum(x.volume for x in rntps)
-            rxn['rNTP mix'].stock_conc = sum(x.stock_conc for x in rntps) / len(rntps)
-            rxn['rNTP mix'].master_mix = all(x.master_mix for x in rntps)
-            rxn['rNTP mix'].order = rntps[0].order
-
-            for rntp in rntps:
-                del rxn[rntp.name]
-
-        rxn['template'].name = ','.join(self.templates)
-
-        if self.template_stock_ng_uL:
-            rxn['template'].hold_conc.stock_conc = self.template_stock_ng_uL, 'ng/µL'
-
-        if self.template_mass_ng:
-            ng_uL = convert_conc_unit(rxn['template'].stock_conc, None, 'ng/µL')
-            rxn['template'].volume = self.template_mass_ng / ng_uL.value, 'µL'
-
-        if self.template_volume_uL:
-            rxn['template'].volume = self.template_volume_uL, 'µL'
-            if self.template_mass_ng:
-                warn(f"template quantity ({self.template_mass_ng} ng) specified but overridden by volume ({self.template_volume_uL} µL)")
-        
-        rxn.fix_volumes('template', rxn.solvent)
-        return rxn
-
-    def get_dnase_reaction(self):
-        rxn = self.dnase_reaction_prototype
-        rxn.num_reactions = len(self.templates)
-        rxn.extra_percent = self.extra_percent
-
-        if self.volume_uL:
-            k = (self.volume_uL, 'µL') / rxn['transcription reaction'].volume
-            rxn.hold_ratios.volume *= k
-
-        return rxn
-
     def get_protocol(self):
         p = stepwise.Protocol()
 
@@ -470,27 +429,79 @@ Template Preparation:
             p += f"Incubate at {self.dnase_incubation_temp_C}°C for {format_min(self.dnase_incubation_time_min)}."
 
         return p
+
+    def get_reaction(self):
+        rxn = self.reaction_prototype.copy()
+        rxn.num_reactions = len(self.templates)
+        rxn.extra_percent = self.extra_percent
+
+        if self.volume_uL:
+            rxn.hold_ratios.volume = self.volume_uL, 'µL'
+
+        if self.rntp_mix:
+            rntps = []
+            
+            for i, reagent in enumerate(rxn):
+                reagent.order = i
+                if 'rntp' in reagent.flags:
+                    rntps.append(reagent)
+
+            if not rntps:
+                err = ConfigError("cannot make rNTP mix", preset=self.preset)
+                err.blame += "no reagents flagged as 'rntp'"
+                err.hints += "you may need to add this information to the [molbio.ivt.{preset}] preset"
+                raise err
+
+            rxn['rNTP mix'].volume = sum(x.volume for x in rntps)
+            rxn['rNTP mix'].stock_conc = sum(x.stock_conc for x in rntps) / len(rntps)
+            rxn['rNTP mix'].master_mix = all(x.master_mix for x in rntps)
+            rxn['rNTP mix'].order = rntps[0].order
+
+            for rntp in rntps:
+                del rxn[rntp.name]
+
+        rxn['template'].name = ','.join(x.tag for x in self.templates)
+
+        template_stocks_ng_uL = [
+                ng_uL
+                for x in self.templates
+                if (ng_uL := x.stock_ng_uL)
+        ]
+        if template_stocks_ng_uL:
+            rxn['template'].hold_conc.stock_conc = \
+                    min(template_stocks_ng_uL), 'ng/µL'
+
+        if self.template_mass_ng:
+            ng_uL = convert_conc_unit(rxn['template'].stock_conc, None, 'ng/µL')
+            rxn['template'].volume = self.template_mass_ng / ng_uL.value, 'µL'
+
+        if self.template_volume_uL:
+            rxn['template'].volume = self.template_volume_uL, 'µL'
+            if self.template_mass_ng:
+                warn(f"template quantity ({self.template_mass_ng} ng) specified but overridden by volume ({self.template_volume_uL} µL)")
+        
+        rxn.fix_volumes('template', rxn.solvent)
+        return rxn
+
+    def get_dnase_reaction(self):
+        rxn = self.dnase_reaction_prototype
+        rxn.num_reactions = len(self.templates)
+        rxn.extra_percent = self.extra_percent
+
+        if self.volume_uL:
+            k = (self.volume_uL, 'µL') / rxn['transcription reaction'].volume
+            rxn.hold_ratios.volume *= k
+
+        return rxn
+
     def get_dependencies(self):
-        return self.templates
+        return {x.tag for x in self.templates}
 
     def get_product_seqs(self):
-        return [transcribe(x) for x in self.template_seqs]
+        return [transcribe(x.seq) for x in self.templates]
 
     def get_product_molecule(self):
         return 'ssRNA'
-
-def transcribe(template_seq):
-    t7_promoter = 'TAATACGACTCACTATA'
-    template_seq = normalize_seq(template_seq)
-
-    i = template_seq.find(t7_promoter)
-    j = i + len(t7_promoter)
-
-    if i < 0:
-        raise ValueError(f"no T7 promoter found")
-
-    return template_seq[j:].translate(str.maketrans('Tt', 'Uu'))
-
 
 if __name__ == '__main__':
     Ivt.main()

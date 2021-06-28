@@ -3,8 +3,8 @@
 import stepwise, appcli, autoprop
 from stepwise import Quantity
 from stepwise_mol_bio import Cleanup
-from freezerbox import MakerArgsConfig, group_by_identity
-from appcli import DocoptConfig, Key
+from freezerbox import MakerConfig, group_by_identity
+from appcli import DocoptConfig, Key, Method
 
 @autoprop
 class Aliquot(Cleanup):
@@ -24,18 +24,17 @@ Arguments:
         previous steps.  No unit is implied, so you must specify one.
 """
     __config__ = [
-            DocoptConfig(),
-            MakerArgsConfig(),
+            DocoptConfig,
+            MakerConfig,
     ]
     volume = appcli.param(
             Key(DocoptConfig, '<volume>'),
-            Key(MakerArgsConfig, 'volume'),
+            Key(MakerConfig, 'volume'),
     )
     conc = appcli.param(
             Key(DocoptConfig, '<conc>'),
-            Key(MakerArgsConfig, 'conc'),
+            Key(MakerConfig, 'conc'),
             default=None,
-            ignore=None,
     )
 
     group_by = {
@@ -43,10 +42,10 @@ Arguments:
         'conc': group_by_identity,
     }
 
-    def __init__(self, volume, conc=None, products=None):
+    def __init__(self, volume, conc=None, product_tags=None):
         self.volume = volume
-        self.conc = conc
-        self.products = products or []
+        if conc: self.conc = conc
+        if product_tags: self.product_tags = product_tags
 
     def get_protocol(self):
         Q = Quantity.from_string
@@ -56,14 +55,17 @@ Arguments:
         else:
             aliquot_info = f'{Q(self.volume)}'
 
-        if self.products and self.show_product_names:
-            product_names = f" of: {', '.join(self.products)}"
+        if self.product_tags and self.show_product_tags:
+            product_tags = f" of: {', '.join(self.product_tags)}"
         else:
-            product_names = "."
+            product_tags = "."
 
         return stepwise.Protocol(
-                steps=[f"Make {aliquot_info} aliquots{product_names}"],
+                steps=[f"Make {aliquot_info} aliquots{product_tags}"],
         )
+
+    def get_product_conc(self):
+        return Quantity.from_string(self.conc)
 
 if __name__ == '__main__':
     Aliquot.main()

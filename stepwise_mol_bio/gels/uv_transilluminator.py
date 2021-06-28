@@ -11,9 +11,7 @@ Image a gel using a UV transilluminator.
 Usage:
     uv_transilluminator [<wavelength>]
 """
-    __config__ = [
-            appcli.DocoptConfig(),
-    ]
+    __config__ = [appcli.DocoptConfig]
 
     wavelength_nm = appcli.param('<wavelength>', default=300)
 

@@ -4,56 +4,32 @@ import stepwise, appcli, autoprop
 from inform import fatal, warn, plural
 from appcli import Key, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, pl, ul
-from stepwise_mol_bio import Main, require_reagent, merge_dicts
+from stepwise_mol_bio import (
+        Main, Argument, ShareConfigs, bind_arguments, require_reagent,
+)
+from freezerbox import ReagentConfig, unanimous
 from copy import deepcopy
 from operator import not_
 
-class Po4Config(appcli.Config):
-    # This should be a general class---provided by `po4`---with the following 
-    # features:
-    # - Don't load the database until needed.
-    # - Will query any key given in the PO₄ database.
-    # - Some option to specify the aggregation function for each key.  Can 
-    #   probably default to `unanimous()`.
-    # - Always yield layer if PO₄ is installed, even if template names aren't 
-    #   valid tags.  This leads to better error messages.
-    autoload = False
+def parse_templates_from_docopt(args):
+    return [
+            InVitroTranslation.Template(tag)
+            for tag in args['<templates>']
+    ]
 
-    def load(self, obj):
-        try:
-            import po4
-        except ImportError:
-            return
+def del_reagent_if_present(rxn, key):
+    if key in rxn:
+        del rxn[key]
 
-        db = po4.load_db()
-
-        try:
-            constructs = [db[x] for x in obj.templates]
-        except po4.QueryError:
-            return
-
-        values = {}
-        
-        try:
-            values['conc_nM'] = po4.unanimous(
-                    x.conc_nM for x in constructs
-            )
-        except (ValueError, po4.ParseError, po4.QueryError):
-            pass
-
-        try:
-            values['is_rna'] = po4.unanimous(
-                    x.is_rna for x in constructs
-            )
-        except (ValueError, po4.ParseError, po4.QueryError):
-            pass
-
-        yield appcli.Layer(values=values, location=db.name)
+def del_reagents_by_flag(rxn, flag):
+    reagents = list(rxn.iter_reagents_by_flag(flag))
+    for reagent in reagents:
+        del rxn[reagent.key]
 
 @autoprop
 class InVitroTranslation(Main):
     """\
-Express proteins from linear DNA templates using NEBExpress.
+Express proteins from purified DNA templates.
 
 Usage:
     ivtt <templates>... [-p <name>] [-v <µL>] [-n <rxns>] [-x <percent>] 
@@ -120,17 +96,33 @@ Options:
         The temperature to incubate the reactions at, in °C.
 """
     __config__ = [
-            Po4Config(),
-            DocoptConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.ivtt'),
+            DocoptConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.ivtt'),
     ]
     preset_briefs = appcli.config_attr()
     preset_brief_template = '{kit}'
 
+    class Template(ShareConfigs, Argument):
+        __config__ = [
+                ReagentConfig.setup(
+                    db_getter=lambda self: self.db,
+                ),
+        ]
+
+        stock_nM = appcli.param(
+                Key(DocoptConfig, '--template-stock', cast=float),
+                Key(ReagentConfig, 'conc_nM'),
+                Key(PresetConfig, 'template_stock_nM'),
+        )
+        is_mrna = appcli.param(
+                Key(DocoptConfig, '--mrna'),
+                Key(ReagentConfig, 'molecule', cast=lambda x: x == 'RNA'),
+        )
+
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '--preset'),
@@ -145,7 +137,8 @@ Options:
             Key(PresetConfig, 'kit'),
     )
     templates = appcli.param(
-            Key(DocoptConfig, '<templates>'),
+            Key(DocoptConfig, parse_templates_from_docopt),
+            get=bind_arguments,
     )
     volume_uL = appcli.param(
             Key(DocoptConfig, '--volume', cast=eval),
@@ -176,18 +169,8 @@ Options:
             Key(PresetConfig, 'template_conc_nM'),
             default=None,
     )
-    template_stock_nM = appcli.param(
-            Key(DocoptConfig, '--template-stock', cast=float),
-            Key(Po4Config, 'conc_nM'),
-            Key(PresetConfig, 'template_stock_nM'),
-    )
     master_mix = appcli.param(
             Key(DocoptConfig, '--master-mix'),
-            default=False,
-    )
-    use_mrna = appcli.param(
-            Key(DocoptConfig, '--mrna'),
-            Key(Po4Config, 'is_rna'),
             default=False,
     )
     use_template = appcli.param(
@@ -307,15 +290,12 @@ Options:
 
         return rxn
 
-def del_reagent_if_present(rxn, key):
-    if key in rxn:
-        del rxn[key]
+    def get_template_stock_nM(self):
+        return min(x.stock_nM for x in self.templates)
 
-def del_reagents_by_flag(rxn, flag):
-    reagents = list(rxn.iter_reagents_by_flag(flag))
-    for reagent in reagents:
-        del rxn[reagent.key]
-
+    @property
+    def use_mrna(self):
+        return unanimous(x.is_mrna for x in self.templates)
 
 if __name__ == '__main__':
     InVitroTranslation.main()

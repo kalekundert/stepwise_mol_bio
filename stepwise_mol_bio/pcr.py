@@ -10,25 +10,102 @@ from stepwise import (
         pl, ul, pre
 )
 from stepwise_mol_bio import (
-        Main, ConfigError, merge_dicts, comma_set, require_reagent,
+        Main, Argument, ShareConfigs, ConfigError,
+        comma_set, bind_arguments, require_reagent,
         int_or_expr, float_or_expr, merge_names,
 )
 from freezerbox import (
-        ReagentConfig, MakerArgsConfig, unanimous,
+        ReagentConfig, MakerConfig, unanimous,
         parse_volume_uL, parse_temp_C, parse_time_s,
         group_by_identity, join_lists,
 )
-from more_itertools import first_true, flatten, chunked, all_equal
+from more_itertools import first_true, flatten, chunked, all_equal, always_iterable
+from statistics import mean
 from collections.abc import Iterable
 from copy import deepcopy
 from operator import not_
 
-class TemplateConfig(ReagentConfig):
-    tag_getter = lambda obj: obj.templates
+# I'd like to support multiple <product> arguments, but first I need 
+# MakerConfig to support multiple products (e.g. call unanimous, then fail 
+# gracefully).
 
-class PrimerConfig(ReagentConfig):
-    tag_getter = lambda obj: flatten(obj.primer_pairs)
-    transform = lambda x: list(chunked(x, 2, strict=True))
+def find_amplicon(template, primer_1, primer_2, is_template_circular=False):
+    from Bio.Seq import reverse_complement
+
+    # This is a temporary solution until I implement full support for IDT-style 
+    # sequence strings in freezerbox.
+    template = freezerbox.normalize_seq(template)
+    primer_1 = freezerbox.normalize_seq(primer_1)
+    primer_2 = freezerbox.normalize_seq(primer_2)
+
+    primer_pairs = [
+            (primer_1, reverse_complement(primer_2)),
+            (primer_2, reverse_complement(primer_1)),
+    ]
+
+    for fwd, rev in primer_pairs:
+        # Assume perfect complementarity in the last 15 bases.  This isn't a 
+        # good approach; better would be to predict where each oligo would 
+        # anneal.  I think I could use Smith-Waterman for this.
+        i = template.find(fwd[-15:  ])
+        j = template.find(rev[   :15])
+
+        if i < 0 or j < 0:
+            continue
+
+        if i < j:
+            break
+
+        if i > j:
+            if is_template_circular:
+                break
+            else:
+                continue
+
+        if i == j:
+            raise ValueError("primers bind same position")
+
+    else:
+        raise ValueError("no amplicon found")
+
+    if i < j:
+        return fwd[:-15] + template[i:j] + rev
+    else:
+        return fwd[:-15] + template[i:] + template[:j] + rev
+
+def parse_amplicons_from_docopt(args):
+    return [parse_amplicon(x) for x in args['<amplicons>']]
+
+def parse_amplicons_from_freezerbox(fields):
+    template = fields['template']
+    fwd, rev = parse_primers(fields['primers'])
+    return [Pcr.Amplicon.from_tags(template, fwd, rev)]
+
+def parse_amplicon(string):
+    fields = string.split(',')
+    n = len(fields) if string else 0
+
+    if n == 3:
+        return Pcr.Amplicon.from_tags(*fields)
+
+    err = ConfigError(string=string, n=n)
+    err.brief = "can't interpret {string!r} as an amplicon"
+    err.info += "expected 3 comma-separated fields (template, fwd, rev)"
+    err.blame += "found {n}"
+    raise err
+
+def parse_primers(string):
+    fields = string.split(',')
+    n = len(fields) if string else 0
+
+    if n == 2:
+        return fields
+
+    err = ConfigError(string=string, n=n)
+    err.brief = "can't interpret {string!r} as a primer pair"
+    err.info += "expected 2 comma-separated fields (fwd, rev)"
+    err.blame += "found {n}"
+    raise err
 
 def temp(x):
     try:
@@ -39,70 +116,17 @@ def temp(x):
 def time(x):
     return float(x)
 
-@autoprop
-class Reagents:
-
-    def __init__(self, template, fwd, rev):
-        self._template = template
-        self._fwd = fwd
-        self._rev = rev
-
-    @classmethod
-    def from_docopt(cls, args):
-        reagents = []
-
-        for reagent in args['<template,fwd,rev>']:
-            template, fwd, rev = reagent.split(',')
-            reagents.append(
-                    Reagents(template, fwd, rev),
-            )
-
-        return reagents
-
-    @classmethod
-    def from_maker_args(cls, args):
-        fwd, rev = args['primers'].split(',')
-        return [Reagents(args['template'], fwd, rev)]
-
-    def get_template(self):
-        return self._template
-
-    def set_template(self, template):
-        self._template = template
-
-    def get_primers(self):
-        return self.fwd, self.rev
-
-    def set_primers(self, primers):
-        self.fwd = primers
-        self.rev = primers
-
-    def get_fwd(self):
-        return self._fwd
-
-    def set_fwd(self, fwd):
-        self._fwd = fwd
-
-    def get_rev(self):
-        return self._rev
-
-    def set_rev(self, rev):
-        self._rev = rev
-
-    def get_dependencies(self):
-        return [self.template, self.fwd, self.rev]
-
-
-@autoprop
+@autoprop.cache
 class Pcr(Main):
     """\
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
-    pcr <template,fwd,rev>... [-a <°C>] [-x <sec> | -l <kb>] [options]
+    pcr <amplicon>... [-a <°C>] [-x <sec> | -l <kb>] [options]
+    pcr (-u <product>) [options]
 
 Arguments:
-    <template,fwd,rev>
+    <amplicon>
         The names of the templates and forward/reverse primers to use for each 
         reaction, separated by commas.  If a `freezerbox` database is present 
         and these names can be found in it, default values for a number of 
@@ -116,6 +140,11 @@ Options:
         sets of parameters are currently available:
 
         ${hanging_indent(app.preset_briefs, 8*' ')}
+
+    -u --product <name>
+        The name of a product to make.  This name must be present in the 
+        FreezerBox database.  In this form of the command, all default settings 
+        will be taken from the reaction used to synthesize the given product.
 
     -l --amplicon-length <bp>
         The length of the amplicon in base pairs (bp).  This can be used to 
@@ -136,21 +165,7 @@ Options:
         overrides the value specified by the preset, without affecting the 
         volume.  Include a unit, because none is implied.
 
-    -m --master-mix <reagents>
-        Indicate which reagents should be included in the master mix.  By 
-        default, this is automatically determined from the given template and 
-        primer names.  The following values are understood:
-
-        dna:      The DNA template.
-        fwd:      The forward primer.
-        rev:      The reverse primer.
-        primers:  Both primers; alias for 'fwd,rev'.
-
-    -M --nothing-in-master-mix
-        Don't include anything but water and polymerase in the master mix.  
-        This is an alias for: -m ''
-
-    --primer-stock <µM>             [default: ${app.primer_stock_uM}]
+    --primer-stock <µM>
         The stock concentration of the primers in µM.  Both primers must have 
         the same concentration.
 
@@ -231,21 +246,115 @@ Options:
 """
 
     __config__ = [
-            DocoptConfig(usage_getter=lambda self: self.format_usage()),
-            MakerArgsConfig(),
-            TemplateConfig(),
-            PrimerConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.pcr'),
+            DocoptConfig.setup(usage_getter=lambda self: self.format_usage()),
+            MakerConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.pcr'),
     ]
     usage = appcli.config_attr()
     preset_briefs = appcli.config_attr()
 
+    @autoprop
+    class Amplicon(ShareConfigs, Argument):
+        __config__ = []
+
+        def _calc_seq(self):
+            try:
+                return find_amplicon(
+                        self.template.seq,
+                        self.fwd.seq,
+                        self.rev.seq,
+                        self.template.is_circular,
+                )
+            except ValueError:
+                err = ConfigError(
+                        template=self.template,
+                        fwd=self.fwd,
+                        rev=self.rev,
+                )
+                err.brief = "{fwd.tag!r} and {rev.tag!r} do not amplify {template.tag!r}"
+                err.info += "{template.tag}: {template.seq}"
+                err.info += "{fwd.tag}: {fwd.seq}"
+                err.info += "{rev.tag}: {rev.seq}"
+                raise err from None
+
+        seq = appcli.param(
+                Method(_calc_seq),
+        )
+        length_bp = appcli.param(
+                Key(DocoptConfig, '--amplicon-length', cast=float),
+                Method(lambda self: len(self.seq)),
+                default=None
+        )
+
+        @classmethod
+        def from_tags(cls, template, fwd, rev, **kwargs):
+            return cls(
+                    Pcr.Template(template),
+                    Pcr.Primer(fwd),
+                    Pcr.Primer(rev),
+                    **kwargs,
+            )
+
+        def __init__(self, template, fwd, rev, **kwargs):
+            self.template = template
+            self.fwd = fwd
+            self.rev = rev
+            self._set_known_attrs(kwargs)
+
+        def __repr__(self):
+            return f'{self.__class__.__qualname__}({self.template!r}, {self.fwd!r}, {self.rev!r})'
+
+        def get_reagents(self):
+            return self.template, *self.primers
+
+        def get_reagent_tags(self):
+            return tuple(x.tag for x in self.reagents)
+
+        def get_primers(self):
+            return self.fwd, self.rev
+
+        def set_primers(self, primers):
+            self.fwd, self.rev = primers
+
+        def on_bind(self, app):
+            super().on_bind(app)
+            for reagent in self.reagents:
+                reagent.bind(app)
+
+    class Template(Argument):
+        __config__ = [ReagentConfig]
+
+        seq = appcli.param('seq')
+        is_circular = appcli.param('is_circular')
+
+    class Primer(ShareConfigs, Argument):
+        __config__ = [ReagentConfig]
+
+        seq = appcli.param(
+                Key(ReagentConfig, 'seq'),
+        )
+        melting_temp_C = appcli.param(
+                Key(ReagentConfig, 'melting_temp_C'),
+        )
+        stock_uM = appcli.param(
+                Key(DocoptConfig, '--primer-stock', cast=float),
+                Key(ReagentConfig, 'conc_uM'),
+                Key(PresetConfig, 'primer_stock_uM'),
+                Key(StepwiseConfig, 'primer_stock_uM'),
+        )
+
     def _calc_anneal_temp_C(self):
-        return list(map(self.anneal_temp_func, self.primer_melting_temps))
+        return [
+                self.anneal_temp_func(
+                    amplicon.fwd.melting_temp_C,
+                    amplicon.rev.melting_temp_C,
+                )
+                for amplicon in self.amplicons
+        ]
 
     def _calc_extend_time_s(self):
-        bp = self.product_length_bp
+        bp = min(bp for x in self.amplicons if (bp := x.length_bp))
 
         def round(x):
             if not self.round_extend_time: return x
@@ -258,70 +367,27 @@ Options:
 
         return round(self.extend_time_func(bp))
 
-    def _calc_master_mix(self):
-        master_mix = set()
-
-        if all_equal(self.templates):
-            master_mix.add('dna')
-
-        fwd, rev = zip(*self.primer_pairs)
-
-        if all_equal(fwd):
-            master_mix.add('fwd')
-
-        if all_equal(rev):
-            master_mix.add('rev')
-
-        return master_mix
-
-    def _find_amplicon(self, i):
-        try:
-            template_seq = self.template_seqs[i]
-            fwd_seq, rev_seq = self.primer_seqs[i]
-            is_linear = self.are_templates_linear[i]
-            return find_amplicon(
-                    template_seq,
-                    fwd_seq,
-                    rev_seq,
-                    is_linear,
-            )
-
-        except ValueError:
-            template_name = self.templates[i]
-            fwd_name, rev_name = self.primer_pairs[i]
-            err = ConfigError(
-                    template_name=template_name,
-                    template_seq=template_seq,
-                    fwd_name=fwd_name,
-                    fwd_seq=fwd_seq,
-                    rev_name=rev_name,
-                    rev_seq=rev_seq,
-                    is_linear=is_linear,
-            )
-            err.brief = "{fwd_name!r} and {rev_name!r} do not amplify {template_name!r}"
-            err.info += "{template_name}: {template_seq}"
-            err.info += "{fwd_name}: {fwd_seq}"
-            err.info += "{rev_name}: {rev_seq}"
-            raise err from None
-
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '--preset'),
-            Key(MakerArgsConfig, 'preset'),
+            Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    reagents = appcli.param(
-            Key(DocoptConfig, Reagents.from_docopt),
-            Key(MakerArgsConfig, Reagents.from_maker_args),
+    amplicons = appcli.param(
+            Key(DocoptConfig, parse_amplicons_from_docopt),
+            Key(MakerConfig, parse_amplicons_from_freezerbox),
+            get=bind_arguments,
     )
-    template_seqs = appcli.param(
-            Key(TemplateConfig, 'seq'),
+    product_tag = appcli.param(
+            Key(DocoptConfig, '--product'),
     )
-    are_templates_linear = appcli.param(
-            Key(TemplateConfig, 'is_linear'),
+    products = appcli.param(
+            Method(lambda self: [
+                self.db[self.product_tag].make_intermediate(0)
+            ]),
     )
     template_volume_uL = appcli.param(
             Key(DocoptConfig, '--template-volume', cast=float),
@@ -329,26 +395,8 @@ Options:
     )
     template_stock = appcli.param(
             Key(DocoptConfig, '--template-stock'),
-            # Don't try to get a value from the freezerbox database, because 
-            # the template volume is not affected by this setting.
-            default=None,
-    )
-    primer_seqs = appcli.param(
-            Key(PrimerConfig, 'seq'),
-    )
-    primer_melting_temps = appcli.param(
-            Key(PrimerConfig, 'melting_temp'),
-    )
-    primer_stock_uM = appcli.param(
-            Key(DocoptConfig, '--primer-stock'),
-            Key(PrimerConfig, 'conc_uM', cast=(unanimous, flatten)),
-            Key(PresetConfig, 'primer_stock_uM'),
-            Key(StepwiseConfig, 'primer_stock_uM'),
-            cast=float,
-    )
-    product_length_bp = appcli.param(
-            Key(DocoptConfig, '--amplicon-length', cast=float),
-            Key(TemplateConfig, 'length', cast=max),
+            # Don't try to get a value from the amplicons/freezerbox database, 
+            # because the template volume is not affected by this setting.
             default=None,
     )
     product_conc_ng_uL = appcli.param(
@@ -356,22 +404,25 @@ Options:
             default=50,
     )
     num_reactions = appcli.param(
-            Key(DocoptConfig, '--num-reactions'),
-            Method(lambda self: len(self.reagents)),
-            cast=int_or_expr,
-            default=1,
+            Key(DocoptConfig, '--num-reactions', cast=int_or_expr),
+            Method(lambda self: len(self.amplicons)),
     )
     reaction_volume_uL = appcli.param(
             Key(DocoptConfig, '--reaction-volume'),
-            Key(MakerArgsConfig, 'volume', cast=parse_volume_uL),
+            Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(PresetConfig, 'reaction_volume_uL'),
             cast=float_or_expr,
             default=None,
     )
-    master_mix = appcli.param(
-            Key(DocoptConfig, '--nothing-in-master-mix', cast=lambda x: set()),
-            Key(DocoptConfig, '--master-mix', cast=comma_set),
-            Method(_calc_master_mix),
+    extra_volume_uL = appcli.param(
+            Key(PresetConfig, 'extra_volume_uL'),
+            Key(StepwiseConfig, 'extra_volume_uL'),
+            cast=float_or_expr,
+    )
+    extra_percent = appcli.param(
+            Key(PresetConfig, 'extra_percent'),
+            Key(StepwiseConfig, 'extra_percent'),
+            cast=float_or_expr,
     )
     base_reaction = appcli.param(
             Key(PresetConfig, 'reagents'),
@@ -404,7 +455,7 @@ Options:
     )
     anneal_temp_C = appcli.param(
             Key(DocoptConfig, '--anneal-temp', cast=temp),
-            Key(MakerArgsConfig, 'Ta', cast=parse_temp_C),
+            Key(MakerConfig, 'Ta', cast=parse_temp_C),
             Method(_calc_anneal_temp_C),
             Key(PresetConfig, 'anneal_temp_C'),
     )
@@ -429,8 +480,8 @@ Options:
     )
     extend_time_s = appcli.param(
             Key(DocoptConfig, '--extend-time', cast=time),
-            Key(MakerArgsConfig, 'tx', cast=parse_time_s),
-            Method(_calc_extend_time_s),
+            Key(MakerConfig, 'tx', cast=parse_time_s),
+            Method(_calc_extend_time_s, skip=ValueError),
             Key(PresetConfig, 'extend_time_s'),
     )
     extend_time_s_per_kb = appcli.param(
@@ -504,27 +555,23 @@ Options:
         'reaction_volume_uL': group_by_identity,
     }
     merge_by = {
-        'reagents': join_lists,
+        'amplicons': join_lists,
         'anneal_temp_C': list,
         'extend_time_s': max,
     }
 
-    def __bareinit__(self):
-        self._db = None
+    @classmethod
+    def from_product(cls, product_tag):
+        self = cls.from_params()
+        self.product_tag = product_tag
+        self.load(MakerConfig)
+        return self
 
-    def __init__(self, reagents):
-        self.reagents = reagents
+    def __init__(self, amplicons):
+        self.amplicons = amplicons
 
     def format_usage(self):
         return self.__doc__
-
-    def get_db(self):
-        if not self._db:
-            self._db = freezerbox.load_db()
-        return self._db
-
-    def set_db(self, db):
-        self._db = db
 
     def get_protocol(self):
         protocol = stepwise.Protocol()
@@ -534,9 +581,10 @@ Options:
 
         # Primer mix (if applicable):
 
+        example_uM = min(x.stock_uM for x in flatten(self.primer_pairs))
         footnotes.append(pl(
                 f"For resuspending lyophilized primers:",
-                f"{self.primer_stock_uM} µM = {1e3 / self.primer_stock_uM:g} µL/nmol",
+                f"{example_uM} µM = {1e3 / example_uM:g} µL/nmol",
                 br='\n',
         ))
 
@@ -587,7 +635,7 @@ Options:
     def get_thermocycler_protocol(self):
 
         def temp(x):
-            if isinstance(x, Iterable):
+            if isinstance(x, Iterable) and not isinstance(x, str):
                 return merge_names(map(temp, x))
             elif isinstance(x, Real):
                 return f'{x:g}°C'
@@ -619,6 +667,7 @@ Options:
                 t = getattr(self, f'{step}_temp_C')
             else:
                 t_mid = getattr(self, f'{step}_temp_C')
+                t_mid = mean(always_iterable(t_mid))
                 t_range = getattr(self, f'{step}_temp_gradient_C')
                 t_low = round(t_mid - t_range / 2)
                 t_high = round(t_low + t_range)
@@ -674,7 +723,8 @@ Options:
         require_reagent(pcr, 'forward primer')
         require_reagent(pcr, 'reverse primer')
 
-        pcr.extra_volume = '10 µL'
+        pcr.extra_volume = self.extra_volume_uL, 'µL'
+        pcr.extra_percent = self.extra_percent
         
         if self.num_reactions:
             pcr.num_reactions = self.num_reactions
@@ -684,8 +734,8 @@ Options:
         pcr['water'].order = 1
 
         pcr['template DNA'].order = 2
-        pcr['template DNA'].name = merge_names(self.templates)
-        pcr['template DNA'].master_mix = 'dna' in self.master_mix
+        pcr['template DNA'].name = merge_names(self.template_tags)
+        pcr['template DNA'].master_mix = all_equal(self.template_tags)
 
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
@@ -697,20 +747,17 @@ Options:
         # to the PCR reaction are too small.
 
         primer_mix = None
-        primer_abbrev = {
-                'forward primer': 'fwd',
-                'reverse primer': 'rev',
-        }
+        primer_keys = [
+                'forward primer',
+                'reverse primer',
+        ]
         use_primer_mix = []
 
-        for p, primers in zip(primer_abbrev, zip(*self.primer_pairs)):
+        for p, primers in zip(primer_keys, zip(*self.primer_pairs)):
             pcr[p].order = 3
-            pcr[p].name = merge_names(primers)
-            pcr[p].hold_conc.stock_conc = self.primer_stock_uM, 'µM'
-            pcr[p].master_mix = (
-                    primer_abbrev[p] in self.master_mix or
-                           'primers' in self.master_mix
-            )
+            pcr[p].name = merge_names(x.tag for x in primers)
+            pcr[p].hold_conc.stock_conc = min(x.stock_uM for x in primers), 'µM'
+            pcr[p].master_mix = all_equal(x.tag for x in primers)
 
             primer_scale = pcr.scale if pcr[p].master_mix else 1
             primer_vol = primer_scale * pcr[p].volume
@@ -742,22 +789,23 @@ Options:
         return pcr, primer_mix
 
     def get_templates(self):
-        return [x.template for x in self.reagents]
+        return [x.template for x in self.amplicons]
+
+    def get_template_tags(self):
+        return [x.tag for x in self.templates]
 
     def get_primer_pairs(self):
-        return [(x.fwd, x.rev) for x in self.reagents]
+        return [(x.fwd, x.rev) for x in self.amplicons]
 
     def get_product_seqs(self):
-        return [
-                self._find_amplicon(i)
-                for i in range(len(self.reagents))
-        ]
+        return [x.seq for x in self.amplicons]
 
     def get_product_conc(self):
         return Quantity(self.product_conc_ng_uL, 'ng/µL')
 
     def get_product_volume(self):
-        return Quantity(self.reaction_volume_uL, 'µL')
+        pcr, primers = self.reaction
+        return pcr.volume
 
     def get_product_molecule(self):
         return 'dsDNA'
@@ -767,51 +815,7 @@ Options:
         return False
 
     def get_dependencies(self):
-        return set(flatten(x.dependencies for x in self.reagents))
-
-def find_amplicon(template, primer_1, primer_2, is_template_linear=True):
-    from Bio.Seq import reverse_complement
-
-    # This is a temporary solution until I implement full support for IDT-style 
-    # sequence strings in freezerbox.
-    template = freezerbox.normalize_seq(template)
-    primer_1 = freezerbox.normalize_seq(primer_1)
-    primer_2 = freezerbox.normalize_seq(primer_2)
-
-    primer_pairs = [
-            (primer_1, reverse_complement(primer_2)),
-            (primer_2, reverse_complement(primer_1)),
-    ]
-
-    for fwd, rev in primer_pairs:
-        # Assume perfect complementarity in the last 15 bases.  This isn't a 
-        # good approach; better would be to predict where each oligo would 
-        # anneal.  I think I could use Smith-Waterman for this.
-        i = template.find(fwd[-15:  ])
-        j = template.find(rev[   :15])
-
-        if i < 0 or j < 0:
-            continue
-
-        if i < j:
-            break
-
-        if i > j:
-            if is_template_linear:
-                continue
-            else:
-                break
-
-        if i == j:
-            raise ValueError("primers bind same position")
-
-    else:
-        raise ValueError("no amplicon found")
-
-    if i < j:
-        return fwd[:-15] + template[i:j] + rev
-    else:
-        return fwd[:-15] + template[i:] + template[:j] + rev
+        return set(flatten(x.reagent_tags for x in self.amplicons))
 
 if __name__ == '__main__':
     Pcr.main()

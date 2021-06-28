@@ -62,9 +62,13 @@ test_protocol:
 
   -
     app:
+      > db = Database()
+      > db['f1'] = NucleicAcid()
+      > db['f2'] = NucleicAcid()
+      >
       > app = SpinCleanup('qiagen')
-      > app.products = ['f1', 'f2']
-      > app.show_product_names = True
+      > app.products = [db['f1'], db['f2']]
+      > app.show_product_tags = True
     expected:
       - Purify f1 and f2 using QIAquick PCR purification kit (28104)
 

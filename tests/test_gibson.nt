@@ -1,4 +1,4 @@
-test_python_protocol:
+test_protocol:
   -
     app:
       > app = Gibson([[
@@ -90,7 +90,7 @@ test_python_protocol:
 
       - Incubate at 50°C for 1h.
 
-test_cli_protocol:
+test_cli:
   -
     id: conc
     cmd: sw gibson A,B -c 200nM
@@ -186,7 +186,7 @@ test_cli_protocol:
       > Note:
       > \[1\] https://tinyurl.com/ychbvkra
 
-test_freezerbox_protocol:
+test_freezerbox_make:
   -
     db:
       p1:

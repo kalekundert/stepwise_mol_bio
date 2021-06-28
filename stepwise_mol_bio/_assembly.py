@@ -6,7 +6,7 @@ import autoprop
 from stepwise import Quantity
 from stepwise_mol_bio import Main, UsageError
 from freezerbox import (
-        ReagentConfig, MakerArgsConfig, mw_from_length, parse_conc, 
+        ReagentConfig, MakerConfig, mw_from_length, parse_conc, 
         parse_size_bp, parse_volume_uL, convert_conc_unit, iter_combos, 
         group_by_identity, group_by_cluster, unanimous, join_lists,
 )
@@ -247,11 +247,9 @@ OPTION_DOC = """\
 
 @autoprop.cache
 class Fragment:
-    __config__ = [
-            ReagentConfig(transform=one, tag_getter=lambda self: self.name),
-    ]
+    __config__ = [ReagentConfig]
 
-    name = appcli.param()
+    name = tag = appcli.param()
     conc = appcli.param(
             Key(ReagentConfig),
     )
@@ -303,8 +301,8 @@ class Fragment:
 @autoprop
 class Assembly(Main):
     __config__ = [
-            DocoptConfig(),
-            MakerArgsConfig(),
+            DocoptConfig,
+            MakerConfig,
     ]
 
     Fragment = Fragment
@@ -313,12 +311,12 @@ class Assembly(Main):
 
     assemblies = appcli.param(
             Key(DocoptConfig, parse_assemblies_from_docopt),
-            Key(MakerArgsConfig, parse_assemblies_from_freezerbox),
+            Key(MakerConfig, parse_assemblies_from_freezerbox),
             get=bind_assemblies
     )
     volume_uL = appcli.param(
             Key(DocoptConfig, '--volume', cast=float),
-            Key(MakerArgsConfig, 'volume', cast=parse_volume_uL),
+            Key(MakerConfig, 'volume', cast=parse_volume_uL),
             default=5,
     )
     excess_insert = appcli.param(

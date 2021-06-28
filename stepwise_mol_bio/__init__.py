@@ -33,10 +33,13 @@ from .invpcr import InversePcr
 from .qpcr import Qpcr
 from .page_purify import PagePurify
 
+import stepwise
 from pathlib import Path
 
 class Plugin:
     protocol_dir = Path(__file__).parent
-    config_defaults = protocol_dir / 'conf.toml'
+    config_path = protocol_dir / 'conf.toml'
+    priority = stepwise.Builtins.priority + 10
 
+del stepwise
 del Path

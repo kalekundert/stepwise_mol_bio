@@ -46,7 +46,7 @@ Options:
         Include a "dilution" with no material in the protocol.
 """
     __config__ = [
-            DocoptConfig(),
+            DocoptConfig,
     ]
 
     _volume_str = appcli.param('<volume>')

@@ -5,90 +5,441 @@ test_find_amplicon:
     primer_2: tctaggactatcaccggagg
     template: tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
     expected:  tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
-    is_linear: True
+    is_circular: False
   -
     id: overhang-template
     primer_1: tataacaggctgctgagacc
     primer_2: tctaggactatcaccggagg
     template: AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA
     expected:         tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
-    is_linear: True
+    is_circular: False
   -
     id: overhang-primer
     primer_1: GATTACAtataacaggctgctgagacc
     primer_2: TGTAATCtctaggactatcaccggagg
     template:       tataacaggctgctgagaccAAAAAAAcctccggtgatagtcctaga
     expected: GATTACAtataacaggctgctgagaccAAAAAAAcctccggtgatagtcctagaGATTACA
-    is_linear: True
+    is_circular: False
   -
     id: circular
     primer_1: tataacaggctgctgagacc
     primer_2: tctaggactatcaccggagg
     template: cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA
     expected: tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
-    is_linear: False
+    is_circular: True
   -
     id: err-primers-cannot-anneal
     primer_1: tataacaggctgctgagacc
     primer_2: tctaggactatcaccggagg
     template: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    is_linear: True
+    is_circular: False
     error: ValueError
   -
     id: err-primers-facing-away
     primer_1: tataacaggctgctgagacc
     primer_2: tctaggactatcaccggagg
     template: cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA
-    is_linear: True
+    is_circular: False
     error: ValueError
+
+test_parse_amplicon:
+  -
+    id: template-fwd-rev
+    given: a,b,c
+    expected:
+      template: a
+      fwd: b
+      rev: c
+
+  -
+    id: err-0
+    given:
+    error:
+      type: ConfigError
+      message:
+        - can't interpret '' as an amplicon
+        - expected 3 comma-separated fields \(template, fwd, rev\)
+        - found 0
+  -
+    id: err-2
+    given: a,b
+    error:
+      type: ConfigError
+      message:
+        - can't interpret 'a,b' as an amplicon
+        - expected 3 comma-separated fields \(template, fwd, rev\)
+        - found 2
+
+test_parse_primers:
+  -
+    given: a,b
+    expected: ['a', 'b']
+  -
+    given:
+    error:
+      type: ConfigError
+      message:
+        - can't interpret '' as a primer pair
+        - expected 2 comma-separated fields \(fwd, rev\)
+        - found 0
+  -
+    given: a
+    error:
+      type: ConfigError
+      message:
+        - can't interpret 'a' as a primer pair
+        - expected 2 comma-separated fields \(fwd, rev\)
+        - found 1
+  -
+    given: a,b,c
+    error:
+      type: ConfigError
+      message:
+        - can't interpret 'a,b,c' as a primer pair
+        - expected 2 comma-separated fields \(fwd, rev\)
+        - found 3
+
+test_reaction:
+  -
+    id: baseline
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume
+        > ───────────────────────────────
+        > water                  39.00 µL
+        > a           20 pg/µL   10.00 µL
+        > b             100 µM    0.50 µL
+        > c             100 µM    0.50 µL
+        > master mix        2x   50.00 µL
+        > ───────────────────────────────
+        >                       100.00 µL
+  -
+    id: num-reactions
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.num_reactions = 2
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a           20 pg/µL   10.00 µL   20.00 µL
+        > b             100 µM    0.50 µL    1.00 µL
+        > c             100 µM    0.50 µL    1.00 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL  100.00 µL/rxn
+  -
+    id: reaction-volume
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.reaction_volume_uL = 200
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume
+        > ───────────────────────────────
+        > water                  78.00 µL
+        > a           20 pg/µL   20.00 µL
+        > b             100 µM    1.00 µL
+        > c             100 µM    1.00 µL
+        > master mix        2x  100.00 µL
+        > ───────────────────────────────
+        >                       200.00 µL
+  -
+    id: master-mix-template
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      >     Pcr.Amplicon.from_tags('a', 'd', 'e'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a           20 pg/µL   10.00 µL   20.00 µL
+        > b,d           100 µM    0.50 µL
+        > c,e           100 µM    0.50 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   99.00 µL/rxn
+  -
+    id: master-mix-fwd
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      >     Pcr.Amplicon.from_tags('d', 'b', 'e'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a,d         20 pg/µL   10.00 µL
+        > b             100 µM    0.50 µL    1.00 µL
+        > c,e           100 µM    0.50 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   89.50 µL/rxn
+  -
+    id: master-mix-rev
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      >     Pcr.Amplicon.from_tags('d', 'e', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a,d         20 pg/µL   10.00 µL
+        > b,e           100 µM    0.50 µL
+        > c             100 µM    0.50 µL    1.00 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   89.50 µL/rxn
+  -
+    id: template-volume
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.template_volume_uL = 5
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume
+        > ───────────────────────────────
+        > water                  44.00 µL
+        > a           20 pg/µL    5.00 µL
+        > b             100 µM    0.50 µL
+        > c             100 µM    0.50 µL
+        > master mix        2x   50.00 µL
+        > ───────────────────────────────
+        >                       100.00 µL
+  -
+    id: template-stock
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.template_stock = '20 nM'
+
+    expected:
+      pcr:
+        > Reagent      Stock     Volume
+        > ─────────────────────────────
+        > water                39.00 µL
+        > a            20 nM   10.00 µL
+        > b           100 µM    0.50 µL
+        > c           100 µM    0.50 µL
+        > master mix      2x   50.00 µL
+        > ─────────────────────────────
+        >                     100.00 µL
+  -
+    id: primers
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.reaction_volume_uL = 80
+
+    expected:
+      primers:
+        > Reagent   Stock    Volume
+        > ─────────────────────────
+        > water             9.00 µL
+        > b        100 µM   0.50 µL
+        > c        100 µM   0.50 µL
+        > ─────────────────────────
+        >                  10.00 µL
+      pcr:
+        > Reagent        Stock    Volume
+        > ──────────────────────────────
+        > water                 24.00 µL
+        > a           20 pg/µL   8.00 µL
+        > primer mix       10x   8.00 µL
+        > master mix        2x  40.00 µL
+        > ──────────────────────────────
+        >                       80.00 µL
+  -
+    id: primers-master-mix
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      >     Pcr.Amplicon.from_tags('d', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.reaction_volume_uL = 10
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      primers:
+        > Reagent   Stock    Volume
+        > ─────────────────────────
+        > water             9.00 µL
+        > b        100 µM   0.50 µL
+        > c        100 µM   0.50 µL
+        > ─────────────────────────
+        >                  10.00 µL
+      pcr:
+        > Reagent        Stock    Volume        2x
+        > ────────────────────────────────────────
+        > water                  3.00 µL   6.00 µL
+        > a,d         20 pg/µL   1.00 µL
+        > primer mix       10x   1.00 µL   2.00 µL
+        > master mix        2x   5.00 µL  10.00 µL
+        > ────────────────────────────────────────
+        >                       10.00 µL   9.00 µL/rxn
 
 test_product_seqs:
   -
     id: seqs-linear
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr([r])
-      > app.template_seqs = [
-      >     'AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA',
-      > ]
-      > app.primer_seqs = [
-      >     ('tataacaggctgctgagacc', 'tctaggactatcaccggagg'),
-      > ]
-      > app.are_templates_linear = [
-      >     True,
-      > ]
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a', seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA', is_circular=False),
+      >         Pcr.Primer('b', seq='tataacaggctgctgagacc'),
+      >         Pcr.Primer('c', seq='tctaggactatcaccggagg'),
+      >     ),
+      > ])
     expected:
       > ['tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga']
   -
     id: seqs-circular
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr([r])
-      > app.template_seqs = [
-      >     'cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA',
-      > ]
-      > app.primer_seqs = [
-      >     ('tataacaggctgctgagacc', 'tctaggactatcaccggagg'),
-      > ]
-      > app.are_templates_linear = [
-      >     False,
-      > ]
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a', seq='cctccggtgatagtcctagaAAAAAAAAAAtataacaggctgctgagaccGATTACA', is_circular=True),
+      >         Pcr.Primer('b', seq='tataacaggctgctgagacc'),
+      >         Pcr.Primer('c', seq='tctaggactatcaccggagg'),
+      >     ),
+      > ])
     expected:
       > ['tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga']
   -
     id: seqs-err
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr([r])
-      > app.template_seqs = [
-      >     'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-      > ]
-      > app.primer_seqs = [
-      >     ('tataacaggctgctgagacc', 'tctaggactatcaccggagg'),
-      > ]
-      > app.are_templates_linear = [
-      >     True,
-      > ]
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a', seq='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', is_circular=False),
+      >         Pcr.Primer('b', seq='tataacaggctgctgagacc'),
+      >         Pcr.Primer('c', seq='tctaggactatcaccggagg'),
+      >     ),
+      > ])
     error:
       type: ConfigError
       message: 'b' and 'c' do not amplify 'a'
@@ -96,22 +447,35 @@ test_product_seqs:
 test_anneal_temp_C:
   -
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr([r])
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a'),
+      >         Pcr.Primer('b'),
+      >         Pcr.Primer('c'),
+      >     ),
+      > ])
       > app.anneal_temp_C = 60
     expected: 60
   -
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr([r])
-      > app.primer_melting_temps = [(60, 65)]
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a'),
+      >         Pcr.Primer('b', melting_temp_C=60),
+      >         Pcr.Primer('c', melting_temp_C=65),
+      >     ),
+      > ])
       > app.anneal_temp_func = min
     expected: [60]
   -
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr([r])
-      > app.primer_melting_temps = [(60, 65)]
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a'),
+      >         Pcr.Primer('b', melting_temp_C=60),
+      >         Pcr.Primer('c', melting_temp_C=65),
+      >     ),
+      > ])
     expected: [61]
     # This test could be affected by the user's config files.  One I fix appcli 
     # #17, I'll be able to avoid this by mocking the relevant configs.
@@ -121,79 +485,84 @@ test_extend_time_s:
   -
     id: setattr
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
+      > app = Pcr([
+      >     Pcr.Amplicon(
+      >         Pcr.Template('a'),
+      >         Pcr.Primer('b'),
+      >         Pcr.Primer('c'),
+      >     ),
+      > ])
       > app.extend_time_s = 60
     expected: 60
   -
     id: round-333
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 333
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=333),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = True
     expected: 10
   -
     id: round-334
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 334
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=334),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = True
     expected: 15
   -
     id: round-500
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 500
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=500),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = True
     expected: 15
   -
     id: round-501
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 501
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=501),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = True
     expected: 30
   -
     id: round-1000
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 1000
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=1000),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = True
     expected: 30
   -
     id: round-1001
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 1001
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=1001),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = True
     expected: 60
   -
     id: no-round
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 100
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=100),
+      > ])
       > app.extend_time_s_per_kb = 30
       > app.round_extend_time = False
     expected: 3
   -
     id: func
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 1000
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=1000),
+      > ])
       > app.extend_time_s_per_kb = None
       > app.extend_time_func = lambda x: 59
       > app.round_extend_time = False
@@ -201,70 +570,146 @@ test_extend_time_s:
   -
     id: func
     app:
-      > r = pcr.Reagents('a', 'b', 'c')
-      > app = Pcr(r)
-      > app.product_length_bp = 1000
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=1000),
+      > ])
       > app.extend_time_s_per_kb = None
       > app.extend_time_func = lambda x: 59
       > app.round_extend_time = True
     expected: 60
+  -
+    id: missing-lengths
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c', length_bp=1000),
+      > ])
+      > app.extend_time_s_per_kb = 30
+      > app.round_extend_time = True
+    expected: 30
 
-test_master_mix:
+test_freezerbox_make:
   -
-    app:
-      > app = Pcr([])
-      > app.master_mix = {'dna', 'fwd', 'rev'}
-    expected: {'dna', 'fwd', 'rev'}
-  -
-    app:
-      > r = [
-      >     pcr.Reagents('a', 'b', 'c'),
-      >     pcr.Reagents('d', 'e', 'f'),
-      > ]
-      > app = Pcr(r)
-    expected: set()
-  -
-    app:
-      > r = [
-      >     pcr.Reagents('x', 'b', 'c'),
-      >     pcr.Reagents('x', 'e', 'f'),
-      > ]
-      > app = Pcr(r)
-    expected: {'dna'}
-  -
-    app:
-      > r = [
-      >     pcr.Reagents('a', 'y', 'c'),
-      >     pcr.Reagents('d', 'y', 'f'),
-      > ]
-      > app = Pcr(r)
-    expected: {'fwd'}
-  -
-    app:
-      > r = [
-      >     pcr.Reagents('a', 'b', 'z'),
-      >     pcr.Reagents('d', 'e', 'z'),
-      > ]
-      > app = Pcr(r)
-    expected: {'rev'}
-  -
-    app:
-      > r = [
-      >     pcr.Reagents('a', 'y', 'z'),
-      >     pcr.Reagents('d', 'y', 'z'),
-      > ]
-      > app = Pcr(r)
-    expected: {'fwd', 'rev'}
-  -
-    app:
-      > r = [
-      >     pcr.Reagents('x', 'y', 'z'),
-      >     pcr.Reagents('x', 'y', 'z'),
-      > ]
-      > app = Pcr(r)
-    expected: {'dna', 'fwd', 'rev'}
+    id: amplicons
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid(seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA')
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2'))
 
-test_make:
+    tags:
+      - f2
+
+    expected:
+      - Prepare 10x primer mix [1]:
+
+      - Reagent   Stock    Volume
+      - ─────────────────────────
+      - water             9.00 µL
+      - o1       100 µM   0.50 µL
+      - o2       100 µM   0.50 µL
+      - ─────────────────────────
+      -                  10.00 µL
+
+      - Setup 1 PCR reaction [2,3]:
+
+      - Reagent           Stock   Volume
+      - ────────────────────────────────
+      - water                    1.50 µL
+      - f1             20 pg/µL  0.50 µL
+      - primer mix          10x  0.50 µL
+      - Q5 master mix        2x  2.50 µL
+      - ────────────────────────────────
+      -                          5.00 µL
+
+  -
+    id: preset
+
+    # Not sure the best way to do this yet.  Should I somehow mock the presets, 
+    # or just add another builtin preset and use that?
+    marks: skip
+
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid(seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA')
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2 preset=...'))
+
+    tags:
+      - f2
+
+    expected:
+      - ...
+
+  -
+    id: volume
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid(seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA')
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2 volume=10µL'))
+
+    tags:
+      - f2
+
+    expected:
+      - Setup 1 PCR reaction [2,3]:
+
+      - Reagent           Stock    Volume
+      - ─────────────────────────────────
+      - water                     3.00 µL
+      - f1             20 pg/µL   1.00 µL
+      - primer mix          10x   1.00 µL
+      - Q5 master mix        2x   5.00 µL
+      - ─────────────────────────────────
+      -                          10.00 µL
+
+  -
+    id: Ta
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid(seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA')
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2 Ta=66°C'))
+
+    tags:
+      - f2
+
+    expected:
+      - Run the following thermocycler protocol:
+
+      - - 98°C for 30s
+      - - Repeat 35x:
+      -   - 98°C for 10s
+      -   - 66°C for 20s
+      -   - 72°C for 10s
+      - - 72°C for 2 min
+      - - 4°C hold
+
+  -
+    id: tx
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid(seq='AAAAAAAtataacaggctgctgagaccGATTACAcctccggtgatagtcctagaAAAAAAA')
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2 tx=30s'))
+
+    tags:
+      - f2
+
+    expected:
+      - Run the following thermocycler protocol:
+
+      - - 98°C for 30s
+      - - Repeat 35x:
+      -   - 98°C for 10s
+      -   - 60°C for 20s
+      -   - 72°C for 30s
+      - - 72°C for 2 min
+      - - 4°C hold
+
+
+test_freezerbox_attrs:
   -
     db:
       o1: Oligo(seq='tataacaggctgctgagacc')
@@ -277,3 +722,4 @@ test_make:
         seq: 'tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga'
         dependencies: {'f1', 'o1', 'o2'}
         conc_ng_uL: 50
+        volume_uL: 5

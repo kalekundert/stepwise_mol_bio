@@ -8,7 +8,7 @@ from stepwise import pl, ul
 from stepwise_mol_bio import Assembly
 from stepwise_mol_bio.digest import NebRestrictionEnzymeDatabase
 from stepwise_mol_bio._assembly import ARGUMENT_DOC, OPTION_DOC
-from freezerbox import MakerArgsConfig, group_by_identity
+from freezerbox import MakerConfig, group_by_identity
 from appcli import Key, DocoptConfig
 from inform import plural
 
@@ -49,7 +49,7 @@ Database:
 
     enzymes = appcli.param(
             Key(DocoptConfig, '--enzymes'),
-            Key(MakerArgsConfig, 'enzymes'),
+            Key(MakerConfig, 'enzymes'),
             cast=lambda x: x.split(','),
             default=['BsaI-HFv2'],
     )

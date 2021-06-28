@@ -24,7 +24,7 @@ Options:
         The number of reactions to set up.
 """
     __config__ = [
-            appcli.DocoptConfig(),
+            appcli.DocoptConfig,
     ]
 
     dna = appcli.param('<dna>')
@@ -56,15 +56,13 @@ Options:
         return kld
 
     def get_protocol(self):
-        protocol = stepwise.Protocol()
-        protocol += pl(
-                f"Run {plural(self.num_reactions):# ligation reaction/s}:",
+        p = stepwise.Protocol()
+        p += pl(
+                f"Setup {plural(self.num_reactions):# ligation reaction/s}:",
                 self.reaction,
-                ul(
-                    "Incubate at room temperature for 1h.",
-                ),
         )
-        return protocol
+        p += "Incubate at room temperature for 1h."
+        return p
 
 if __name__ == '__main__':
     Kld.main()

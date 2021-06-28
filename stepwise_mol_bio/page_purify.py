@@ -9,12 +9,12 @@ from stepwise import (
 )
 from appcli import Key, Method, DocoptConfig
 from freezerbox import (
-        ReagentConfig, MakerArgsConfig, ParseError, unanimous, 
+        ReagentConfig, MakerConfig, ParseError, unanimous, 
         convert_conc_unit, group_by_identity, join_lists,
         parse_volume_uL as parse_strict_volume_uL,
 )
 from stepwise_mol_bio import (
-        Cleanup, Gel, SpinCleanup, ConfigError, merge_dicts, comma_list,
+        Cleanup, Gel, SpinCleanup, ConfigError, comma_list,
 )
 from operator import not_
 from more_itertools import one
@@ -30,12 +30,38 @@ def parse_volume_uL(x):
 def parse_samples(values):
     return [Sample.from_colon_separated_string(x) for x in values]
 
+def elution_buffer():
+    return stepwise.MasterMix("""\
+            Reagent               Stock      Volume
+            ===================  ======  ==========
+            nuclease-free water          to 1000 µL
+            Tris, pH 7.5            1 M       10 µL
+            NaCl                    5 M      100 µL
+            EDTA                 500 mM        2 µL
+            SDS                     10%       10 µL
+    """)
+
+def join_if(items, cond):
+    if not cond:
+        return ''
+    else:
+        return stepwise.oxford_comma(items) + ' '
+
+def cleanup(preset, product_tags, show_products):
+    sc = SpinCleanup(preset)
+    sc.sample_volume_uL = 400
+
+    if show_products:
+        sc.product_tags = product_tags
+        sc.show_product_tags = True
+
+    return sc.protocol
+
 class Sample:
     __config__ = [
-            ReagentConfig(
+            ReagentConfig.setup(
                 db_getter=lambda self: self.app.db,
                 tag_getter=lambda self: self.name,
-                transform=one,
             )
     ]
 
@@ -252,10 +278,10 @@ Database:
         See `--volume`.  Must include a unit.
 """
     __config__ = [
-            DocoptConfig(),
-            MakerArgsConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.page_purify'),
+            DocoptConfig,
+            MakerConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.page_purify'),
     ]
     Sample = Sample
     preset_briefs = appcli.config_attr()
@@ -263,11 +289,11 @@ Database:
 
     presets = appcli.param(
             Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset = appcli.param(
             Key(DocoptConfig, '--preset'),
-            Key(MakerArgsConfig, 'preset'),
+            Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
     samples = appcli.param(
@@ -276,12 +302,12 @@ Database:
     )
     default_stock_conc = appcli.param(
             Key(DocoptConfig, '--conc', cast=parse_conc),
-            Key(MakerArgsConfig, 'conc', cast=Quantity.from_string),
+            Key(MakerConfig, 'conc', cast=Quantity.from_string),
             Key(PresetConfig, 'conc', cast=Quantity.from_string),
     )
     default_volume_uL = appcli.param(
             Key(DocoptConfig, '--volume', cast=parse_volume_uL),
-            Key(MakerArgsConfig, 'volume', cast=parse_strict_volume_uL),
+            Key(MakerConfig, 'volume', cast=parse_strict_volume_uL),
             Key(PresetConfig, 'volume_uL', cast=parse_volume_uL),
             default=5,
     )
@@ -292,7 +318,7 @@ Database:
     )
     gel_preset = appcli.param(
             Key(DocoptConfig, '--gel-preset'),
-            Key(MakerArgsConfig, 'gel'),
+            Key(MakerConfig, 'gel'),
             Key(PresetConfig, 'gel_preset'),
     )
     gel_percent = appcli.param(
@@ -497,34 +523,6 @@ Database:
         app = super()._solo_maker_factory(product)
         app._bind_samples()
         return app
-
-def elution_buffer():
-    return stepwise.MasterMix("""\
-            Reagent               Stock      Volume
-            ===================  ======  ==========
-            nuclease-free water          to 1000 µL
-            Tris, pH 7.5            1 M       10 µL
-            NaCl                    5 M      100 µL
-            EDTA                 500 mM        2 µL
-            SDS                     10%       10 µL
-    """)
-
-def join_if(items, cond):
-    if not cond:
-        return ''
-    else:
-        return stepwise.oxford_comma(items) + ' '
-
-def cleanup(preset, products, show_products):
-    sc = SpinCleanup(preset)
-    sc.sample_volume_uL = 400
-
-    if show_products:
-        sc.products = products
-        sc.show_product_names = True
-
-    return sc.protocol
-
 
 if __name__ == '__main__':
     PagePurify.main()

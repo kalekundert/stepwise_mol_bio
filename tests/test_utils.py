@@ -2,7 +2,7 @@
 
 import parametrize_from_file
 from stepwise_mol_bio._utils import *
-from schema_helpers import *
+from param_helpers import *
 
 @parametrize_from_file(
         schema=Schema({

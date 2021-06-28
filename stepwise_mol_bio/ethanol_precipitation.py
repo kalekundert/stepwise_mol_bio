@@ -127,8 +127,8 @@ References:
 """
 
     __config__ = [
-            DocoptConfig(),
-            PresetConfig(),
+            DocoptConfig,
+            PresetConfig,
             StepwiseConfig('molbio.ethanol_precipitation'),
     ]
 

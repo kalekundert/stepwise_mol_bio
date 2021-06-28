@@ -265,7 +265,7 @@ test_reaction:
   -
     id: baseline
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest.from_tags(['x1'], ['BsaI-HFv2'])
     expected:
       > Reagent               Stock    Volume
       > ─────────────────────────────────────
@@ -278,7 +278,7 @@ test_reaction:
   -
     id: enzymes
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2', 'BbsI-HF'])
+      > app = RestrictionDigest.from_tags(['x1'], ['BsaI-HFv2', 'BbsI-HF'])
     expected:
       > Reagent               Stock    Volume
       > ─────────────────────────────────────
@@ -292,7 +292,7 @@ test_reaction:
   -
     id: templates
     app:
-      > app = RestrictionDigest(['x1', 'x2'], ['BsaI-HFv2'])
+      > app = RestrictionDigest.from_tags(['x1', 'x2'], ['BsaI-HFv2'])
     expected:
       > Reagent               Stock    Volume     2.2x
       > ──────────────────────────────────────────────
@@ -305,7 +305,7 @@ test_reaction:
   -
     id: num-reactions
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest.from_tags(['x1'], ['BsaI-HFv2'])
       > app.num_reactions = 2
     expected:
       > Reagent               Stock    Volume      2.2x
@@ -319,7 +319,7 @@ test_reaction:
   -
     id: scale-volume
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest.from_tags(['x1'], ['BsaI-HFv2'])
       > app.target_volume_uL = 20
     expected:
       > Reagent               Stock    Volume
@@ -333,9 +333,11 @@ test_reaction:
   -
     id: scale-enz
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest(
+      >     [RestrictionDigest.Template('x1', stock_ng_uL=500)],
+      >     ['BsaI-HFv2'],
+      > )
       > app.dna_ug = 2
-      > app.dna_stock_ng_uL = 500
     expected:
       > Reagent               Stock    Volume
       > ─────────────────────────────────────
@@ -348,7 +350,7 @@ test_reaction:
   -
     id: scale-enz-dna
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest.from_tags(['x1'], ['BsaI-HFv2'])
       > app.dna_ug = 2
     expected:
       > Reagent               Stock    Volume
@@ -361,7 +363,7 @@ test_reaction:
   -
     id: supplement-sam
     app:
-      > app = RestrictionDigest(['x1'], ['BaeI'])
+      > app = RestrictionDigest.from_tags(['x1'], ['BaeI'])
       > # Increase the volume because BaeI is more dilute than BsaI-HFv2.
       > app.target_volume_uL = 50
 
@@ -385,7 +387,7 @@ test_reaction:
   -
     id: supplement-bsa
     app:
-      > app = RestrictionDigest(['x1'], ['PI-PspI'])
+      > app = RestrictionDigest.from_tags(['x1'], ['PI-PspI'])
       > # Increase the volume because PI-PspI is more dilute than BsaI-HFv2.
       > app.target_volume_uL = 50
     # http://nebcloner.neb.com/#!/protocol/re/single/PI-PspI
@@ -402,7 +404,10 @@ test_reaction:
   -
     id: genomic
     app:
-      > app = RestrictionDigest(['x1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest(
+      >     [RestrictionDigest.Template('x1', is_genomic=True)],
+      >     ['BsaI-HFv2'],
+      > )
       > app.is_genomic = True
     expected:
       > Reagent               Stock    Volume
@@ -418,7 +423,7 @@ test_protocol:
   -
     id: baseline
     app:
-      > app = RestrictionDigest(['f1'], ['BsaI-HFv2'])
+      > app = RestrictionDigest.from_tags(['f1'], ['BsaI-HFv2'])
     expected:
       - Setup 1 BsaI-HFv2 digestion
       - 37°C for 5–15 min
@@ -427,11 +432,89 @@ test_protocol:
   -
     id: temperatures
     app:
-      > app = RestrictionDigest(['f1'], ['BsaI-HFv2', 'BsmBI-v2'])
+      > app = RestrictionDigest.from_tags(['f1'], ['BsaI-HFv2', 'BsmBI-v2'])
     expected:
       - Setup 1 restriction digestion
       - 37°C for 5–15 min
       - 55°C for 5–15 min
+      - 80°C for 20 min
+  -
+    id: time
+    app:
+      > app = RestrictionDigest.from_tags(['f1'], ['BsaI-HFv2'])
+      > app.time = Q('60 min')
+    expected:
+      - Setup 1 BsaI-HFv2 digestion
+      - 37°C for 60 min
+      - 80°C for 20 min
+
+test_freezerbox_make:
+  -
+    id: stock-mass
+    db:
+      p1:
+        > Plasmid(
+        >     # Need to increase conc to prevent reaction volume from growing.
+        >     conc=Q('500 ng/µL'),
+        > )
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('digest template=p1 enzymes=BsaI-HFv2 mass=2µg'),
+        > )
+
+    tags:
+      - f1
+
+    expected:
+      - Reagent               Stock    Volume
+      - ─────────────────────────────────────
+      - water                         4.00 µL
+      - p1                500 ng/µL   4.00 µL
+      - rCutSmart Buffer        10x   1.00 µL
+      - BsaI-HFv2           20 U/µL   1.00 µL
+      - ─────────────────────────────────────
+      -                              10.00 µL
+
+
+  -
+    id: volume
+    db:
+      p1:
+        > Plasmid()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('digest template=p1 enzymes=BsaI-HFv2 volume=20µL'),
+        > )
+
+    tags:
+      - f1
+
+    expected:
+      - Reagent               Stock    Volume
+      - ─────────────────────────────────────
+      - water                        12.50 µL
+      - p1                200 ng/µL   5.00 µL
+      - rCutSmart Buffer        10x   2.00 µL
+      - BsaI-HFv2           20 U/µL   0.50 µL
+      - ─────────────────────────────────────
+      -                              20.00 µL
+
+  -
+    id: time
+    db:
+      p1:
+        > Plasmid()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('digest template=p1 enzymes=BsaI-HFv2 time=1h'),
+        > )
+
+    tags:
+      - f1
+
+    expected:
+      - Setup 1 BsaI-HFv2 digestion
+      - 37°C for 1 h
       - 80°C for 20 min
 
 test_freezerbox_attrs:

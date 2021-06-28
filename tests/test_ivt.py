@@ -2,7 +2,7 @@
 
 import parametrize_from_file
 from stepwise_mol_bio import ivt
-from schema_helpers import *
+from param_helpers import *
 
 @parametrize_from_file(schema=app_expected_reaction)
 def test_reaction(app, expected):
@@ -44,7 +44,7 @@ def test_transcribe(template, expected, error):
         assert ivt.transcribe(template) == expected
 
 @parametrize_from_file(schema=db_expected)
-def test_make(db, expected):
+def test_freezerbox_attrs(db, expected):
     for tag in expected:
         assert db[tag].seq == expected[tag]['seq']
         assert db[tag].dependencies == expected[tag]['dependencies']

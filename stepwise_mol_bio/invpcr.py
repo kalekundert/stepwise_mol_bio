@@ -47,7 +47,6 @@ Usage:
             p += super().protocol
         if not self.skip_kld:
             p += self.kld.protocol
-            p += "Transform 2 µL."
         return p
 
     @property

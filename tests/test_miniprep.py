@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from stepwise.testing import check_command, disable_capture
-from schema_helpers import *
+from param_helpers import *
 from freezerbox.stepwise import Make
 
 @parametrize_from_file(schema=app_expected_protocol)

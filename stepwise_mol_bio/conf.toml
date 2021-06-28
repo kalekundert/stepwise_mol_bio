@@ -1,8 +1,10 @@
-[pcr]
+[molbio.pcr]
 primer_stock_uM = 100
+extra_volume_uL = 10
+extra_percent = 10
 default_preset = 'q5'
 
-[pcr.presets.q5]
+[molbio.pcr.presets.q5]
 brief = "Official protocol for Q5 High-Fidelity DNA Polymerase (NEB)."
 reagents = '''
 Reagent            Stock      Volume  MM?
@@ -27,7 +29,7 @@ final_extend_time_s = 120
 hold_temp_C = 4
 footnote = 'https://tinyurl.com/y27ralt4'
 
-[pcr.presets.ssoadv]
+[molbio.pcr.presets.ssoadv]
 brief = "Official protocol for qPCR with SsoAdvanced™ Universal SYBR® Green Supermix (BioRad)."
 reagents = '''
 Reagent                  Stock    Volume  MM?
@@ -54,588 +56,18 @@ two_step = true
 qpcr = true
 footnote = 'https://tinyurl.com/y4qffgss'
 
-[qpcr]
+[molbio.qpcr]
 default_preset = 'ssoadv'
 
 
-[spin_cleanup]
-default_preset = 'qiagen'
+[molbio.digest]
+dna_stock_ng_uL = 200
 
-[spin_cleanup.presets.qiagen]
-protocol_name = 'QIAquick PCR purification kit (28104)'
-protocol_link = 'https://tinyurl.com/xr8ruvr9'
-column_name = 'QIAquick column'
-spin_speed_g = 17900
-column_capacity_ug = 10
-sample_type = 'DNA'
 
-bind_buffer = "PB"
-bind_volume_x = 5
-bind_spin_sec = 30
-
-pH_buffer = "3M sodium acetate, pH=5.0"
-pH_volume_x = 0.2
-pH_color = "yellow"
-
-wash_buffer = 'PE'
-wash_volume_uL = 750
-wash_spin_sec = 30
-dry_spin_sec = 60
-
-elute_buffer = 'EB'
-elute_volume_uL = 50
-elute_min_volume_uL = 30
-elute_wait_sec = 60
-elute_spin_sec = 30
-
-[spin_cleanup.presets.'qiagen/min-elute/pcr']
-protocol_name = 'Qiagen MinElute PCR purification kit (28004)'
-inherit = 'qiagen'
-protocol_link = 'https://www.qiagen.com/HB-2069'
-column_name = 'MinElute column'
-column_capacity_ug = 5
-
-bind_spin_sec = 60
-wash_spin_sec = 60
-elute_volume_uL = 10
-elute_min_volume_uL = 10
-elute_spin_sec = 60
-
-[spin_cleanup.presets.'qiagen/min-elute/rxn']
-protocol_name = 'Qiagen MinElute reaction cleanup kit (28204)'
-inherit = 'qiagen/min-elute/pcr'
-
-sample_volume_uL.min = 20
-sample_volume_uL.max = 100
-
-bind_buffer = 'ERC'
-bind_volume_uL = 300
-
-pH_volume_uL = 10
-
-[spin_cleanup.presets.'zymo/rna-clean-conc/5']
-inherit = 'zymo/rna-clean-conc/25'
-protocol_name = 'Zymo Clean & Concentrator-5 kit (R1015)'
-protocol_link = 'https://tinyurl.com/yd699u8b'
-column_capacity_ug = 10
-elute_volume_uL = 15
-elute_min_volume_uL = 6
-
-[spin_cleanup.presets.'zymo/rna-clean-conc/25']
-protocol_name = 'Zymo Clean & Concentrator-25 kit (R1017)'
-protocol_link = 'https://tinyurl.com/jn3nw4c8'
-column_name = 'Zymo-Spin IICR column'
-column_capacity_ug = 50
-spin_speed_g = 16000
-sample_type = 'RNA'
-sample_volume_uL.min = 50
-
-bind_buffer = ['RNA binding buffer', '95-100% ethanol']
-bind_volume_x = [2, 3]
-bind_spin_sec = 30
-
-wash_buffer = ['RNA prep buffer', 'RNA wash buffer', 'RNA wash buffer']
-wash_volume_uL = [400, 700, 400]
-wash_spin_sec = [30, 30, 60]
-
-elute_buffer = 'nuclease-free water'
-elute_volume_uL = 50
-elute_min_volume_uL = 25
-elute_spin_sec = 30
-
-[spin_cleanup.presets.'zymo/rna-clean-conc/100']
-protocol_name = 'Zymo Clean & Concentrator-100 kit (R1019)'
-protocol_link = 'https://tinyurl.com/2va2v8hm'
-column_name = 'Zymo-Spin V-E column with reservoir'
-column_capacity_ug = 250
-spin_speed_g = 16000
-sample_type = 'RNA'
-sample_volume_uL.min = 500
-
-bind_buffer = ['RNA binding buffer', '95-100% ethanol']
-bind_volume_x = [2, 3]
-bind_vacuum = true
-
-wash_buffer = ['RNA prep buffer', 'RNA wash buffer', 'RNA wash buffer']
-wash_volume_uL = [400, 400, 400]
-wash_vacuum = [true, true, true]
-dry_spin_sec = 60
-
-elute_buffer = 'nuclease-free water'
-elute_volume_uL = 100
-elute_min_volume_uL = 100
-elute_spin_sec = 30
-
-
-[gel.presets.'bolt/mes']
-brief = "Bolt Bis-Tris-MES SDS PAGE (Invitrogen)"
-title = "SDS PAGE"
-gel_type = "Bolt Bis-Tris SDS PAGE"
-gel_percent = "4-12"
-gel_buffer = "Bolt MES SDS running buffer"
-sample_mix = """
-Reagent                     Stock      Volume  MM?
-======================  =========  ==========  ===
-water                              to 10.0 µL  yes
-Bolt LDS sample buffer         4x      2.5 µL  yes
-Bolt reducing agent           10x      1.0 µL  yes
-sample                  100 ng/µL      2.5 µL
-"""
-incubate_temp_C = 70
-incubate_time_min = 10
-load_volume_uL = 10
-ladder = 'SeeBlue Plus2 (Invitrogen LC5925)'
-ladder_volume_uL = 5
-run_volts = 165
-run_time_min = 42
-stain = "stain protein"
-
-[gel.presets.'novex/tricine']
-brief = "Novex Tris-Tricine SDS PAGE (Invitrogen)"
-title = "SDS PAGE"
-gel_type = "Novex tris-tricine SDS PAGE"
-gel_percent = "10-20"
-gel_buffer = "tricine SDS running buffer"
-
-# Sample volume:
-# - Couldn't find a recommendation for how much protein to load.
-# - So I just copied from 'bolt/mes'.
-sample_mix = """
-Reagent                         Stock      Volume  MM?
-==========================  =========  ==========  ===
-water                                  to 10.0 µL  yes
-tricine SDS sample buffer          2x      5.0 µL  yes
-NuPAGE reducing agent             10x      1.0 µL  yes
-sample                      100 ng/µL      2.5 µL
-"""
-
-incubate_temp_C = 85
-incubate_time_min = 2
-load_volume_uL = 10
-ladder = "SeeBlue Plus2 (Invitrogen LC5925)"
-ladder_volume_uL = 5
-run_volts = 125
-run_time_min = 90
-stain = "stain protein"
-protocol_link = 'https://tinyurl.com/4nzuxfdb'
-
-[gel.presets.native]
-brief = "Native PAGE"
-title = "native PAGE"
-gel_type = "Bis-Tris Novex NativePAGE"
-gel_percent = "3−12"
-gel_buffer = "NativePAGE running buffer"
-sample_mix = """
-Reagent             Stock      Volume  MM?
-==============  =========  ==========  ===
-water                      to 6.00 µL  yes
-sample buffer          4x     1.50 µL  yes
-sample                        1.25 µL
-"""
-load_volume_uL = 5
-run_volts = 150
-run_time_min = 115
-stain = "stain coomassie"
-
-[gel.presets.'native/blue']
-brief = "Native PAGE with Coomassie"
-inherit = "native"
-gel_buffer = "light blue cathode buffer"
-sample_mix = """
-Reagent             Stock      Volume  MM?
-==============  =========  ==========  ===
-water                      to 6.00 µL  yes
-sample buffer          4x     1.50 µL  yes
-G-250 additive         5%     0.25 µL  yes
-sample                        1.25 µL
-"""
-
-[gel.presets.urea]
-brief = "TBE/urea PAGE"
-title = "TBE/urea PAGE"
-gel_type = "TBE/urea PAGE"
-gel_percent = 6
-gel_buffer = "1x TBE"
-sample_mix = """
-Reagent             Stock    Volume  MM?
-==============  =========  ========  ===
-water                      to 10 µL  yes
-sample buffer          2x      5 µL  yes
-sample          200 ng/µL      1 µL
-"""
-incubate_temp_C = 70
-incubate_time_min = 3
-load_volume_uL = 10
-run_volts = 180
-run_time_min = 40
-stain = "stain rna"
-
-[gel.presets.'urea/purify']
-inherit = 'urea'
-
-sample_mix = """
-Reagent              Stock    Volume  MM?
-===============  =========  ========  ===
-water                       to 10 µL  yes
-RNA loading dye         2x      5 µL  yes
-sample               10 µM      5 µL
-"""
-ladder = 'low range ssRNA ladder (NEB N0364S)'
-ladder_volume_uL = 1
-
-[gel.presets.'agarose/1']
-brief = "1.0% agarose"
-gel_type = "agarose/TAE"
-gel_percent = 1
-gel_buffer = "1x TAE"
-sample_mix = """
-Reagent             Stock  Volume  MM?
-==============  =========  ======  ===
-loading buffer         6x    1 µL  yes
-sample                       5 µL
-"""
-load_volume_uL = 5
-run_volts = 100
-run_time_min = 60
-stain = "stain dna"
-
-[gel.presets.'agarose/1.5']
-brief = "1.5% agarose"
-inherit = 'agarose/1'
-gel_percent = 1.5
-
-[gel.presets.'agarose/2']
-brief = "2.0% agarose"
-inherit = 'agarose/1'
-gel_percent = 2
-
-
-[page_purify]
-default_preset = 'default'
-
-[page_purify.presets.default]
-gel_preset = 'urea/purify'
-cleanup_preset.rna = 'zymo/rna-clean-conc/5'
-cleanup_preset.dna = 'qiagen/min-elute/rxn'
-
-
-[stain.presets.dna]
-inherit = 'gelred'
-
-[stain.presets.rna]
-inherit = 'gelred'
-
-[stain.presets.protein]
-inherit = 'coomassie'
-
-[stain.presets.gelred]
-title = 'GelRed'
-stain_buffer = '3x GelRed in electrophoresis buffer'
-stain_time_min = 30
-
-imaging_protocol = 'stepwise_mol_bio/uv 300'
-
-protocol_link = 'https://tinyurl.com/746v43ns'
-footnotes = [
-"""Including 0.1 M NaCl in the staining solution enhances sensitivity, but may 
-promote dye precipitation if the gel stain is reused.""",
-]
-
-[stain.presets.'gelred/page']
-title = 'PAGE GelRed'
-stain_buffer = '1x PAGE GelRed in water'
-stain_time_min = 30
-
-imaging_protocol = 'stepwise_mol_bio/uv 254'
-
-protocol_link = 'https://tinyurl.com/4msy6bf6'
-
-[stain.presets.gelgreen]
-title = 'GelGreen'
-
-stain_buffer = '3x GelGreen, 100 mM NaCl'
-stain_time_min = 30
-light_sensitive = true
-
-imaging_protocol = 'stepwise_mol_bio/uv'
-
-protocol_link = 'https://tinyurl.com/etxhfxws'
-footnotes = [
-"""Including 100 mM NaCl in the staining solution enhances sensitivity, but may 
-promote dye precipitation if the gel stain is reused.""",
-
-"""Staining solution can be reused at least 2-3x.  Store staining solution at 
-room temperature protected from light.""",
-]
-
-[stain.presets.'sybr-green-ii/page']
-title = 'SYBR Green II'
-
-stain_buffer = "1x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDTA, pH=8.0)"
-stain_time_min = 10
-light_sensitive = true
-
-imaging_protocol = 'stepwise_mol_bio/uv'
-
-protocol_link = 'https://tinyurl.com/y8n7237s'
-footnotes = [
-"""Staining with SYBR Green II reagent is pH sensitive.  For optimal 
-sensitivity, verify that the pH of the staining solution at the temperature 
-used for staining is between 7.5 and 8.0 (preferably 8.0).""",
-"""The staining solution may be stored in the dark (preferably refrigerated) 
-and reused 3-4 times."""
-]
-
-[stain.presets.'sybr-green-ii/agarose']
-inherit = 'sybr-green-ii/page'
-stain_buffer = "2x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDTA, pH=8.0)"
-stain_time_min = 20
-
-[stain.presets.coomassie]
-title = "Coomassie"
-
-stain_buffer = "0.1% Coomassie R250, 10% acetic acid, 40% methanol"
-stain_microwave = true
-stain_time_min = 5
-stain_rinse_repeats = 2
-
-destain_repeats = "until the background is clear (2-3x)"
-destain_buffer = "20% methanol, 10% acetic acid"
-destain_time_min = 10
-destain_microwave = true
-destain_steps = [
-  "submerge",
-  "microwave",
-  "Place a wadded-up kimwipe in the destain",
-  "incubate",
-]
-
-protocol_link = 'https://tinyurl.com/4dtc22hz'
-
-[stain.presets.'coomassie/slow']
-inherit = 'coomassie'
-
-stain_time_min = 60
-stain_microwave = false
-
-destain_time_min = 60
-destain_microwave = false
-
-[stain.presets.'simplyblue/microwave/1mm']
-title = 'SimplyBlue SafeStain'
-
-prep_repeats = 3
-prep_buffer = 'water'
-prep_time_min = 1
-prep_microwave = true
-
-stain_buffer = 'SimplyBlue SafeStain'
-stain_microwave = true
-stain_time_min = 5
-
-destain_steps = [
-  "Wash the gel with 100 mL water for 10 min.",
-  "Add 20 mL 5M NaCl and wash for 5 min",
-]
-
-protocol_link = 'https://tinyurl.com/5a4uv53w'
-footnotes = [
-"""
-The gel can be stained for up to 3 hours, but 
-after 3 hours, sensitivity decreases.  If you need 
-to leave the gel overnight in the stain, add 2 mL 
-of 5M NaCl in water for every 20 mL of stain. This 
-procedure will not affect sensitivity.""",
-]
-
-[stain.presets.'simplyblue/microwave/2mm']
-inherit = 'simplyblue/microwave/1mm'
-stain_time_min = 10
-
-[stain.presets.'simplyblue/basic']
-title = "SimplyBlue SafeStain"
-
-prep_repeats = 3
-prep_buffer = 'water'
-prep_time_min = 5
-
-stain_buffer = "SimplyBlue SafeStain"
-stain_time_min = 60
-
-destain_steps = [
-  "Wash the gel with ≈100 mL water for 1−3h",
-  "To obtain the clearest background, wash again with ≈100 mL water for 1h.",
-]
-
-protocol_link = 'https://tinyurl.com/5a4uv53w'
-footnotes = [
-"""
-Rinsing removes SDS and buffer salts, which interfere with binding of the dye 
-to the protein.
-""",
-"""
-The gel can be stained for up to 3 hours, but 
-after 3 hours, sensitivity decreases.  If you need 
-to leave the gel overnight in the stain, add 2 mL 
-of 5M NaCl in water for every 20 mL of stain. This 
-procedure will not affect sensitivity.
-""",
-"""
-Sensitivity decreases if the gel is stored in 
-water for more than 1 day. The decrease in the 
-amount of free dye in the water favors 
-dissociation of the dye from the protein.  If you 
-need to store the gel in water for a few days, add 
-20 mL of 5M NaCl.
-"""
-]
-
-[stain.presets.'simplyblue/max']
-inherit = 'simplyblue/basic'
-destain_steps = [
-  "Wash the gel with 100 mL water for 1h.",
-  "Add 20 mL 5M NaCl to the above wash.",
-  "Continue washing for 2-16h.",
-]
-
-[stain.presets.sypro-ruby]
-title = "SYPRO Ruby"
-
-prep_buffer = "fix solution (50% methanol, 7% acetic acid)"
-prep_volume_mL = 100
-prep_time_min = 30
-
-stain_buffer = "SYPRO Ruby"
-stain_volume_mL = 60
-stain_time_hr = 16
-
-destain_buffer = "wash solution (10% methanol, 7% acetic acid)"
-destain_volume_mL = 100
-destain_time_min = 30
-destain_steps = [
-  "submerge",
-  "incubate",
-  "Rinse 2x for 5 min in ultrapure water.",
-]
-
-imaging_protocol = 'stepwise_mol_bio/laser_scanner red'
-
-protocol_link = "https://tinyurl.com/46jbd9nc"
-footnotes = [
-"""
-The staining protocol is optimized for standard 1 mm thick, 8 cm × 8 cm 
-SDS-PAGE minigels.  Larger or thicker gels require additional volumes of 
-reagents and/or longer incubation times.  Use 20 times the volume of the gel 
-for fix and wash solutions, and 10 times the volume of the gel for the staining 
-solution.
-""",
-]
-
-[stain.presets.'sypro-ruby/microwave']
-inherit = "sypro-ruby"
-
-prep_repeats = 2
-prep_time_min = 15
-
-stain_steps = [
-  "submerge",
-  "Microwave for 30s.",
-  "Shake briefly to evenly distribute heat.",
-  "Microwave again until almost boiling (≈30s).",
-  "Shake gently for 5m.",
-  "Microwave for 30s.",
-  "Shake gently for 23m.",
-]
-
-footnotes = [
-"""
-The staining protocol is optimized for standard 1 mm thick, 8 cm × 8 cm 
-SDS-PAGE minigels.  Larger or thicker gels require additional volumes of 
-reagents and/or longer incubation times.  Use 20 times the volume of the gel 
-for fix and wash solutions, and 10 times the volume of the gel for the staining 
-solution.  Microwave times should be optimized such that the stain reaches 
-80–85°C.
-""",
-"""
-Although SYPRO® Ruby stain solution is not flammable, use caution when 
-microwaving SYPRO® Ruby stain as the solution becomes very hot.  Placing a lid 
-loosely over the staining container will minimize fumes.  Do not heat the 
-fixative solution or other methanolic solutions in the microwave.
-""",
-]
-
-[stain.presets.'sypro-ruby/water-bath']
-inherit = "sypro-ruby"
-stain_steps = [
-  "submerge",
-  "Incubate the gel at 80°C in a shaking water bath for 30m.",
-]
-
-[stain.presets.sypro-red]
-title = "SYPRO Red"
-
-stain_buffer = "1x SYPRO Red, 7.5% acetic acid"
-stain_volume_mL = 50
-stain_time_min = 40
-
-destain_buffer = "7.5% acetic acid"
-destain_volume_mL = 50
-destain_time_min = 1
-
-imaging_protocol = 'stepwise_mol_bio/laser_scanner green'
-
-protocol_link = "https://tinyurl.com/r7p6juer"
-footnotes = [
-"""
-The stain solution may be reused up to four times, but sensitivty is 
-dramatically reduced.  Use fresh stain for optimal sensitivity.
-""",
-"""
-For low percentage gels and for very small proteins, 10% acetic acid will 
-result in better retention of the protein in the gel without compromising 
-sensitivity.  Do not fix the proteins with methanol-containing solutions.  
-Methanol removes the SDS coat from proteins, strongly reducing the signal from 
-SYPRO Orange and Red.""",
-"""
-Acetic acid will interfere with transfer of the proteins to a blot.  You can 
-try diluting SYPRO Red or Orange in transfer buffer, but this will result in 
-lower sensitivity staining.  Alternatively, you can stain the gel with SYPRO 
-Tangerine (which does not require acetic acid fixation) or you can stain the 
-blot directly with SYPRO Ruby.
-""",
-]
-
-[stain.presets.sypro-orange]
-inherit = "sypro-red"
-title = "SYPRO Orange"
-stain_buffer = "1x SYPRO Orange, 7.5% acetic acid"
-
-
-[laser.presets.blue]
-laser = 488
-filter = '518BP22'
-
-[laser.presets.green]
-laser = 520
-filter = '565BP24'
-
-[laser.presets.red]
-laser = 658
-filter = '710BP40'
-
-[laser.presets.nir]
-laser = 784
-filter = '832BP37'
-
-
-[ethanol_precipitation]
-preset = 'plasmid'
-
-
-[ivt]
+[molbio.ivt]
 default_preset = 'hiscribe'
 
-[ivt.presets.hiscribe]
+[molbio.ivt.presets.hiscribe]
 brief = "HiScribe T7 High Yield RNA Synthesis Kit (NEB E2040)"
 reaction.long = '''
 Reagent              Product #  Stock Conc  Flags      Volume  MM?
@@ -689,7 +121,7 @@ footnotes.incubation = [
   'For reaction times longer than 60 minutes, we recommend using a dry air incubator or a PCR instrument, to prevent evaporation.'
 ]
 
-[ivt.presets.megascript]
+[molbio.ivt.presets.megascript]
 brief = "MEGAscript Kit (Ambion AM1330)"
 reaction = '''
 Reagent               Stock Conc  Flags      Volume  MM?
@@ -729,7 +161,7 @@ footnotes.reaction = [
   'The spermidine in the transcription buffer can coprecipitate the template DNA if the reaction is assembled on ice.',
 ]
 
-[ivt.presets.maxiscript]
+[molbio.ivt.presets.maxiscript]
 brief = "MAXIscript Kit (Ambion AM1308)"
 inherit = 'megascript'
 reaction = '''
@@ -756,10 +188,10 @@ footnotes.incubation = [
 ]
 
 
-[ivtt]
+[molbio.ivtt]
 default_preset = 'purexpress'
 
-[ivtt.presets.purexpress]
+[molbio.ivtt.presets.purexpress]
 kit = "PURExpress (NEB E6800)"
 
 # DNA:
@@ -802,7 +234,7 @@ setup_footnote = "https://tinyurl.com/dxapyo69"
 incubation_time = '2h'
 incubation_temp_C = 37
 
-[ivtt.presets.nebexpress]
+[molbio.ivtt.presets.nebexpress]
 kit = "NEBExpress (NEB E5360)"
 
 # DNA:
@@ -842,7 +274,7 @@ incubation_footnote = '''
 Additional incubation time (maximum 10 hours) at 37°C may increase yield.
 '''
 
-[ivtt.presets.purefrex1]
+[molbio.ivtt.presets.purefrex1]
 kit = "PUREfrex 1.0 (GeneFrontier PF001)"
 
 # The manual for PUREfrex2.0 is much more extensive than that for PUREfrex 1.0.
@@ -885,7 +317,7 @@ https://tinyurl.com/2zue5vy4
 incubation_time = '2h'
 incubation_temp_C = 37
 
-[ivtt.presets.purefrex2]
+[molbio.ivtt.presets.purefrex2]
 kit = "PUREfrex 2.0 (GeneFrontier PF201)"
 
 # DNA:
@@ -920,7 +352,7 @@ https://tinyurl.com/ml26pu09
 incubation_time = '2h'
 incubation_temp_C = 37
 
-[ivtt.presets.'promega/s30/linear']
+[molbio.ivtt.presets.'promega/s30/linear']
 kit = "S30 (Promega L1030)"
 
 # DNA:
@@ -968,4 +400,579 @@ Enhanced expression at lower temperatures for longer times appears to be
 gene/protein-specific and may be tested if the standard reaction at 37°C for 1 
 hour does not produce the desired results.
 '''
+
+
+[molbio.spin_cleanup]
+default_preset = 'qiagen'
+
+[molbio.spin_cleanup.presets.qiagen]
+protocol_name = 'QIAquick PCR purification kit (28104)'
+protocol_link = 'https://tinyurl.com/xr8ruvr9'
+column_name = 'QIAquick column'
+spin_speed_g = 17900
+column_capacity_ug = 10
+sample_type = 'DNA'
+
+bind_buffer = "PB"
+bind_volume_x = 5
+bind_spin_sec = 30
+
+pH_buffer = "3M sodium acetate, pH=5.0"
+pH_volume_x = 0.2
+pH_color = "yellow"
+
+wash_buffer = 'PE'
+wash_volume_uL = 750
+wash_spin_sec = 30
+dry_spin_sec = 60
+
+elute_buffer = 'EB'
+elute_volume_uL = 50
+elute_min_volume_uL = 30
+elute_wait_sec = 60
+elute_spin_sec = 30
+
+[molbio.spin_cleanup.presets.'qiagen/min-elute/pcr']
+protocol_name = 'Qiagen MinElute PCR purification kit (28004)'
+inherit = 'qiagen'
+protocol_link = 'https://www.qiagen.com/HB-2069'
+column_name = 'MinElute column'
+column_capacity_ug = 5
+
+bind_spin_sec = 60
+wash_spin_sec = 60
+elute_volume_uL = 10
+elute_min_volume_uL = 10
+elute_spin_sec = 60
+
+[molbio.spin_cleanup.presets.'qiagen/min-elute/rxn']
+protocol_name = 'Qiagen MinElute reaction cleanup kit (28204)'
+inherit = 'qiagen/min-elute/pcr'
+
+sample_volume_uL.min = 20
+sample_volume_uL.max = 100
+
+bind_buffer = 'ERC'
+bind_volume_uL = 300
+
+pH_volume_uL = 10
+
+[molbio.spin_cleanup.presets.'zymo/rna-clean-conc/5']
+inherit = 'zymo/rna-clean-conc/25'
+protocol_name = 'Zymo Clean & Concentrator-5 kit (R1015)'
+protocol_link = 'https://tinyurl.com/yd699u8b'
+column_capacity_ug = 10
+elute_volume_uL = 15
+elute_min_volume_uL = 6
+
+[molbio.spin_cleanup.presets.'zymo/rna-clean-conc/25']
+protocol_name = 'Zymo Clean & Concentrator-25 kit (R1017)'
+protocol_link = 'https://tinyurl.com/jn3nw4c8'
+column_name = 'Zymo-Spin IICR column'
+column_capacity_ug = 50
+spin_speed_g = 16000
+sample_type = 'RNA'
+sample_volume_uL.min = 50
+
+bind_buffer = ['RNA binding buffer', '95-100% ethanol']
+bind_volume_x = [2, 3]
+bind_spin_sec = 30
+
+wash_buffer = ['RNA prep buffer', 'RNA wash buffer', 'RNA wash buffer']
+wash_volume_uL = [400, 700, 400]
+wash_spin_sec = [30, 30, 60]
+
+elute_buffer = 'nuclease-free water'
+elute_volume_uL = 50
+elute_min_volume_uL = 25
+elute_spin_sec = 30
+
+[molbio.spin_cleanup.presets.'zymo/rna-clean-conc/100']
+protocol_name = 'Zymo Clean & Concentrator-100 kit (R1019)'
+protocol_link = 'https://tinyurl.com/2va2v8hm'
+column_name = 'Zymo-Spin V-E column with reservoir'
+column_capacity_ug = 250
+spin_speed_g = 16000
+sample_type = 'RNA'
+sample_volume_uL.min = 500
+
+bind_buffer = ['RNA binding buffer', '95-100% ethanol']
+bind_volume_x = [2, 3]
+bind_vacuum = true
+
+wash_buffer = ['RNA prep buffer', 'RNA wash buffer', 'RNA wash buffer']
+wash_volume_uL = [400, 400, 400]
+wash_vacuum = [true, true, true]
+dry_spin_sec = 60
+
+elute_buffer = 'nuclease-free water'
+elute_volume_uL = 100
+elute_min_volume_uL = 100
+elute_spin_sec = 30
+
+
+[molbio.gel.presets.'bolt/mes']
+brief = "Bolt Bis-Tris-MES SDS PAGE (Invitrogen)"
+title = "SDS PAGE"
+gel_type = "Bolt Bis-Tris SDS PAGE"
+gel_percent = "4-12"
+gel_buffer = "Bolt MES SDS running buffer"
+sample_mix = """
+Reagent                     Stock      Volume  MM?
+======================  =========  ==========  ===
+water                              to 10.0 µL  yes
+Bolt LDS sample buffer         4x      2.5 µL  yes
+Bolt reducing agent           10x      1.0 µL  yes
+sample                  100 ng/µL      2.5 µL
+"""
+incubate_temp_C = 70
+incubate_time_min = 10
+load_volume_uL = 10
+ladder = 'SeeBlue Plus2 (Invitrogen LC5925)'
+ladder_volume_uL = 5
+run_volts = 165
+run_time_min = 42
+stain = "stain protein"
+
+[molbio.gel.presets.'novex/tricine']
+brief = "Novex Tris-Tricine SDS PAGE (Invitrogen)"
+title = "SDS PAGE"
+gel_type = "Novex tris-tricine SDS PAGE"
+gel_percent = "10-20"
+gel_buffer = "tricine SDS running buffer"
+
+# Sample volume:
+# - Couldn't find a recommendation for how much protein to load.
+# - So I just copied from 'bolt/mes'.
+sample_mix = """
+Reagent                         Stock      Volume  MM?
+==========================  =========  ==========  ===
+water                                  to 10.0 µL  yes
+tricine SDS sample buffer          2x      5.0 µL  yes
+NuPAGE reducing agent             10x      1.0 µL  yes
+sample                      100 ng/µL      2.5 µL
+"""
+
+incubate_temp_C = 85
+incubate_time_min = 2
+load_volume_uL = 10
+ladder = "SeeBlue Plus2 (Invitrogen LC5925)"
+ladder_volume_uL = 5
+run_volts = 125
+run_time_min = 90
+stain = "stain protein"
+protocol_link = 'https://tinyurl.com/4nzuxfdb'
+
+[molbio.gel.presets.native]
+brief = "Native PAGE"
+title = "native PAGE"
+gel_type = "Bis-Tris Novex NativePAGE"
+gel_percent = "3−12"
+gel_buffer = "NativePAGE running buffer"
+sample_mix = """
+Reagent             Stock      Volume  MM?
+==============  =========  ==========  ===
+water                      to 6.00 µL  yes
+sample buffer          4x     1.50 µL  yes
+sample                        1.25 µL
+"""
+load_volume_uL = 5
+run_volts = 150
+run_time_min = 115
+stain = "stain coomassie"
+
+[molbio.gel.presets.'native/blue']
+brief = "Native PAGE with Coomassie"
+inherit = "native"
+gel_buffer = "light blue cathode buffer"
+sample_mix = """
+Reagent             Stock      Volume  MM?
+==============  =========  ==========  ===
+water                      to 6.00 µL  yes
+sample buffer          4x     1.50 µL  yes
+G-250 additive         5%     0.25 µL  yes
+sample                        1.25 µL
+"""
+
+[molbio.gel.presets.urea]
+brief = "TBE/urea PAGE"
+title = "TBE/urea PAGE"
+gel_type = "TBE/urea PAGE"
+gel_percent = 6
+gel_buffer = "1x TBE"
+sample_mix = """
+Reagent             Stock    Volume  MM?
+==============  =========  ========  ===
+water                      to 10 µL  yes
+sample buffer          2x      5 µL  yes
+sample          200 ng/µL      1 µL
+"""
+incubate_temp_C = 70
+incubate_time_min = 3
+load_volume_uL = 10
+run_volts = 180
+run_time_min = 40
+stain = "stain rna"
+
+[molbio.gel.presets.'urea/purify']
+inherit = 'urea'
+
+sample_mix = """
+Reagent              Stock    Volume  MM?
+===============  =========  ========  ===
+water                       to 10 µL  yes
+RNA loading dye         2x      5 µL  yes
+sample               10 µM      5 µL
+"""
+ladder = 'low range ssRNA ladder (NEB N0364S)'
+ladder_volume_uL = 1
+
+[molbio.gel.presets.'agarose/1']
+brief = "1.0% agarose"
+gel_type = "agarose/TAE"
+gel_percent = 1
+gel_buffer = "1x TAE"
+sample_mix = """
+Reagent             Stock  Volume  MM?
+==============  =========  ======  ===
+loading buffer         6x    1 µL  yes
+sample                       5 µL
+"""
+load_volume_uL = 5
+run_volts = 100
+run_time_min = 60
+stain = "stain dna"
+
+[molbio.gel.presets.'agarose/1.5']
+brief = "1.5% agarose"
+inherit = 'agarose/1'
+gel_percent = 1.5
+
+[molbio.gel.presets.'agarose/2']
+brief = "2.0% agarose"
+inherit = 'agarose/1'
+gel_percent = 2
+
+
+[molbio.page_purify]
+default_preset = 'default'
+
+[molbio.page_purify.presets.default]
+gel_preset = 'urea/purify'
+cleanup_preset.rna = 'zymo/rna-clean-conc/5'
+cleanup_preset.dna = 'qiagen/min-elute/rxn'
+
+
+[molbio.stain.presets.dna]
+inherit = 'gelred'
+
+[molbio.stain.presets.rna]
+inherit = 'gelred'
+
+[molbio.stain.presets.protein]
+inherit = 'coomassie'
+
+[molbio.stain.presets.gelred]
+title = 'GelRed'
+stain_buffer = '3x GelRed in electrophoresis buffer'
+stain_time_min = 30
+
+imaging_protocol = 'stepwise_mol_bio/uv 300'
+
+protocol_link = 'https://tinyurl.com/746v43ns'
+footnotes = [
+"""Including 0.1 M NaCl in the staining solution enhances sensitivity, but may 
+promote dye precipitation if the gel stain is reused.""",
+]
+
+[molbio.stain.presets.'gelred/page']
+title = 'PAGE GelRed'
+stain_buffer = '1x PAGE GelRed in water'
+stain_time_min = 30
+
+imaging_protocol = 'stepwise_mol_bio/uv 254'
+
+protocol_link = 'https://tinyurl.com/4msy6bf6'
+
+[molbio.stain.presets.gelgreen]
+title = 'GelGreen'
+
+stain_buffer = '3x GelGreen, 100 mM NaCl'
+stain_time_min = 30
+light_sensitive = true
+
+imaging_protocol = 'stepwise_mol_bio/uv'
+
+protocol_link = 'https://tinyurl.com/etxhfxws'
+footnotes = [
+"""Including 100 mM NaCl in the staining solution enhances sensitivity, but may 
+promote dye precipitation if the gel stain is reused.""",
+
+"""Staining solution can be reused at least 2-3x.  Store staining solution at 
+room temperature protected from light.""",
+]
+
+[molbio.stain.presets.'sybr-green-ii/page']
+title = 'SYBR Green II'
+
+stain_buffer = "1x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDTA, pH=8.0)"
+stain_time_min = 10
+light_sensitive = true
+
+imaging_protocol = 'stepwise_mol_bio/uv'
+
+protocol_link = 'https://tinyurl.com/y8n7237s'
+footnotes = [
+"""Staining with SYBR Green II reagent is pH sensitive.  For optimal 
+sensitivity, verify that the pH of the staining solution at the temperature 
+used for staining is between 7.5 and 8.0 (preferably 8.0).""",
+"""The staining solution may be stored in the dark (preferably refrigerated) 
+and reused 3-4 times."""
+]
+
+[molbio.stain.presets.'sybr-green-ii/agarose']
+inherit = 'sybr-green-ii/page'
+stain_buffer = "2x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDTA, pH=8.0)"
+stain_time_min = 20
+
+[molbio.stain.presets.coomassie]
+title = "Coomassie"
+
+stain_buffer = "0.1% Coomassie R250, 10% acetic acid, 40% methanol"
+stain_microwave = true
+stain_time_min = 5
+stain_rinse_repeats = 2
+
+destain_repeats = "until the background is clear (2-3x)"
+destain_buffer = "20% methanol, 10% acetic acid"
+destain_time_min = 10
+destain_microwave = true
+destain_steps = [
+  "submerge",
+  "microwave",
+  "Place a wadded-up kimwipe in the destain",
+  "incubate",
+]
+
+protocol_link = 'https://tinyurl.com/4dtc22hz'
+
+[molbio.stain.presets.'coomassie/slow']
+inherit = 'coomassie'
+
+stain_time_min = 60
+stain_microwave = false
+
+destain_time_min = 60
+destain_microwave = false
+
+[molbio.stain.presets.'simplyblue/microwave/1mm']
+title = 'SimplyBlue SafeStain'
+
+prep_repeats = 3
+prep_buffer = 'water'
+prep_time_min = 1
+prep_microwave = true
+
+stain_buffer = 'SimplyBlue SafeStain'
+stain_microwave = true
+stain_time_min = 5
+
+destain_steps = [
+  "Wash the gel with 100 mL water for 10 min.",
+  "Add 20 mL 5M NaCl and wash for 5 min",
+]
+
+protocol_link = 'https://tinyurl.com/5a4uv53w'
+footnotes = [
+"""
+The gel can be stained for up to 3 hours, but 
+after 3 hours, sensitivity decreases.  If you need 
+to leave the gel overnight in the stain, add 2 mL 
+of 5M NaCl in water for every 20 mL of stain. This 
+procedure will not affect sensitivity.""",
+]
+
+[molbio.stain.presets.'simplyblue/microwave/2mm']
+inherit = 'simplyblue/microwave/1mm'
+stain_time_min = 10
+
+[molbio.stain.presets.'simplyblue/basic']
+title = "SimplyBlue SafeStain"
+
+prep_repeats = 3
+prep_buffer = 'water'
+prep_time_min = 5
+
+stain_buffer = "SimplyBlue SafeStain"
+stain_time_min = 60
+
+destain_steps = [
+  "Wash the gel with ≈100 mL water for 1−3h",
+  "To obtain the clearest background, wash again with ≈100 mL water for 1h.",
+]
+
+protocol_link = 'https://tinyurl.com/5a4uv53w'
+footnotes = [
+"""
+Rinsing removes SDS and buffer salts, which interfere with binding of the dye 
+to the protein.
+""",
+"""
+The gel can be stained for up to 3 hours, but 
+after 3 hours, sensitivity decreases.  If you need 
+to leave the gel overnight in the stain, add 2 mL 
+of 5M NaCl in water for every 20 mL of stain. This 
+procedure will not affect sensitivity.
+""",
+"""
+Sensitivity decreases if the gel is stored in 
+water for more than 1 day. The decrease in the 
+amount of free dye in the water favors 
+dissociation of the dye from the protein.  If you 
+need to store the gel in water for a few days, add 
+20 mL of 5M NaCl.
+"""
+]
+
+[molbio.stain.presets.'simplyblue/max']
+inherit = 'simplyblue/basic'
+destain_steps = [
+  "Wash the gel with 100 mL water for 1h.",
+  "Add 20 mL 5M NaCl to the above wash.",
+  "Continue washing for 2-16h.",
+]
+
+[molbio.stain.presets.sypro-ruby]
+title = "SYPRO Ruby"
+
+prep_buffer = "fix solution (50% methanol, 7% acetic acid)"
+prep_volume_mL = 100
+prep_time_min = 30
+
+stain_buffer = "SYPRO Ruby"
+stain_volume_mL = 60
+stain_time_hr = 16
+
+destain_buffer = "wash solution (10% methanol, 7% acetic acid)"
+destain_volume_mL = 100
+destain_time_min = 30
+destain_steps = [
+  "submerge",
+  "incubate",
+  "Rinse 2x for 5 min in ultrapure water.",
+]
+
+imaging_protocol = 'stepwise_mol_bio/laser_scanner red'
+
+protocol_link = "https://tinyurl.com/46jbd9nc"
+footnotes = [
+"""
+The staining protocol is optimized for standard 1 mm thick, 8 cm × 8 cm 
+SDS-PAGE minigels.  Larger or thicker gels require additional volumes of 
+reagents and/or longer incubation times.  Use 20 times the volume of the gel 
+for fix and wash solutions, and 10 times the volume of the gel for the staining 
+solution.
+""",
+]
+
+[molbio.stain.presets.'sypro-ruby/microwave']
+inherit = "sypro-ruby"
+
+prep_repeats = 2
+prep_time_min = 15
+
+stain_steps = [
+  "submerge",
+  "Microwave for 30s.",
+  "Shake briefly to evenly distribute heat.",
+  "Microwave again until almost boiling (≈30s).",
+  "Shake gently for 5m.",
+  "Microwave for 30s.",
+  "Shake gently for 23m.",
+]
+
+footnotes = [
+"""
+The staining protocol is optimized for standard 1 mm thick, 8 cm × 8 cm 
+SDS-PAGE minigels.  Larger or thicker gels require additional volumes of 
+reagents and/or longer incubation times.  Use 20 times the volume of the gel 
+for fix and wash solutions, and 10 times the volume of the gel for the staining 
+solution.  Microwave times should be optimized such that the stain reaches 
+80–85°C.
+""",
+"""
+Although SYPRO® Ruby stain solution is not flammable, use caution when 
+microwaving SYPRO® Ruby stain as the solution becomes very hot.  Placing a lid 
+loosely over the staining container will minimize fumes.  Do not heat the 
+fixative solution or other methanolic solutions in the microwave.
+""",
+]
+
+[molbio.stain.presets.'sypro-ruby/water-bath']
+inherit = "sypro-ruby"
+stain_steps = [
+  "submerge",
+  "Incubate the gel at 80°C in a shaking water bath for 30m.",
+]
+
+[molbio.stain.presets.sypro-red]
+title = "SYPRO Red"
+
+stain_buffer = "1x SYPRO Red, 7.5% acetic acid"
+stain_volume_mL = 50
+stain_time_min = 40
+
+destain_buffer = "7.5% acetic acid"
+destain_volume_mL = 50
+destain_time_min = 1
+
+imaging_protocol = 'stepwise_mol_bio/laser_scanner green'
+
+protocol_link = "https://tinyurl.com/r7p6juer"
+footnotes = [
+"""
+The stain solution may be reused up to four times, but sensitivty is 
+dramatically reduced.  Use fresh stain for optimal sensitivity.
+""",
+"""
+For low percentage gels and for very small proteins, 10% acetic acid will 
+result in better retention of the protein in the gel without compromising 
+sensitivity.  Do not fix the proteins with methanol-containing solutions.  
+Methanol removes the SDS coat from proteins, strongly reducing the signal from 
+SYPRO Orange and Red.""",
+"""
+Acetic acid will interfere with transfer of the proteins to a blot.  You can 
+try diluting SYPRO Red or Orange in transfer buffer, but this will result in 
+lower sensitivity staining.  Alternatively, you can stain the gel with SYPRO 
+Tangerine (which does not require acetic acid fixation) or you can stain the 
+blot directly with SYPRO Ruby.
+""",
+]
+
+[molbio.stain.presets.sypro-orange]
+inherit = "sypro-red"
+title = "SYPRO Orange"
+stain_buffer = "1x SYPRO Orange, 7.5% acetic acid"
+
+
+[molbio.laser.presets.blue]
+laser = 488
+filter = '518BP22'
+
+[molbio.laser.presets.green]
+laser = 520
+filter = '565BP24'
+
+[molbio.laser.presets.red]
+laser = 658
+filter = '710BP40'
+
+[molbio.laser.presets.nir]
+laser = 784
+filter = '832BP37'
+
+
+[molbio.ethanol_precipitation]
+preset = 'plasmid'
+
 

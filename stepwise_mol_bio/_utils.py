@@ -2,9 +2,11 @@
 
 import sys
 import appcli
+import autoprop
 import tidyexc
 
-from freezerbox import MakerArgsConfig, iter_combo_makers
+from freezerbox import MakerConfig, iter_combo_makers
+from appcli import Method, DocoptConfig
 from appdirs import AppDirs
 from inform import format_range, error
 from more_itertools import all_equal
@@ -18,13 +20,11 @@ class Main(appcli.App):
     group_by = {}
     merge_by = {}
 
-    def __bareinit__(self):
-        self.products = []
-
     @classmethod
     def main(cls):
         app = cls.from_params()
-        app.load(appcli.DocoptConfig)
+        app.load(DocoptConfig)
+        app.load(MakerConfig)
         
         try:
             app.protocol.print()
@@ -54,7 +54,7 @@ class Main(appcli.App):
         app = cls.from_params()
         app.db = product.db
         app.products = [product]
-        app.load(MakerArgsConfig)
+        app.load(MakerConfig)
         return app
 
     @classmethod
@@ -66,18 +66,57 @@ class Main(appcli.App):
 
 class Cleanup(Main):
 
+    product_tags = appcli.param(
+            Method(lambda self: [x.tag for x in self.products]),
+            default_factory=list,
+    )
+
     def __bareinit__(self):
         super().__bareinit__()
-        self.show_product_names = False
+        self.show_product_tags = False
 
     @classmethod
     def make(cls, db, products):
         makers = list(super().make(db, products))
-        show_product_names = (len(makers) != 1)
+        show_product_tags = (len(makers) != 1)
 
         for maker in makers:
-            maker.show_product_names = show_product_names
+            maker.show_product_tags = show_product_tags
             yield maker
+
+
+@autoprop
+class Argument(appcli.App):
+
+    def __init__(self, tag, **kwargs):
+        self.tag = tag
+        self._set_known_attrs(kwargs)
+
+    def __repr__(self):
+        return f'{self.__class__.__qualname__}({self.tag!r})'
+
+    def bind(self, app, force=False):
+        if not hasattr(self, 'app') or force:
+            self.app = app
+            self.on_bind(app)
+
+    def on_bind(self, app):
+        pass
+
+    def get_db(self):
+        return self.app.db
+
+    def _set_known_attrs(self, attrs):
+        for attr, value in attrs.items():
+            if attr not in self.__class__.__dict__:
+                raise AttributeError(f"unknown attribute {attr!r}")
+            setattr(self, attr, value)
+
+
+class ShareConfigs:
+
+    def on_bind(self, app):
+        appcli.share_configs(app, self)
 
 
 
@@ -91,6 +130,11 @@ class ConfigError(StepwiseMolBioError):
 class UsageError(StepwiseMolBioError):
     # For if the program isn't being used correctly, e.g. missing information.
     pass
+
+def bind_arguments(app, reagents, iter=iter):
+    for reagent in iter(reagents):
+        reagent.bind(app)
+    return reagents
 
 def try_except(expr, exc, failure, success=None):
     try:
@@ -124,7 +168,7 @@ def int_or_expr(x):
     return type_or_expr(int, x)
 
 def float_or_expr(x):
-    return type_or_expr(float, x)
+    return type_or_expr((float, int), x)
 
 def type_or_expr(type, x):
     if isinstance(x, type):

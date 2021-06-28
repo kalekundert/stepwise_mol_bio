@@ -4,7 +4,7 @@ import stepwise, appcli, autoprop
 from inform import indent, plural
 from appcli import DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, UsageError, pl, pre
-from stepwise_mol_bio import Main, ConfigError, merge_dicts
+from stepwise_mol_bio import Main, ConfigError
 
 @autoprop
 class LaserScanner(Main):
@@ -36,14 +36,14 @@ Arguments:
             <laser>/<filter>
 """
     __config__ = [
-            DocoptConfig(),
-            PresetConfig(),
-            StepwiseConfig('molbio.laser'),
+            DocoptConfig,
+            PresetConfig,
+            StepwiseConfig.setup('molbio.laser'),
     ]
 
     presets = appcli.param(
             appcli.Key(StepwiseConfig, 'presets'),
-            pick=merge_dicts,
+            pick=list,
     )
     preset_briefs = appcli.config_attr()
     preset_brief_template = '{laser} nm'
