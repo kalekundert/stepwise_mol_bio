@@ -23,6 +23,7 @@ from .ivt import Ivt
 from .ivtt import InVitroTranslation
 from .kld import Kld
 from .ligate import Ligate
+from .lyophilize import Lyophilize
 from .miniprep import Miniprep
 from .pcr import Pcr
 from .serial_dilution import SerialDilution

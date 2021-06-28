@@ -1,0 +1,188 @@
+test_protocol:
+  -
+    id: baseline
+    app:
+      > app = Lyophilize()
+    expected:
+      - Concentrate the sample(s) by lyophilization.
+  -
+    id: volume
+    app:
+      > app = Lyophilize(volume=Q('5 µL'))
+    expected:
+      - Concentrate the sample(s) to 5 µL by lyophilization.
+  -
+    id: conc
+    app:
+      > app = Lyophilize(conc=Q('500 ng/µL'))
+    expected:
+      - Concentrate the sample(s) to 500 ng/µL by lyophilization.
+  -
+    id: volume-conc
+    app:
+      > app = Lyophilize(volume=Q('5 µL'), conc=Q('500 ng/µL'))
+    error:
+      type: UsageError
+      message:
+        - cannot specify volume and concentration
+        - volume: 5 µL
+        - conc: 500 ng/µL
+  -
+    id: product-tags
+    app:
+      > app = Lyophilize()
+      > app.show_product_tags = True
+      > app.product_tags = ['x1']
+    expected:
+      - Concentrate the following sample by lyophilization: x1
+  -
+    id: product-tags
+    app:
+      > app = Lyophilize()
+      > app.show_product_tags = True
+      > app.product_tags = ['x1', 'x2']
+    expected:
+      - Concentrate the following samples by lyophilization: x1, x2
+  -
+    id: product-tags
+    app:
+      > app = Lyophilize()
+      > app.show_product_tags = False
+      > app.product_tags = ['x1']
+    expected:
+      - Concentrate the sample by lyophilization
+  -
+    id: product-tags
+    app:
+      > app = Lyophilize()
+      > app.show_product_tags = False
+      > app.product_tags = ['x1', 'x2']
+    expected:
+      - Concentrate the samples by lyophilization
+
+test_cli:
+  -
+    cmd: sw lyophilize
+    stdout:
+      > {DATE}
+      >
+      > \$ sw lyophilize
+      >
+      > 1. Concentrate the sample\(s\) by lyophilization.
+  -
+    cmd: sw lyophilize -v 5
+    stdout:
+      > {DATE}
+      >
+      > \$ sw lyophilize -v 5
+      >
+      > 1. Concentrate the sample\(s\) to 5 µL by
+      >    lyophilization.
+  -
+    cmd: sw lyophilize -c 500ng/µL
+    stdout:
+      > {DATE}
+      >
+      > \$ sw lyophilize -c '500ng/µL'
+      >
+      > 1. Concentrate the sample\(s\) to 500 ng/µL by
+      >    lyophilization.
+
+test_freezerbox_make:
+  -
+    id: baseline
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize'),
+        > )
+    tags:
+      - f1
+    expected:
+      - Concentrate the sample by lyophilization.
+  -
+    id: volume
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize volume=5µL'),
+        > )
+    tags:
+      - f1
+    expected:
+      - Concentrate the sample to 5 µL by lyophilization.
+  -
+    id: conc
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize conc=500ng/µL'),
+        > )
+    tags:
+      - f1
+    expected:
+      - Concentrate the sample to 500 ng/µL by lyophilization.
+  -
+    id: merge
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize volume=5µL'),
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize volume=5µL'),
+        > )
+    tags:
+      - f1
+      - f2
+    expected:
+      - Concentrate the samples to 5 µL by lyophilization
+  -
+    id: merge-show-tags
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize volume=5µL'),
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize conc=500ng/µL'),
+        > )
+    tags:
+      - f1
+      - f2
+    expected:
+      - Concentrate the following sample to 5 µL by lyophilization: f1
+      - Concentrate the following sample to 500 ng/µL by lyophilization: f2
+
+test_freezerbox_attrs:
+  -
+    id: volume
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize volume=5µL'),
+        > )
+    expected:
+      f1:
+        volume: Quantity(5, 'µL')
+  -
+    id: conc
+    db:
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('lyophilize conc=500ng/µL'),
+        > )
+    expected:
+      f1:
+        conc: Quantity(500, 'ng/µL')

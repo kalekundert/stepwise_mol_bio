@@ -66,6 +66,7 @@ guidelines to help get you on the right track:
   - Typical classes:
 
     - `App`:
+
       - Inherit from `Main` or `Cleanup`.
       - Represents the complete protocol, which is usually a single master mix 
         and some follow-up steps.
@@ -73,6 +74,7 @@ guidelines to help get you on the right track:
         object.
 
     - `Reaction`:
+
       - Inherit from `Argument`.
       - Represents a single reaction.  The app will hold a list of reactions.
       - There's a bit of an art to deciding which attributes go in the app vs 
@@ -82,6 +84,7 @@ guidelines to help get you on the right track:
         final concentrations, volumes) should go in the app.
 
     - `Reagent`:
+
       - Inherit from `Argument`.
       - Represents the individual reagents that make up the reaction, e.g.  
         template and primers for PCR, DNA and enzyme for restriction digests, 

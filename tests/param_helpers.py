@@ -178,6 +178,12 @@ app_expected_protocol = Schema({
     'app': exec_app,
     'expected': [str],
 })
+app_expected_protocol_error = Schema({
+    'app': exec_app,
+    **error_or({
+        'expected': [str],
+    }),
+})
 app_expected_error = Schema({
     'app': exec_app,
     **error_or({
