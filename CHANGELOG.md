@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v1.23.1 (2021-06-29)
+### Fix
+* **laser_scanner:** Correctly use list-based presets ([`c8fc44f`](https://github.com/kalekundert/stepwise_mol_bio/commit/c8fc44fcbc1eea9dde196444dc9d730ed306ce91))
+
 ## v1.23.0 (2021-06-28)
 ### Feature
 * **lyophilize:** Add protocol ([`4c43fb0`](https://github.com/kalekundert/stepwise_mol_bio/commit/4c43fb01e5e4962ef0ae5e02af4cc688471ed0fe))
