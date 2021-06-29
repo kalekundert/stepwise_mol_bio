@@ -3,7 +3,9 @@
 import stepwise, appcli, autoprop
 from inform import indent, plural
 from appcli import DocoptConfig
-from stepwise import StepwiseConfig, PresetConfig, UsageError, pl, pre
+from stepwise import (
+        StepwiseConfig, PresetConfig, Presets, UsageError, pl, table,
+)
 from stepwise_mol_bio import Main, ConfigError
 
 @autoprop
@@ -77,7 +79,7 @@ Arguments:
         p = stepwise.Protocol()
         p += pl(
                 "Image with a laser scanner:",
-                pre(stepwise.tabulate([lasers, filters])),
+                table([lasers, filters], align='<>>'),
         )
         return p
 
@@ -86,8 +88,11 @@ Arguments:
             return optics
 
         try:
-            return self.presets[optics]
-        except ConfigError:
+            # Might be good to make it so that the `presets` attribute it a 
+            # `Presets` instance rather than a list.  This would affect a bunch 
+            # of protocol, though.
+            return Presets(self.presets)[optics]
+        except KeyError:
             try: 
                 laser, filter = optics.split('/')
                 return {'laser': laser, 'filter': filter}

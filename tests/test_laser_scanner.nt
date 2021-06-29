@@ -1,0 +1,70 @@
+test_protocol:
+  -
+    id: preset
+    app:
+      > app = LaserScanner('blue')
+    expected:
+      - Image with a laser scanner:
+
+      - laser:    488 nm
+      - filter:  518BP22
+  -
+    id: string
+    app:
+      > app = LaserScanner('520/565BP24')
+    expected:
+      - Image with a laser scanner:
+
+      - laser:    520 nm
+      - filter:  565BP24
+  -
+    id: dict
+    app:
+      > app = LaserScanner({'laser': 658, 'filter': '710BP24'})
+    expected:
+      - Image with a laser scanner:
+
+      - laser:    658 nm
+      - filter:  710BP24
+  -
+    id: pair
+    app:
+      > app = LaserScanner.from_laser_filter_pair(784, '832BP37')
+    expected:
+      - Image with a laser scanner:
+
+      - laser:    784 nm
+      - filter:  832BP37
+  -
+    id: blue-red
+    app:
+      > app = LaserScanner('blue', 'red')
+    expected:
+      - Image with a laser scanner:
+
+      - lasers:    488 nm   658 nm
+      - filters:  518BP22  710BP40
+
+test_cli:
+  -
+    cmd: sw laser blue
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/laser_scanner blue
+      >
+      > 1. Image with a laser scanner:
+      >
+      >    laser:    488 nm
+      >    filter:  518BP22
+  -
+    cmd: sw laser blue red
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/laser_scanner blue red
+      >
+      > 1. Image with a laser scanner:
+      >
+      >    lasers:    488 nm   658 nm
+      >    filters:  518BP22  710BP40
