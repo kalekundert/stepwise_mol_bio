@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v1.23.0 (2021-06-28)
+### Feature
+* **lyophilize:** Add protocol ([`4c43fb0`](https://github.com/kalekundert/stepwise_mol_bio/commit/4c43fb01e5e4962ef0ae5e02af4cc688471ed0fe))
+* Upgrade appcli; get protocols from products via CLI ([`fa19df2`](https://github.com/kalekundert/stepwise_mol_bio/commit/fa19df29e1ca207b29a208b508c63f85385d9ec8))
+* **digest:** Report product concentration/volume ([`b04ae06`](https://github.com/kalekundert/stepwise_mol_bio/commit/b04ae06928b9a24f03e9f2052d775ec9313f5faa))
+* **miniprep:** Add very simple protocol ([`7a15c32`](https://github.com/kalekundert/stepwise_mol_bio/commit/7a15c32053107be139e0dc2a6515a6b9105f5c95))
+
+### Documentation
+* Fix typo ([`020bd3e`](https://github.com/kalekundert/stepwise_mol_bio/commit/020bd3ec5ddabcd4bd3613e12e3e6fd8651b5136))
+
 ## v1.22.0 (2021-06-08)
 ### Feature
 * Tweak wording ([`f53013d`](https://github.com/kalekundert/stepwise_mol_bio/commit/f53013dc3c3bdbabd4f793c68989aec6fb9426d8))
