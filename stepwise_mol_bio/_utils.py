@@ -10,7 +10,7 @@ from freezerbox import MakerConfig, iter_combo_makers
 from appcli import Method, DocoptConfig
 from appdirs import AppDirs
 from inform import format_range, error
-from more_itertools import all_equal
+from more_itertools import all_equal, always_iterable, first
 from functools import partial
 from pathlib import Path
 
@@ -180,13 +180,13 @@ def int_or_expr(x):
     return type_or_expr(int, x)
 
 def float_or_expr(x):
-    return type_or_expr((float, int), x)
+    return type_or_expr(float, x)
 
 def type_or_expr(type, x):
-    if isinstance(x, type):
-        return x
-    else:
+    if isinstance(x, str):
         return type(eval(x))
+    else:
+        return type(x)
 
 def require_reagent(rxn, reagent):
     if reagent not in rxn:

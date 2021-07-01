@@ -44,5 +44,32 @@ test_match_len:
       type: ValueError
       message: expected 3 item\(s\), got 2
 
+test_int_or_expr:
+  -
+    given: 1
+    expected: 1
+  -
+    given: '1'
+    expected: 1
+  -
+    given: '1+1'
+    expected: 2
+
+test_float_or_expr:
+  -
+    given: 1
+    expected: 1.0
+  -
+    given: 1.5
+    expected: 1.5
+  -
+    given: '1'
+    expected: 1.0
+  -
+    given: '1.5'
+    expected: 1.5
+  -
+    given: '1/2'
+    expected: 0.5
 
 
