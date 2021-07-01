@@ -4,6 +4,7 @@ import sys
 import appcli
 import autoprop
 import tidyexc
+import freezerbox
 
 from freezerbox import MakerConfig, iter_combo_makers
 from appcli import Method, DocoptConfig
@@ -15,6 +16,7 @@ from pathlib import Path
 
 app_dirs = AppDirs("stepwise_mol_bio")
 
+@autoprop
 class Main(appcli.App):
     usage_io = sys.stderr
     group_by = {}
@@ -48,6 +50,16 @@ class Main(appcli.App):
 
     def refresh(self):
         autoprop.clear_cache(self)
+
+    def get_db(self):
+        try:
+            return self._db
+        except AttributeError:
+            self._db = freezerbox.load_db()
+            return self._db
+
+    def set_db(self, db):
+        self._db = db
 
     @classmethod
     def _solo_maker_factory(cls, product):
