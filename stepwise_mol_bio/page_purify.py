@@ -378,14 +378,13 @@ Database:
         k = mix.volume / mix['sample'].volume
 
         for sample in self.samples:
-            sample.stock_conc
-            sample.sample_volume_per_lane_uL = min(
+            sample.volume_per_lane_uL = min(
                     sample.volume_uL,
                     sample.volume_uL / ceil(sample.mass_ug / '20 µg'),
                     mix['sample'].volume.value or inf,
             )
-            sample.load_volume_per_lane_uL = k * sample.sample_volume_per_lane_uL
-            sample.num_lanes = int(ceil(sample.volume_uL / sample.sample_volume_per_lane_uL))
+            sample.load_volume_per_lane_uL = k * sample.volume_per_lane_uL
+            sample.num_lanes = int(ceil(sample.volume_uL / sample.volume_per_lane_uL))
 
         conc_vol_groups = group_by_identity(
                 self.samples,
