@@ -88,7 +88,7 @@ Arguments:
             return optics
 
         try:
-            # Might be good to make it so that the `presets` attribute it a 
+            # Might be good to make it so that the `presets` attribute is a 
             # `Presets` instance rather than a list.  This would affect a bunch 
             # of protocol, though.
             return Presets(self.presets)[optics]
