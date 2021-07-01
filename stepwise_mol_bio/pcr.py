@@ -150,8 +150,9 @@ Options:
         The length of the amplicon in base pairs (bp).  This can be used to 
         calculate an appropriate extension time.
 
-    -n --num-reactions <int>        [default: ${app.num_reactions}]
-        The number of reactions to set up.
+    -n --num-reactions <int>
+        The number of reactions to set up.  By default, this is the number of 
+        amplicons specified.
 
     -v --reaction-volume <μL>
         The volume of the PCR reaction.
