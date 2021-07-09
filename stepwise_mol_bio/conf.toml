@@ -494,7 +494,6 @@ column_name = 'Zymo-Spin V-E column with reservoir'
 column_capacity_ug = 250
 spin_speed_g = 16000
 sample_type = 'RNA'
-sample_volume_uL.min = 500
 
 bind_buffer = ['RNA binding buffer', '95-100% ethanol']
 bind_volume_x = [2, 3]

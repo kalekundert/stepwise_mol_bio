@@ -104,7 +104,6 @@ test_protocol:
       - Purify using Zymo Clean & Concentrator-100 kit (R1019)
       - Perform all spin steps at 16000g.
 
-      - Ensure that the sample is at least 500 µL.
       - Add 2 volumes RNA binding buffer to the crude RNA.
       - Add 3 volumes 95-100% ethanol to the crude RNA.
       - Load on a Zymo-Spin V-E column with reservoir.
