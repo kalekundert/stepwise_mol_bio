@@ -103,7 +103,7 @@ scopes = [
   "spin_cleanup",
   "stain",
   "transform",
-  "uv_transilluminator",
+  "transilluminator",
 ]
 ignore_generated_commits = true
 generated_commits = ['^Merge']

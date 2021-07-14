@@ -653,6 +653,17 @@ inherit = 'agarose/1'
 gel_percent = 2
 
 
+[molbio.transilluminator.presets.uv]
+brief = "UV transilluminator (300 nm default)"
+colloquial_name = 'UV'
+default_wavelength_nm = 300
+
+[molbio.transilluminator.presets.blue]
+brief = "Blue-light transilluminator (470 nm default)"
+colloquial_name = 'blue-light'
+default_wavelength_nm = 470
+
+
 [molbio.page_purify]
 default_preset = 'default'
 

@@ -16,7 +16,7 @@ from .ethanol_precipitation import EthanolPrecipitation
 from .gels.gel import Gel
 from .gels.laser_scanner import LaserScanner
 from .gels.stain import Stain
-from .gels.uv_transilluminator import UvTransilluminator
+from .gels.transilluminator import Transilluminator
 from .gibson import Gibson
 from .golden_gate import GoldenGate
 from .ivt import Ivt
