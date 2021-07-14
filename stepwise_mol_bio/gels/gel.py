@@ -48,19 +48,19 @@ Options:
     -b --buffer <str>
         The buffer to run the gel in, e.g. TAE.
 
-    -c --sample-conc <value>
-        The concentration of the sample.  This will be used to scale how much 
-        sample is mixed with loading buffer, with the goal of mixing the same 
-        quantity of material specified in the preset.  In order to use this 
-        option, the preset must specify a sample concentration.  The units of 
-        that concentration will be used for this concentration.
+    -c --sample-stock <value>
+        The stock concentration of the sample.  This will be used to scale how 
+        much sample is mixed with loading buffer, with the goal of mixing the 
+        same quantity of material specified in the preset.  In order to use 
+        this option, the preset must specify a sample concentration.  The units 
+        of that concentration will be used for this concentration.
 
     -v --sample-volume <µL>
         The volume of sample to mix with loading buffer, in µL.  This does not 
         scale the concentration, and may increase or decrease the amount of 
         sample loaded relative to what's specified in the preset.
 
-    --mix-volume <µL>
+    -V --mix-volume <µL>
         The volume of the sample/loading buffer mix to prepare for each sample.  
         For example, if you want to run two gels, but the preset only makes 
         enough mix for one, use this option to make more.
@@ -134,7 +134,7 @@ Configuration:
         protocol.
 
     molbio.gel.presets.<name>.sample_conc:
-        The default value for the `--sample-conc` option.
+        The default value for the `--sample-stock` option.
 
     molbio.gel.presets.<name>.sample_volume_uL:
         The default value for the `--sample-volume` option.
@@ -229,8 +229,8 @@ Configuration:
             default=None,
     )
     sample_conc = appcli.param(
-            Key(DocoptConfig, '--sample-conc'),
-            Key(PresetConfig, 'sample_conc'),
+            Key(DocoptConfig, '--sample-stock'),
+            Key(PresetConfig, 'sample_stock'),
             cast=float,
             default=None,
     )
