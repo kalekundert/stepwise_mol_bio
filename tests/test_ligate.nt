@@ -289,6 +289,45 @@ test_freezerbox_protocol:
       - Label the products: p4, p5
 
       - https://tinyurl.com/y7gxfv5m
+  -
+    db:
+      p1:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p2:
+        > Plasmid(
+        >   conc=Q('200 nM'),
+        > )
+      p3:
+        > Plasmid(
+        >     synthesis=parse_fields('ligate p1,p2 kinase=1'),
+        > )
+
+    tags:
+      - p3
+
+    expected:
+      - Setup 1 ligation reaction [1]:
+
+      - Reagent              Stock   Volume
+      - ───────────────────────────────────
+      - water                       2.80 µL
+      - T4 ligase buffer       10x  0.50 µL
+      - T4 DNA ligase     400 U/µL  0.25 µL
+      - T4 PNK             10 U/µL  0.25 µL
+      - p1                  200 nM  0.30 µL
+      - p2                  200 nM  0.90 µL
+      - ───────────────────────────────────
+      -                             5.00 µL
+
+      - Incubate at the following temperatures:
+      - 25°C for 15 min
+      - 65°C for 10 min
+
+      - Label the product: p3
+
+      - https://tinyurl.com/y7gxfv5m
 
 test_freezerbox_attrs:
   -
