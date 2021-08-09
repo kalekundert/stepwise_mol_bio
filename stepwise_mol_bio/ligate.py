@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# vim: tw=50
 
 import stepwise
 import autoprop
@@ -76,9 +75,6 @@ Database:
 
         return self._add_fragments_to_reaction(rxn)
 
-    def del_reaction(self):
-        pass
-
     def get_protocol(self):
         p = stepwise.Protocol()
         rxn = self.reaction
@@ -96,8 +92,6 @@ Database:
         )
         return p
 
-    def del_protocol(self):
-        pass
 
 if __name__ == '__main__':
     Ligate.main()

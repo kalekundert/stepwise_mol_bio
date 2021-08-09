@@ -114,8 +114,7 @@ class RestrictionDigest(Main):
 Perform restriction digests using the protocol recommended by NEB.
 
 Usage:
-    digest <templates> <enzymes> [-d <ng>] [-D <ng/µL>] [-v <µL>] [-n <rxns>]
-        [-g]
+    digest <templates> <enzymes> [options]
     digest <product> [-e <enzymes>] [options]
 
 Arguments:
@@ -263,9 +262,6 @@ Options:
         return self
 
 
-    def __bareinit__(self):
-        self._enzyme_db = None
-
     def __init__(self, templates, enzyme_names, db=None):
         self.templates = templates
         self.enzyme_names = enzyme_names
@@ -275,12 +271,7 @@ Options:
         return [self.enzyme_db[x] for x in self.enzyme_names]
 
     def get_enzyme_db(self):
-        if self._enzyme_db is None:
-            self._enzyme_db = NebRestrictionEnzymeDatabase()
-        return self._enzyme_db
-
-    def set_enzyme_db(self, db):
-        self._enzyme_db = db
+        return NebRestrictionEnzymeDatabase()
 
     def get_reaction(self):
         # Define a prototypical restriction digest reaction.  Stock 
@@ -388,9 +379,6 @@ Options:
 
         return rxn
 
-    def del_reaction(self):
-        pass
-
     def get_protocol(self):
         from itertools import groupby
         from operator import itemgetter
@@ -454,9 +442,6 @@ The heat inactivation step is not necessary if
 the DNA will be purified before use.
 """
         return protocol
-
-    def del_protocol(self):
-        pass
 
     def get_dependencies(self):
         return {x.tag for x in self.templates}

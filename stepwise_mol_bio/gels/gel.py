@@ -340,9 +340,6 @@ Configuration:
 
         return p
 
-    def del_protocol(self):
-        pass
-
     def get_prep_step(self):
 
         def both_or_neither(key1, key2):
@@ -376,9 +373,6 @@ Configuration:
 
         return s
 
-    def del_prep_step(self):
-        pass
-
     def get_run_step(self):
         p = stepwise.Protocol()
         additive = f" with {x}" if (x := self.gel_additive) else ""
@@ -392,9 +386,6 @@ Configuration:
             ("run", f"{self.run_volts:g}V for {self.run_time_min:g} min"),
         ))
         return p
-
-    def del_run_step(self):
-        pass
 
     def get_sample_mix(self):
         if not self.sample_mix_str:
@@ -422,8 +413,6 @@ Configuration:
 
         return mix
 
-    def del_sample_mix(self):
-        pass
 
 if __name__ == '__main__':
     Gel.main()

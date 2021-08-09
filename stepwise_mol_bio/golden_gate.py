@@ -86,9 +86,6 @@ Database:
 
         return self._add_fragments_to_reaction(rxn)
 
-    def del_reaction(self):
-        pass
-
     def get_protocol(self):
         # Maybe this should be the getter function for the assembly param...
 
@@ -152,8 +149,6 @@ Database:
 
         return p
 
-    def del_protocol(self):
-        pass
 
 if __name__ == '__main__':
     GoldenGate.main()

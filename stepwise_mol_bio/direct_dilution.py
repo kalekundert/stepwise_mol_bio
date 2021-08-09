@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import stepwise, appcli, autoprop
-from inform import Error
+
+from stepwise import pl, table
 from stepwise_mol_bio.serial_dilution import SerialDilution, format_quantity
+from inform import Error
 
 @autoprop
 class DirectDilution(SerialDilution):
@@ -80,11 +82,10 @@ Options:
             ])
 
         protocol = stepwise.Protocol()
-        protocol += f"""\
-Prepare the following dilutions:
-
-{stepwise.tabulate(rows, header, align='>>>>')}
-"""
+        protocol += pl(
+                "Prepare the following dilutions:",
+                table(rows, header, align='>>>>'),
+        )
         return protocol
 
     def _pick_stock_concs(self):

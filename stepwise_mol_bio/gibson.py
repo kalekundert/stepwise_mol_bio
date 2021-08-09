@@ -47,9 +47,6 @@ Database:
 
         return self._add_fragments_to_reaction(rxn)
 
-    def del_reaction(self):
-        pass
-
     def get_protocol(self):
         p = stepwise.Protocol()
         rxn = self.reaction
@@ -65,8 +62,6 @@ Database:
         p += f"Incubate at 50°C for {incubation_time}."
         return p
 
-    def del_protocol(self):
-        pass
 
 if __name__ == '__main__':
     Gibson.main()

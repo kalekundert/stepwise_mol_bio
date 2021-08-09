@@ -295,8 +295,6 @@ class Fragment:
     def get_conc_nM(self):
         return convert_conc_unit(self.conc, self.mw, 'nM').value
 
-    def del_conc_nM(self):
-        pass
 
 @autoprop
 class Assembly(Main):
