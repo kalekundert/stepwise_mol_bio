@@ -33,8 +33,8 @@ Express proteins from purified DNA templates.
 
 Usage:
     ivtt <templates>... [-p <name>] [-v <µL>] [-n <rxns>] [-x <percent>] 
-        [-c <nM>] [-C <nM>] [-mrIX] [-a <name;conc;vol;mm>]... [-t <time>]
-        [-T <°C>]
+        [-c <nM>] [-C <nM>] [-mrIX] [-a <name;conc;vol;mm>]... [-d <name>]...
+        [-t <time>] [-T <°C>]
 
 Arguments:
     <templates>
@@ -86,6 +86,11 @@ Options:
         Add an additional reagent to the reaction.  See `sw reaction -h` for a 
         complete description of the syntax.  This option can be specified 
         multiple times.
+
+    -d --exclude <name>
+        Remove the given reagent from the reaction.  The reagent can be 
+        identified either by its name or by its flag.  This can be used to 
+        remove an additive added by the preset, for example.
 
     -t --incubation-time <time>         [default: ${app.incubation_time}]
         The amount of time to incubate the reactions.  No unit is assumed, so 
@@ -189,6 +194,10 @@ Options:
             Key(PresetConfig, 'additives'),
             default_factory=list,
     )
+    exclude = appcli.param(
+            Key(DocoptConfig, '--exclude', cast=set),
+            default_factory=set,
+    )
     setup_instructions = appcli.param(
             Key(PresetConfig, 'setup_instructions'),
             default_factory=list,
@@ -232,11 +241,17 @@ Options:
             # It would be better if there was a utility in stepwise for parsing 
             # `sw reaction`-style strings.  Maybe `Reagent.from_text()`.
             for i, additive in enumerate(additives, i):
-                reagent, stock_conc, volume, master_mix = additive.split(';')
+                reagent, stock_conc, volume, master_mix = (
+                        x.strip() for x in additive.split(';'))
                 rxn[reagent].stock_conc = stock_conc
                 rxn[reagent].volume = volume
                 rxn[reagent].master_mix = {'+': True, '-': False, '': False}[master_mix.strip()]
                 rxn[reagent].order = i
+
+        def remove_reagents(exclude):
+            for reagent in rxn:
+                if reagent.name in exclude or reagent.flags & exclude:
+                    del rxn[reagent.key]
 
         rxn = deepcopy(self.base_reaction)
         rxn.num_reactions = self.num_reactions
@@ -253,6 +268,7 @@ Options:
             rxn.hold_ratios.volume = self.volume_uL, 'µL'
 
         add_reagents(self.additives)
+        remove_reagents(self.exclude)
 
         if self.use_mrna:
             template = 'mRNA'
@@ -265,7 +281,7 @@ Options:
             del_reagent_if_present(rxn, 'mRNA')
             del_reagents_by_flag(rxn, 'mrna')
 
-        rxn[template].name = f"{','.join(self.templates)}"
+        rxn[template].name = f"{','.join(x.tag for x in self.templates)}"
         rxn[template].master_mix = self.master_mix
         rxn[template].hold_conc.stock_conc = self.template_stock_nM, 'nM'
 
