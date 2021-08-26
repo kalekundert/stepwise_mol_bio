@@ -208,6 +208,14 @@ def match_len(x, n):
     else:
         return n * [x]
 
+def round_down_to_1_sig_fig(x):
+    from math import log10, floor
+
+    exponent = floor(log10(abs(x)))
+    factor = 10**exponent
+    mantissa = x / factor
+
+    return floor(mantissa) * factor
 
 def format_sec(x):
     if x < 60:

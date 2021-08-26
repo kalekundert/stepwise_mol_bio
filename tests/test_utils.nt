@@ -73,3 +73,28 @@ test_float_or_expr:
     expected: 0.5
 
 
+test_round_down_to_1_sig_fig:
+  -
+    given: 0.19
+    expected: 0.1
+  -
+    given: 0.21
+    expected: 0.2
+  -
+    given: 1.9
+    expected: 1
+  -
+    given: 2.1
+    expected: 2
+  -
+    given: 19
+    expected: 10
+  -
+    given: 21
+    expected: 20
+  -
+    given: 199
+    expected: 100
+  -
+    given: 201
+    expected: 200

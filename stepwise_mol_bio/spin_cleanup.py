@@ -7,6 +7,8 @@ from stepwise import StepwiseConfig, PresetConfig, Quantity, oxford_comma
 from stepwise_mol_bio import Cleanup, format_sec
 from freezerbox import MakerConfig, group_by_identity, parse_volume_uL, unanimous
 from more_itertools import always_iterable
+from tidyexc import only_raise
+from ._utils import round_down_to_1_sig_fig
 
 def ng_uL(x):
     return Quantity(x, 'ng/µL')
@@ -166,6 +168,11 @@ Configuration:
     molbio.spin_cleanup.presets.<name>.elute_spin_sec
         How long to centrifuge the column when eluting.
 
+    molbio.spin_cleanup.presets.<name>.yield
+        What fraction of the input material you expect to recover from the 
+        column.  This is used to estimate the concentration of the eluate, 
+        which may be factored into downstream protocols.
+
 Database:
     Spin-column cleanup protocols can appear in the "Cleanups" column of a 
     FreezerBox database:
@@ -180,6 +187,9 @@ Database:
 
     buffer=<µL>
         See `--elute-buffer`.
+
+    yield=<fraction>
+        See the `yield` configuration option.
 """
     __config__ = [
             DocoptConfig,
@@ -304,11 +314,17 @@ Database:
     elute_spin_sec = appcli.param(
             Key(PresetConfig, 'elute_spin_sec'),
     )
+    expected_yield = appcli.param(
+            Key(MakerConfig, 'yield', cast=float),
+            Key(PresetConfig, 'yield'),
+            default=1,
+    )
 
     group_by = {
             'preset': group_by_identity,
             'elute_buffer': group_by_identity,
             'elute_volume_uL': group_by_identity,
+            'expected_yield': group_by_identity,
     }
 
     def __init__(self, preset=None):
@@ -414,7 +430,10 @@ Database:
     def get_product_conc(self):
         v0 = unanimous(x.precursor.volume for x in self.products)
         c0 = unanimous(x.precursor.conc for x in self.products)
-        return c0 * (v0 / self.product_volume)
+        c1 = c0 * (v0 / self.product_volume) * self.expected_yield
+
+        # Yield is very approximate anyways, so round down to a nice number:
+        return round_down_to_1_sig_fig(c1)
 
     def get_product_volume(self):
         return Quantity(self.elute_volume_uL, 'µL')

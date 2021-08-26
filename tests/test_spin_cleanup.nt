@@ -122,3 +122,41 @@ test_protocol:
 
       - https://tinyurl.com/2va2v8hm
       - Column capacity: 250 µg
+
+test_freezerbox_attrs:
+  -
+    id: unknown-conc
+    db:
+      p1:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('spin-cleanup qiagen volume=40µL'),
+        > )
+    expected:
+      p1:
+        volume: Quantity(40, 'µL')
+  -
+    id: yield
+    db:
+      p1:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT volume=100µL conc=50ng/µL'),
+        >     cleanups=parse_fields_list('spin-cleanup qiagen volume=40µL yield=0.6'),
+        > )
+    expected:
+      p1:
+        volume: Quantity(40, 'µL')
+        # Rounded down from 75 ng/µL
+        conc: Quantity(70, 'ng/µL')
+  -
+    id: yield-defaults
+    db:
+      p1:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT volume=100µL conc=50ng/µL'),
+        >     cleanups=parse_fields_list('spin-cleanup qiagen'),
+        > )
+    expected:
+      p1:
+        volume: Quantity(50, 'µL')
+        conc: Quantity(80, 'ng/µL')

@@ -30,3 +30,7 @@ def test_float_or_expr(given, expected):
     actual = float_or_expr(given)
     assert actual == approx(expected)
     assert isinstance(actual, float)
+
+@parametrize_from_file(schema=Schema({str: Coerce(float)}))
+def test_round_down_to_1_sig_fig(given, expected):
+    assert round_down_to_1_sig_fig(given) == approx(expected)
