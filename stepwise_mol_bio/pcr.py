@@ -123,7 +123,7 @@ Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
     pcr <amplicon>... [-a <°C>] [-x <sec> | -l <kb>] [options]
-    pcr (-u <product>) [options]
+    pcr (-u <product>) [-a <°C>] [-x <sec> | -l <kb>] [options]
 
 Arguments:
     <amplicon>
@@ -166,9 +166,13 @@ Options:
         overrides the value specified by the preset, without affecting the 
         volume.  Include a unit, because none is implied.
 
+    --primer-conc <µM>
+        The final concentration of the primers in µM.  The default is taken 
+        from the reaction table specified in the preset.
+
     --primer-stock <µM>
-        The stock concentration of the primers in µM.  Both primers must have 
-        the same concentration.
+        The stock concentration of the primers in µM.  The default is taken 
+        from the reaction table specified in the preset.
 
     -y --num-cycles <n>
         The number of denature/anneal/extend cycles to perform, e.g. 35.
@@ -355,7 +359,7 @@ Options:
         ]
 
     def _calc_extend_time_s(self):
-        bp = min(bp for x in self.amplicons if (bp := x.length_bp))
+        bp = max(bp for x in self.amplicons if (bp := x.length_bp))
 
         def round(x):
             if not self.round_extend_time: return x
@@ -395,9 +399,13 @@ Options:
             default=None,
     )
     template_stock = appcli.param(
-            Key(DocoptConfig, '--template-stock'),
+            Key(DocoptConfig, '--template-stock', cast=float),
             # Don't try to get a value from the amplicons/freezerbox database, 
             # because the template volume is not affected by this setting.
+            default=None,
+    )
+    primer_conc_uM = appcli.param(
+            Key(DocoptConfig, '--primer-conc', cast=float),
             default=None,
     )
     product_conc_ng_uL = appcli.param(
@@ -759,6 +767,9 @@ Options:
             pcr[p].name = merge_names(x.tag for x in primers)
             pcr[p].hold_conc.stock_conc = min(x.stock_uM for x in primers), 'µM'
             pcr[p].master_mix = all_equal(x.tag for x in primers)
+
+            if self.primer_conc_uM:
+                pcr[p].hold_stock_conc.conc = self.primer_conc_uM, 'µM'
 
             primer_scale = pcr.scale if pcr[p].master_mix else 1
             primer_vol = primer_scale * pcr[p].volume

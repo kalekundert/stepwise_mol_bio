@@ -332,6 +332,35 @@ test_reaction:
         > ─────────────────────────────
         >                     100.00 µL
   -
+    id: primer-conc
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > # The above reaction specifies 0.5 µM of each primer.
+      > app.primer_conc_uM = 1
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume
+        > ───────────────────────────────
+        > water                  38.00 µL
+        > a           20 pg/µL   10.00 µL
+        > b             100 µM    1.00 µL
+        > c             100 µM    1.00 µL
+        > master mix        2x   50.00 µL
+        > ───────────────────────────────
+        >                       100.00 µL
+  -
     id: primers
     app:
       > app = Pcr([
@@ -707,7 +736,6 @@ test_freezerbox_make:
       -   - 72°C for 30s
       - - 72°C for 2 min
       - - 4°C hold
-
 
 test_freezerbox_attrs:
   -
