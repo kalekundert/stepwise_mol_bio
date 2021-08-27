@@ -186,7 +186,7 @@ test_reaction:
         > ───────────────────────────────
         >                       200.00 µL
   -
-    id: master-mix-template
+    id: master-mix-template-auto
     app:
       > app = Pcr([
       >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
@@ -216,7 +216,38 @@ test_reaction:
         > ──────────────────────────────────────────
         >                       100.00 µL   99.00 µL/rxn
   -
-    id: master-mix-fwd
+    id: master-mix-template-manual
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.num_reactions = 2
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+      > app.master_mix = {'dna'}
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a           20 pg/µL   10.00 µL   20.00 µL
+        > b             100 µM    0.50 µL
+        > c             100 µM    0.50 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   99.00 µL/rxn
+  -
+    id: master-mix-fwd-auto
     app:
       > app = Pcr([
       >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
@@ -246,7 +277,38 @@ test_reaction:
         > ──────────────────────────────────────────
         >                       100.00 µL   89.50 µL/rxn
   -
-    id: master-mix-rev
+    id: master-mix-fwd-manual
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.num_reactions = 2
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+      > app.master_mix = {'fwd'}
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a           20 pg/µL   10.00 µL
+        > b             100 µM    0.50 µL    1.00 µL
+        > c             100 µM    0.50 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   89.50 µL/rxn
+  -
+    id: master-mix-rev-auto
     app:
       > app = Pcr([
       >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
@@ -275,6 +337,98 @@ test_reaction:
         > master mix        2x   50.00 µL  100.00 µL
         > ──────────────────────────────────────────
         >                       100.00 µL   89.50 µL/rxn
+  -
+    id: master-mix-rev-manual
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.num_reactions = 2
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+      > app.master_mix = {'rev'}
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a           20 pg/µL   10.00 µL
+        > b             100 µM    0.50 µL
+        > c             100 µM    0.50 µL    1.00 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   89.50 µL/rxn
+  -
+    id: master-mix-primers-auto
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      >     Pcr.Amplicon.from_tags('d', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a,d         20 pg/µL   10.00 µL
+        > b             100 µM    0.50 µL    1.00 µL
+        > c             100 µM    0.50 µL    1.00 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   90.00 µL/rxn
+  -
+    id: master-mix-primers-manual
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.num_reactions = 2
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+      > app.master_mix = {'primers'}
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume         2x
+        > ──────────────────────────────────────────
+        > water                  39.00 µL   78.00 µL
+        > a           20 pg/µL   10.00 µL
+        > b             100 µM    0.50 µL    1.00 µL
+        > c             100 µM    0.50 µL    1.00 µL
+        > master mix        2x   50.00 µL  100.00 µL
+        > ──────────────────────────────────────────
+        >                       100.00 µL   90.00 µL/rxn
   -
     id: template-volume
     app:
@@ -396,7 +550,7 @@ test_reaction:
         > ──────────────────────────────
         >                       80.00 µL
   -
-    id: primers-master-mix
+    id: primers-master-mix-auto
     app:
       > app = Pcr([
       >     Pcr.Amplicon.from_tags('a', 'b', 'c'),

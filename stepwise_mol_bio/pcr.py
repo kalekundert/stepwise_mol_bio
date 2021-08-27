@@ -157,6 +157,18 @@ Options:
     -v --reaction-volume <μL>
         The volume of the PCR reaction.
 
+    -m --master-mix <reagents>
+        Indicate which reagents should be included in the master mix.  The 
+        following values are understood:
+
+        dna:      The DNA template.
+        fwd:      The forward primer.
+        rev:      The reverse primer.
+        primers:  Both primers; alias for 'fwd,rev'.
+
+        By default, any reagents that have the same name for every amplicon 
+        will be included in the master mix.
+
     -V --template-volume <µL>
         The volume of template to use in the reaction.  This overrides the 
         value specified by the preset.
@@ -241,6 +253,14 @@ Options:
 
     --hold-temp <°C>
         The temperature in °C to hold the reaction at after it completes.
+
+    --only-thermocycler
+        Only show the thermocycler protocol; don't show how to setup the PCR 
+        reaction.  See also `--skip-thermocycler`.
+
+    --skip-thermocycler
+        Don't show the thermocycler protocol.  Typically, the thermocycler 
+        protocol will be show later with `--only-primer-mix`.  
 
     --melt-curve-low-temp <°C>
         The temperature in °C at which to begin recording a melt curve,
@@ -451,6 +471,10 @@ Options:
             Key(StepwiseConfig, 'extra_percent'),
             cast=float_or_expr,
     )
+    master_mix = appcli.param(
+            Key(DocoptConfig, '--master-mix', cast=comma_set),
+            default=None,
+    )
     base_reaction = appcli.param(
             Key(PresetConfig, 'reagents'),
             cast=stepwise.MasterMix.from_text,
@@ -558,6 +582,14 @@ Options:
             cast=temp,
             default=None,
     )
+    skip_thermocycler = appcli.param(
+            Key(DocoptConfig, '--skip-thermocycler'),
+            default=False,
+    )
+    only_thermocycler = appcli.param(
+            Key(DocoptConfig, '--only-thermocycler'),
+            default=False,
+    )
     melt_curve_low_temp_C = appcli.param(
             Key(DocoptConfig, '--melt-curve-low-temp'),
             Key(PresetConfig, 'melt_curve_low_temp_C'),
@@ -624,59 +656,62 @@ Options:
         thermocycler = self.thermocycler_protocol
         footnotes = []
 
-        # Primer mix (if applicable):
+        if not self.only_thermocycler:
 
-        if not self.skip_primer_mix:
-            example_uM = min(x.stock_uM for x in flatten(self.primer_pairs))
-            footnotes.append(pl(
-                    f"For resuspending lyophilized primers:",
-                    f"{example_uM} µM = {1e3 / example_uM:g} µL/nmol",
-                    br='\n',
-            ))
+            # Primer mix (if applicable):
 
-            if primer_mix:
-                protocol += pl(
-                        f"Prepare 10x primer mix{protocol.add_footnotes(*footnotes)}:",
-                        primer_mix,
-                )
-                footnotes = []
+            if not self.skip_primer_mix:
+                example_uM = min(x.stock_uM for x in flatten(self.primer_pairs))
+                footnotes.append(pl(
+                        f"For resuspending lyophilized primers:",
+                        f"{example_uM} µM = {1e3 / example_uM:g} µL/nmol",
+                        br='\n',
+                ))
 
-                if self.only_primer_mix:
-                    return protocol
+                if primer_mix:
+                    protocol += pl(
+                            f"Prepare 10x primer mix{protocol.add_footnotes(*footnotes)}:",
+                            primer_mix,
+                    )
+                    footnotes = []
 
-        # PCR reaction setup:
+                    if self.only_primer_mix:
+                        return protocol
 
-        if self.footnote:
-            # Before the footnote on resuspending the primers, if it hasn't 
-            # been added to the protocol already.
-            footnotes.insert(0, self.footnote)
+            # PCR reaction setup:
 
-        if x := pcr['template DNA'].stock_conc:
-            footnotes.append(pl(
-                    f"For diluting template DNA to {x}:",
-                    f"Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt([DNA]) µL",
-                    br='\n',
-            ))
+            if self.footnote:
+                # Before the footnote on resuspending the primers, if it hasn't 
+                # been added to the protocol already.
+                footnotes.insert(0, self.footnote)
 
-        title = 'qPCR' if self.qpcr else 'PCR'
-        instructions = ul()
-        protocol += pl(
-                f"Setup {plural(pcr.num_reactions):# {title} reaction/s}{protocol.add_footnotes(*footnotes)}:",
-                pcr,
-                instructions,
-        )
+            if x := pcr['template DNA'].stock_conc:
+                footnotes.append(pl(
+                        f"For diluting template DNA to {x}:",
+                        f"Dilute 1 µL twice into {sqrt(1000/x.value):.1g}*sqrt([DNA]) µL",
+                        br='\n',
+                ))
 
-        if pcr.volume > '50 µL':
-            instructions += f"Split each reaction into {ceil(pcr.volume.value / 50)} tubes."
-        if pcr.num_reactions > 1:
-            instructions += "Use any extra master mix as a negative control."
+            title = 'qPCR' if self.qpcr else 'PCR'
+            instructions = ul()
+            protocol += pl(
+                    f"Setup {plural(pcr.num_reactions):# {title} reaction/s}{protocol.add_footnotes(*footnotes)}:",
+                    pcr,
+                    instructions,
+            )
+
+            if pcr.volume > '50 µL':
+                instructions += f"Split each reaction into {ceil(pcr.volume.value / 50)} tubes."
+            if pcr.num_reactions > 1:
+                instructions += "Use any extra master mix as a negative control."
 
         # Thermocycler protocol:
 
-        protocol += pl(
-                "Run the following thermocycler protocol:",
-                thermocycler,
-        )
+        if not self.skip_thermocycler:
+            protocol += pl(
+                    "Run the following thermocycler protocol:",
+                    thermocycler,
+            )
 
         protocol.renumber_footnotes()
         return protocol
@@ -765,6 +800,13 @@ Options:
         return pre('\n'.join(thermocycler_steps))
 
     def get_reaction(self):
+
+        def eval_master_mix(keys, default):
+            if (mm := self.master_mix) is None:
+                return default
+            else:
+                return bool(mm & keys)
+
         pcr = deepcopy(self.base_reaction)
     
         require_reagent(pcr, 'water')
@@ -784,7 +826,8 @@ Options:
 
         pcr['template DNA'].order = 2
         pcr['template DNA'].name = merge_names(self.template_tags)
-        pcr['template DNA'].master_mix = all_equal(self.template_tags)
+        pcr['template DNA'].master_mix = eval_master_mix(
+                {'dna'}, all_equal(self.template_tags))
 
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
@@ -797,16 +840,19 @@ Options:
 
         primer_mix = None
         primer_keys = [
-                'forward primer',
-                'reverse primer',
+                ('forward primer', 'fwd'),
+                ('reverse primer', 'rev'),
         ]
         use_primer_mix = []
 
-        for p, primers in zip(primer_keys, zip(*self.primer_pairs)):
+        for (p, p_mm), primers in zip(primer_keys, zip(*self.primer_pairs)):
             pcr[p].order = 3
             pcr[p].name = merge_names(x.tag for x in primers)
             pcr[p].hold_conc.stock_conc = min(x.stock_uM for x in primers), 'µM'
-            pcr[p].master_mix = all_equal(x.tag for x in primers)
+            pcr[p].master_mix = eval_master_mix(
+                    {p_mm, 'primers'},
+                    all_equal(x.tag for x in primers),
+            )
 
             if self.primer_conc_uM:
                 pcr[p].hold_stock_conc.conc = self.primer_conc_uM, 'µM'
