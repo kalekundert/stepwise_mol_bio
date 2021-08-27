@@ -433,6 +433,77 @@ test_reaction:
         > master mix        2x   5.00 µL  10.00 µL
         > ────────────────────────────────────────
         >                       10.00 µL   9.00 µL/rxn
+  -
+    id: primers-volume
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.reaction_volume_uL = 80
+      > app.primer_mix_volume_uL = 20
+
+    expected:
+      primers:
+        > Reagent   Stock    Volume
+        > ─────────────────────────
+        > water            18.00 µL
+        > b        100 µM   1.00 µL
+        > c        100 µM   1.00 µL
+        > ─────────────────────────
+        >                  20.00 µL
+      pcr:
+        > Reagent        Stock    Volume
+        > ──────────────────────────────
+        > water                 24.00 µL
+        > a           20 pg/µL   8.00 µL
+        > primer mix       10x   8.00 µL
+        > master mix        2x  40.00 µL
+        > ──────────────────────────────
+        >                       80.00 µL
+  -
+    id: primers-force
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.force_primer_mix = True
+
+    expected:
+      primers:
+        > Reagent   Stock    Volume
+        > ─────────────────────────
+        > water             9.00 µL
+        > b        100 µM   0.50 µL
+        > c        100 µM   0.50 µL
+        > ─────────────────────────
+        >                  10.00 µL
+      pcr:
+        > Reagent        Stock     Volume
+        > ───────────────────────────────
+        > water                  30.00 µL
+        > a           20 pg/µL   10.00 µL
+        > primer mix       10x   10.00 µL
+        > master mix        2x   50.00 µL
+        > ───────────────────────────────
+        >                       100.00 µL
 
 test_product_seqs:
   -

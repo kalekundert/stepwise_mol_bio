@@ -174,6 +174,24 @@ Options:
         The stock concentration of the primers in µM.  The default is taken 
         from the reaction table specified in the preset.
 
+    --primer-mix-volume <µL>
+        The volume of primer mix to prepare, in µL.
+
+    --force-primer-mix
+        Require the primers to be mixed in a separate step, even if the 
+        reaction volume is large enough that this would not normally be 
+        necessary.
+
+    --only-primer-mix
+        Only show the protocol for making the primer mix; leave out the PCR 
+        reaction itself and the thermocycling protocol.  This option implies 
+        `--force-primer-mix`.  See also `--skip-primer-mix`.
+
+    --skip-primer-mix
+        Don't show the protocol for making the primer mix.  Typically, the 
+        primer mix would've been shown previously with `--only-primer-mix`.  
+        This option implies `--force-primer-mix`.
+
     -y --num-cycles <n>
         The number of denature/anneal/extend cycles to perform, e.g. 35.
 
@@ -437,6 +455,24 @@ Options:
             Key(PresetConfig, 'reagents'),
             cast=stepwise.MasterMix.from_text,
     )
+    primer_mix_volume_uL = appcli.param(
+            Key(DocoptConfig, '--primer-mix-volume'),
+            default=10,
+    )
+    force_primer_mix = appcli.param(
+            Key(DocoptConfig, '--force-primer-mix'),
+            Key(DocoptConfig, '--skip-primer-mix'),
+            Key(DocoptConfig, '--only-primer-mix'),
+            default=False,
+    )
+    skip_primer_mix = appcli.param(
+            Key(DocoptConfig, '--skip-primer-mix'),
+            default=False,
+    )
+    only_primer_mix = appcli.param(
+            Key(DocoptConfig, '--only-primer-mix'),
+            default=False,
+    )
     num_cycles = appcli.param(
             Key(DocoptConfig, '--num-cycles'),
             Key(PresetConfig, 'num_cycles'),
@@ -590,19 +626,23 @@ Options:
 
         # Primer mix (if applicable):
 
-        example_uM = min(x.stock_uM for x in flatten(self.primer_pairs))
-        footnotes.append(pl(
-                f"For resuspending lyophilized primers:",
-                f"{example_uM} µM = {1e3 / example_uM:g} µL/nmol",
-                br='\n',
-        ))
+        if not self.skip_primer_mix:
+            example_uM = min(x.stock_uM for x in flatten(self.primer_pairs))
+            footnotes.append(pl(
+                    f"For resuspending lyophilized primers:",
+                    f"{example_uM} µM = {1e3 / example_uM:g} µL/nmol",
+                    br='\n',
+            ))
 
-        if primer_mix:
-            protocol += pl(
-                    f"Prepare 10x primer mix{protocol.add_footnotes(*footnotes)}:",
-                    primer_mix,
-            )
-            footnotes = []
+            if primer_mix:
+                protocol += pl(
+                        f"Prepare 10x primer mix{protocol.add_footnotes(*footnotes)}:",
+                        primer_mix,
+                )
+                footnotes = []
+
+                if self.only_primer_mix:
+                    return protocol
 
         # PCR reaction setup:
 
@@ -774,7 +814,7 @@ Options:
             primer_scale = pcr.scale if pcr[p].master_mix else 1
             primer_vol = primer_scale * pcr[p].volume
 
-            if primer_vol < '0.5 µL':
+            if primer_vol < '0.5 µL' or self.force_primer_mix:
                 use_primer_mix.append(p)
 
         if use_primer_mix:
@@ -796,7 +836,7 @@ Options:
                 primer_mix[p].hold_stock_conc.conc *= 10
                 del pcr[p]
 
-            primer_mix.hold_ratios.volume = '10 µL'
+            primer_mix.hold_ratios.volume = self.primer_mix_volume_uL, 'µL'
 
         return pcr, primer_mix
 
