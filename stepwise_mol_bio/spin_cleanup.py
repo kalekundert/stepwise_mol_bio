@@ -4,11 +4,10 @@ import stepwise, appcli, autoprop
 from inform import warn
 from appcli import Key, Method, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, Quantity, oxford_comma
-from stepwise_mol_bio import Cleanup, format_sec
+from stepwise_mol_bio import Cleanup, format_sec, round_down_to_1_sig_fig
 from freezerbox import MakerConfig, group_by_identity, parse_volume_uL, unanimous
 from more_itertools import always_iterable
 from tidyexc import only_raise
-from ._utils import round_down_to_1_sig_fig
 
 def ng_uL(x):
     return Quantity(x, 'ng/µL')
