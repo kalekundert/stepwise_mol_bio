@@ -62,7 +62,7 @@ Options:
         required master mix volume.
 
     -c --template-conc <nM>
-        The desired final concentration of template in the reaction.  
+        The desired final concentration of template in the reaction.
 
     -C --template-stock <nM>
         The stock concentration of the template DNA or mRNA, in units of nM.  
