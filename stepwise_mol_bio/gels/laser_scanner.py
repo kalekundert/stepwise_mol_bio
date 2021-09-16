@@ -4,7 +4,7 @@ import stepwise, appcli, autoprop
 from inform import indent, plural
 from appcli import DocoptConfig
 from stepwise import (
-        StepwiseConfig, PresetConfig, Presets, UsageError, pl, table,
+        StepwiseConfig, PresetConfig, Presets, UsageError, pl, ul, table,
 )
 from stepwise_mol_bio import Main, ConfigError
 
@@ -14,7 +14,7 @@ class LaserScanner(Main):
 Image a gel using a laser scanner.
 
 Usage:
-    laser_scanner <optics>...
+    laser_scanner <optics>... [-i <str>]...
 
 <%! from stepwise_mol_bio import hanging_indent %>\
 Arguments:
@@ -36,6 +36,10 @@ Arguments:
         following syntax:
 
             <laser>/<filter>
+
+Options:
+    -i --instruction <str>
+        A special instruction to include in the protocol.
 """
     __config__ = [
             DocoptConfig,
@@ -56,6 +60,10 @@ Arguments:
     # - {laser: filter} (dict)
     optics = appcli.param(
             appcli.Key(DocoptConfig, '<optics>'),
+            default_factory=list,
+    )
+    instructions = appcli.param(
+            appcli.Key(DocoptConfig, '--instruction'),
             default_factory=list,
     )
 
@@ -80,6 +88,7 @@ Arguments:
         p += pl(
                 "Image with a laser scanner:",
                 table([lasers, filters], align='<>>'),
+                ul(*self.instructions),
         )
         return p
 
