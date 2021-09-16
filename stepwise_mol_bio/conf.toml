@@ -432,6 +432,8 @@ elute_min_volume_uL = 30
 elute_wait_sec = 60
 elute_spin_sec = 30
 
+yield = 0.8
+
 [molbio.spin_cleanup.presets.'qiagen/min-elute/pcr']
 protocol_name = 'Qiagen MinElute PCR purification kit (28004)'
 inherit = 'qiagen'
@@ -487,6 +489,8 @@ elute_volume_uL = 50
 elute_min_volume_uL = 25
 elute_spin_sec = 30
 
+yield = 0.8
+
 [molbio.spin_cleanup.presets.'zymo/rna-clean-conc/100']
 protocol_name = 'Zymo Clean & Concentrator-100 kit (R1019)'
 protocol_link = 'https://tinyurl.com/2va2v8hm'
@@ -508,6 +512,8 @@ elute_buffer = 'nuclease-free water'
 elute_volume_uL = 100
 elute_min_volume_uL = 100
 elute_spin_sec = 30
+
+yield = 0.8
 
 
 [molbio.gel.presets.'bolt/mes']
