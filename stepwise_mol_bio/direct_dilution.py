@@ -58,6 +58,14 @@ Options:
     max_dilution = appcli.param('--max-dilution', cast=float, default=10)
 
     def get_protocol(self):
+        protocol = stepwise.Protocol()
+        protocol += pl(
+                "Prepare the following dilutions:",
+                self.dilution_table,
+        )
+        return protocol
+
+    def get_dilution_table(self):
         header = [
                 format_quantity('Final', f'[{self.conc_unit}]', pad='\n'),
                 format_quantity('Stock', f'[{self.conc_unit}]', pad='\n'),
@@ -81,12 +89,7 @@ Options:
                 format_quantity(target_volume - stock_volume),
             ])
 
-        protocol = stepwise.Protocol()
-        protocol += pl(
-                "Prepare the following dilutions:",
-                table(rows, header, align='>>>>'),
-        )
-        return protocol
+        return table(rows, header, align='>>>>')
 
     def _pick_stock_concs(self):
         stock_concs = {}
