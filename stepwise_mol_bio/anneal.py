@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import stepwise, appcli, autoprop
-from inform import plural
+
+from stepwise import pl, ul
 from stepwise_mol_bio import Main, comma_set
+from inform import plural
 from collections.abc import Sequence
 
 def float_pair(x):
@@ -99,17 +101,17 @@ Options:
         protocol = stepwise.Protocol()
         n = self.num_reactions
 
-        protocol += f"""\
-Setup {plural(n):# annealing reaction/s}:
-
-{self.reaction}
-"""
-        protocol += f"""\
-Perform the {plural(n):annealing reaction/s}:
-
-- Incubate at 95°C for 2 min.
-- Cool at room temperature.
-"""
+        protocol += pl(
+                f"Setup {plural(n):# annealing reaction/s}:",
+                self.reaction,
+        )
+        protocol += pl(
+                f"Perform the {plural(n):annealing reaction/s}:",
+                ul(
+                    "Incubate at 95°C for 2 min.",
+                    "Cool at room temperature.",
+                ),
+        )
         return protocol
 
 if __name__ == '__main__':
