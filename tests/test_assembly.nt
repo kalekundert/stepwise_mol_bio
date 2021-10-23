@@ -310,18 +310,44 @@ test_add_fragments_to_reaction:
       target_pmol: 0.06
       min_pmol: 0.02
 
-    # Show B,D stock conc in nM even though both inputs are ng/µL, because 
-    # concentrations differ.  It's molarity that matters, and the same 
-    # concentration in ng/µL could be very different in nM.
+    # Show B,D stock conc in ng/µL even though they have very different 
+    # molarities, because their molcular weights are close enough that D will 
+    # be the correct conventration if diluted to 100 ng/µL.
+    expected:
+      > Reagent      Stock   Volume
+      > ───────────────────────────
+      > water               4.10 µL
+      > A,C         200 nM  0.30 µL
+      > B,D      100 ng/µL  0.60 µL
+      > ───────────────────────────
+      >                     5.00 µL
+
+  -
+    id: conc
+    assemblies:
+      -
+        - Assembly.Fragment('A', conc=Q('200 nM'))
+        - Assembly.Fragment('B', conc=Q('100 ng/µL'), mw=2e6)  # 50 nM
+      -
+        - Assembly.Fragment('C', conc=Q('200 nM'))
+        - Assembly.Fragment('D', conc=Q('200 ng/µL'), mw=1e6)  # 200 nM
+    kwargs:
+      target_pmol: 0.06
+      min_pmol: 0.02
+
+    # Show B,D stock conc in nM even though both inputs are ng/µL, because both 
+    # the concentrations and the molecular weights differ enough that the only 
+    # way to give a single number that will be correct for both fragments is to 
+    # use convert the concentrations to nM (and to use the smaller of the two).
     expected:
       > Reagent   Stock   Volume
       > ────────────────────────
-      > water            4.10 µL
+      > water            3.50 µL
       > A,C      200 nM  0.30 µL
-      > B,D      100 nM  0.60 µL
+      > B,D       50 nM  1.20 µL
       > ────────────────────────
       >                  5.00 µL
-
+    #
   -
     id: volume
     assemblies:

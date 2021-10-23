@@ -138,10 +138,11 @@ def add_fragments_to_reaction(
                     return False
 
             concs = [x.conc for x in frags]
-            concs_nM = [x.conc_nM for x in frags]
+            mws = [x.mw for x in frags]
 
-            if not all_close(concs_nM) or not all_close(concs):
-                self.conc = self.conc_nM, 'nM'
+            if not all_close(concs):
+                if not all(mws) or not all_close(mws):
+                    self.conc = self.conc_nM, 'nM'
 
             # volume
             self.vol_uL = uL_from_pmol(target_pmol, self.conc_nM)

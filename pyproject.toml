@@ -80,6 +80,7 @@ types = ["chore", "docs", "feat", "fix", "refactor", "style", "test"]
 scopes = [
   "aliquot",
   "anneal",
+  "assembly",
   "digest",
   "direct_dilution",
   "ethanol_precipitation",
