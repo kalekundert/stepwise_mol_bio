@@ -36,7 +36,7 @@ Options:
             default=None,
     )
     conc = appcli.param(
-            Key(DocoptConfig, '--conc', cast=parse_conc),
+            Key(DocoptConfig, '--conc'),
             Key(MakerConfig, 'conc', cast=parse_conc),
             default=None,
     )

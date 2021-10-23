@@ -79,11 +79,11 @@ test_cli:
       > 1. Concentrate the sample\(s\) to 5 µL by
       >    lyophilization.
   -
-    cmd: sw lyophilize -c 500ng/µL
+    cmd: sw lyophilize -c '500 ng/µL'
     stdout:
       > {DATE}
       >
-      > \$ sw lyophilize -c '500ng/µL'
+      > \$ sw lyophilize -c '500 ng/µL'
       >
       > 1. Concentrate the sample\(s\) to 500 ng/µL by
       >    lyophilization.
