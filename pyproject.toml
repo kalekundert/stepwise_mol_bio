@@ -54,6 +54,7 @@ doc = [
 molbio = "stepwise_mol_bio:Plugin"
 
 [tool.flit.entrypoints."freezerbox.make"]
+anneal = "stepwise_mol_bio:Anneal"
 digest = "stepwise_mol_bio:RestrictionDigest"
 gibson = "stepwise_mol_bio:Gibson"
 golden-gate = "stepwise_mol_bio:GoldenGate"

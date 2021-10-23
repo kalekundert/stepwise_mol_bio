@@ -60,6 +60,10 @@ footnote = 'https://tinyurl.com/y4qffgss'
 default_preset = 'ssoadv'
 
 
+[molbio.anneal]
+volume_uL = 4
+stock_conc_uM = 100
+
 [molbio.digest]
 dna_stock_ng_uL = 200
 

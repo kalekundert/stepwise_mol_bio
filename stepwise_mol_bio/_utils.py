@@ -99,13 +99,31 @@ class Cleanup(Main):
 
 @autoprop
 class Argument(appcli.App):
+    _use_main_configs = False
 
-    def __init__(self, tag, **kwargs):
-        self.tag = tag
+    def __init__(self, *args, **kwargs):
+        self.tags = args
+        if len(self.tags) == 1:
+            self.tag = args[0]
         self._set_known_attrs(kwargs)
 
+    def __init_subclass__(cls, **kwargs):
+        cls._use_main_configs = kwargs.pop('use_main_configs', False)
+        super().__init_subclass__(**kwargs)
+
+    def __str__(self):
+        return self.tag
+
     def __repr__(self):
-        return f'{self.__class__.__qualname__}({self.tag!r})'
+        tag_strs = ", ".join(map(repr, self.tags))
+        return f'{self.__class__.__qualname__}({tag_strs})'
+
+    def __eq__(self, other):
+        try:
+            # Doesn't compare attributes, so be careful.
+            return self.tags == other.tags
+        except AttributeError:
+            return NotImplemented
 
     def bind(self, app, force=False):
         if not hasattr(self, 'app') or force:
@@ -113,7 +131,8 @@ class Argument(appcli.App):
             self.on_bind(app)
 
     def on_bind(self, app):
-        pass
+        if self._use_main_configs:
+            appcli.share_configs(app, self)
 
     def get_db(self):
         return self.app.db

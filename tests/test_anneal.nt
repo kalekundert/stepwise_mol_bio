@@ -1,0 +1,377 @@
+test_reaction:
+  -
+    id: base
+    app:
+      > app = Anneal.from_tags([('o1', 'o2')])
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > PBS         10x  0.40 µL
+      > o1       100 µM  1.80 µL
+      > o2       100 µM  1.80 µL
+      > ────────────────────────
+      >                  4.00 µL
+  -
+    id: master-mix
+    app:
+      > app = Anneal.from_tags([
+      >     ('o1', 'o2'),
+      >     ('o1', 'o3')
+      > ])
+    expected:
+      > Reagent   Stock   Volume     2.2x
+      > ─────────────────────────────────
+      > PBS         10x  0.40 µL  0.88 µL
+      > o1       100 µM  1.80 µL  3.96 µL
+      > o2,o3    100 µM  1.80 µL
+      > ─────────────────────────────────
+      >                  4.00 µL  2.20 µL/rxn
+  -
+    id: master-mix
+    app:
+      > app = Anneal.from_tags([
+      >     ('o1', 'o3'),
+      >     ('o2', 'o3')
+      > ])
+    expected:
+      > Reagent   Stock   Volume     2.2x
+      > ─────────────────────────────────
+      > PBS         10x  0.40 µL  0.88 µL
+      > o1,o2    100 µM  1.80 µL
+      > o3       100 µM  1.80 µL  3.96 µL
+      > ─────────────────────────────────
+      >                  4.00 µL  2.20 µL/rxn
+  -
+    id: stock
+    app:
+      > app = Anneal([(
+      >     Anneal.Oligo('o1', stock_uM=100),
+      >     Anneal.Oligo('o2', stock_uM=200),
+      > )])
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > PBS         10x  0.40 µL
+      > o1       100 µM  2.40 µL
+      > o2       200 µM  1.20 µL
+      > ────────────────────────
+      >                  4.00 µL
+  -
+    id: volume
+    app:
+      > app = Anneal.from_tags([('o1', 'o2')])
+      > app.volume_uL = 10
+    expected:
+      > Reagent   Stock    Volume
+      > ─────────────────────────
+      > PBS         10x   1.00 µL
+      > o1       100 µM   4.50 µL
+      > o2       100 µM   4.50 µL
+      > ─────────────────────────
+      >                  10.00 µL
+  -
+    id: num-reactions
+    app:
+      > app = Anneal.from_tags([('o1', 'o2')])
+      > app.num_reactions = 2
+    expected:
+      > Reagent   Stock   Volume     2.2x
+      > ─────────────────────────────────
+      > PBS         10x  0.40 µL  0.88 µL
+      > o1       100 µM  1.80 µL  3.96 µL
+      > o2       100 µM  1.80 µL  3.96 µL
+      > ─────────────────────────────────
+      >                  4.00 µL  4.00 µL/rxn
+  -
+    id: conc
+    app:
+      > app = Anneal.from_tags([('o1', 'o2')])
+      > app.oligo_conc_uM = 10
+    expected:
+      > Reagent   Stock   Volume
+      > ────────────────────────
+      > water            2.80 µL
+      > PBS         10x  0.40 µL
+      > o1       100 µM  0.40 µL
+      > o2       100 µM  0.40 µL
+      > ────────────────────────
+      >                  4.00 µL
+
+test_protocol:
+  -
+    id: base
+    app:
+      > app = Anneal.from_tags([('o1', 'o2')])
+    expected:
+      - Setup 1 annealing reaction:
+      - Perform the annealing reaction:
+      - Incubate at 95°C for 2 min
+      - Cool at room temperature
+  -
+    id: plural
+    app:
+      > app = Anneal.from_tags([
+      >     ('o1', 'o2'),
+      >     ('o3', 'o4'),
+      > ])
+    expected:
+      - Setup 2 annealing reactions:
+      - Perform the annealing reactions:
+      - Incubate at 95°C for 2 min
+      - Cool at room temperature
+
+test_cli:
+  -
+    cmd: sw anneal o1,o2
+    stdout:
+      > {DATE}
+      >
+      > \$ sw anneal o1,o2
+      >
+      > 1. Setup 1 annealing reaction:
+      >
+      >    Reagent   Stock   Volume
+      >    ────────────────────────
+      >    PBS         10x  0.40 µL
+      >    o1       100 µM  1.80 µL
+      >    o2       100 µM  1.80 µL
+      >    ────────────────────────
+      >                     4.00 µL
+      >
+      > 2. Perform the annealing reaction:
+      >
+      >    - Incubate at 95°C for 2 min\.
+      >    - Cool at room temperature\.
+
+test_freezerbox_make:
+  -
+    id: stock
+    db:
+      o1:
+        > Oligo()
+      o2:
+        > Oligo(
+        >   conc=Q('200 µM'),
+        > )
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2')
+        > )
+    tags:
+      - f1
+
+    expected:
+      - Setup 1 annealing reaction:
+
+      - Reagent   Stock   Volume
+      - ────────────────────────
+      - PBS         10x  0.40 µL
+      - o1       100 µM  2.40 µL
+      - o2       200 µM  1.20 µL
+      - ────────────────────────
+      -                  4.00 µL
+
+      - Perform the annealing reaction:
+      - - Incubate at 95°C for 2 min.
+      - - Cool at room temperature.
+  -
+    id: conc
+    db:
+      o1: Oligo()
+      o2: Oligo()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2 conc=10µM')
+        > )
+    tags:
+      - f1
+
+    expected:
+      - Setup 1 annealing reaction:
+
+      - Reagent   Stock   Volume
+      - ────────────────────────
+      - water            2.80 µL
+      - PBS         10x  0.40 µL
+      - o1       100 µM  0.40 µL
+      - o2       100 µM  0.40 µL
+      - ────────────────────────
+      -                  4.00 µL
+
+      - Perform the annealing reaction:
+      - - Incubate at 95°C for 2 min.
+      - - Cool at room temperature.
+  -
+    id: volume
+    db:
+      o1: Oligo()
+      o2: Oligo()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2 volume=10µL')
+        > )
+    tags:
+      - f1
+
+    expected:
+      - Setup 1 annealing reaction:
+
+      - Reagent   Stock    Volume
+      - ─────────────────────────
+      - PBS         10x   1.00 µL
+      - o1       100 µM   4.50 µL
+      - o2       100 µM   4.50 µL
+      - ─────────────────────────
+      -                  10.00 µL
+
+      - Perform the annealing reaction:
+      - - Incubate at 95°C for 2 min.
+      - - Cool at room temperature.
+  -
+    id: merge
+    db:
+      o1: Oligo()
+      o2: Oligo()
+      o3: Oligo()
+      o4: Oligo()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2')
+        > )
+      f2:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o3 o4')
+        > )
+
+    tags:
+      - f1
+      - f2
+
+    expected:
+      - Setup 2 annealing reactions:
+
+      - Reagent   Stock   Volume
+      - ────────────────────────
+      - PBS         10x  0.40 µL
+      - o1,o3    100 µM  1.80 µL
+      - o2,o4    100 µM  1.80 µL
+      - ────────────────────────
+      -                  4.00 µL
+
+      - Perform the annealing reactions:
+      - - Incubate at 95°C for 2 min.
+      - - Cool at room temperature.
+
+test_freezerbox_attrs:
+  -
+    id: base
+    db:
+      o1: Oligo()
+      o2: Oligo()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2'),
+        > )
+    expected:
+      f1:
+        dependencies: {'o1', 'o2'}
+        conc: Quantity(45, 'µM')
+        volume: Quantity(4, 'µL')
+  -
+    id: conc
+    db:
+      o1: Oligo()
+      o2: Oligo()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2 conc=10µM'),
+        > )
+    expected:
+      f1:
+        dependencies: {'o1', 'o2'}
+        conc: Quantity(10, 'µM')
+        volume: Quantity(4, 'µL')
+  -
+    id: volume
+    db:
+      o1: Oligo()
+      o2: Oligo()
+      f1:
+        > NucleicAcid(
+        >     synthesis=parse_fields('anneal o1 o2 volume=10µL'),
+        > )
+    expected:
+      f1:
+        dependencies: {'o1', 'o2'}
+        conc: Quantity(45, 'µM')
+        volume: Quantity(10, 'µL')
+
+test_parse_oligo_pairs_docopt:
+  -
+    id: one
+    given:
+      - o1,o2
+    expected:
+      - Anneal.Oligo('o1'), Anneal.Oligo('o2')
+  -
+    id: two
+    given:
+      - o1,o2
+      - o3,o4
+    expected:
+      - Anneal.Oligo('o1'), Anneal.Oligo('o2')
+      - Anneal.Oligo('o3'), Anneal.Oligo('o4')
+  -
+    id: err-too-few
+    given:
+      - o1
+    error:
+      type: UsageError
+      message: expected 2 oligos, got 1: o1
+  -
+    id: err-too-many
+    given:
+      - o1,o2,o3
+    error:
+      type: UsageError
+      message: expected 2 oligos, got 3: o1,o2,o3
+
+test_parse_oligo_pair_freezerbox:
+  -
+    id: ok
+    given: anneal o1 o2
+    expected:
+      - Anneal.Oligo('o1'), Anneal.Oligo('o2')
+  -
+    id: err-too-few
+    given: anneal o1
+    error:
+      type: QueryError
+      message: expected 2 oligos, got 1: 'anneal o1'
+  -
+    id: err-too-many
+    given: anneal o1 o2 o3
+    error:
+      type: QueryError
+      message: expected 2 oligos, got 3: 'anneal o1 o2 o3'
+
+test_parse_oligo_stock_docopt:
+  -
+    id: one
+    given: 1
+    expected: 1.0
+  -
+    id: two
+    given: 1,2
+    expected: 1.0, 2.0
+  -
+    id: err-too-many
+    given: 1,2,3
+    error:
+      type: UsageError
+      message: expected 1 or 2 stock concentrations, got 3: 1,2,3
+  -
+    id: err-not-float
+    given: xyz
+    error:
+      type: ValueError
