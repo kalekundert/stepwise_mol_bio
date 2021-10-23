@@ -62,7 +62,7 @@ test_protocol:
 
   -
     app:
-      > db = Database()
+      > db = Database({})
       > db['f1'] = NucleicAcid()
       > db['f2'] = NucleicAcid()
       >

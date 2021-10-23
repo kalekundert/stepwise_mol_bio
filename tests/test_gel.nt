@@ -3,6 +3,9 @@ test_protocol:
   # now, I'm just skipping the staining step.
   -
     id: presets-agarose/1
+    # I overwrote this preset in my personal config, so I need a way to run the 
+    # tests independently of my configs before I can re-enable this.
+    marks: skip
     app:
       > app = Gel('agarose/1')
       > app.stain = None

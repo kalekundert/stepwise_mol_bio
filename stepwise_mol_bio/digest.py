@@ -265,7 +265,7 @@ Options:
     def __init__(self, templates, enzyme_names, db=None):
         self.templates = templates
         self.enzyme_names = enzyme_names
-        self.enzyme_db = db
+        if db: self.enzyme_db = db
 
     def get_enzymes(self):
         return [self.enzyme_db[x] for x in self.enzyme_names]

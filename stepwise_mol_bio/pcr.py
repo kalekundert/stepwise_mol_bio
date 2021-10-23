@@ -530,7 +530,7 @@ Options:
     )
     anneal_temp_func = appcli.param(
             Key(PresetConfig, 'anneal_temp_func', cast=eval),
-            default=lambda x: min(x) + 1,
+            default=lambda t1, t2: min(t1, t2) + 1,
     )
     anneal_temp_gradient_C = appcli.param(
             Key(DocoptConfig, '--anneal-temp-gradient'),

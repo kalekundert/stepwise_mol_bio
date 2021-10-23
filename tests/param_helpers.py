@@ -172,6 +172,7 @@ def error(x):
     err_eval = eval_with(
             ConfigError=stepwise_mol_bio.ConfigError,
             UsageError=stepwise_mol_bio.UsageError,
+            QueryError=freezerbox.QueryError,
     )
     if isinstance(x, str):
         err_type = err_eval(x)
@@ -205,11 +206,12 @@ def error(x):
                 return True
 
     return expect_error()
+
 def empty_ok(x):
     return Or(x, And('', lambda y: type(x)()))
 
 def eval_db(reagents):
-    db = freezerbox.Database('TEST_DB')
+    db = freezerbox.Database({'use': 'TEST_DB'})
     reagents = Schema(empty_ok({str: str}))(reagents)
 
     for tag, reagent in reagents.items():
@@ -225,6 +227,7 @@ def exec_app(src):
 
     return app
 
+eval_py = eval_with()
 eval_swmb = eval_with().all(stepwise).all(freezerbox).all(stepwise_mol_bio)
 
 app_expected = Schema({
@@ -269,7 +272,6 @@ cmd_stdout_stderr = Schema({
     Optional('stdout', default='^$'): str,
     Optional('stderr', default='^$'): str,
 })
-
 
 def match_protocol(app, expected, capture=nullcontext()):
     with capture:
