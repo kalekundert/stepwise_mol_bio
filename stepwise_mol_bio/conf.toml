@@ -861,7 +861,7 @@ destain_steps = [
 [molbio.stain.presets.sypro-ruby]
 title = "SYPRO Ruby"
 
-prep_buffer = "fix solution (50% methanol, 7% acetic acid)"
+prep_buffer = "fix solution (50% methanol, 7% (v/v) acetic acid)"
 prep_volume_mL = 100
 prep_time_min = 30
 
@@ -869,7 +869,7 @@ stain_buffer = "SYPRO Ruby"
 stain_volume_mL = 60
 stain_time_hr = 16
 
-destain_buffer = "wash solution (10% methanol, 7% acetic acid)"
+destain_buffer = "wash solution (10% methanol, 7% (v/v) acetic acid)"
 destain_volume_mL = 100
 destain_time_min = 30
 destain_steps = [
@@ -934,11 +934,11 @@ stain_steps = [
 [molbio.stain.presets.sypro-red]
 title = "SYPRO Red"
 
-stain_buffer = "1x SYPRO Red, 7.5% acetic acid"
+stain_buffer = "1x SYPRO Red, 7.5% (v/v) acetic acid"
 stain_volume_mL = 50
 stain_time_min = 40
 
-destain_buffer = "7.5% acetic acid"
+destain_buffer = "7.5% (v/v) acetic acid"
 destain_volume_mL = 50
 destain_time_min = 1
 
@@ -947,7 +947,7 @@ imaging_protocol = 'stepwise_mol_bio/laser_scanner green'
 protocol_link = "https://tinyurl.com/r7p6juer"
 footnotes = [
 """
-The stain solution may be reused up to four times, but sensitivty is 
+The stain solution may be reused up to four times, but sensitivity is 
 dramatically reduced.  Use fresh stain for optimal sensitivity.
 """,
 """
@@ -968,7 +968,9 @@ blot directly with SYPRO Ruby.
 [molbio.stain.presets.sypro-orange]
 inherit = "sypro-red"
 title = "SYPRO Orange"
-stain_buffer = "1x SYPRO Orange, 7.5% acetic acid"
+stain_buffer = "1x SYPRO Orange, 7.5% (v/v) acetic acid"
+imaging_protocol = 'stepwise_mol_bio/laser_scanner blue'
+
 
 
 [molbio.laser.presets.blue]
