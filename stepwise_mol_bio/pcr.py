@@ -122,16 +122,19 @@ class Pcr(Main):
 Amplify a DNA template using polymerase chain reaction (PCR).
 
 Usage:
-    pcr <amplicon>... [-a <°C>] [-x <sec> | -l <kb>] [options]
+    pcr <amplicons>... [-a <°C>] [-x <sec> | -l <kb>] [options]
     pcr (-u <product>) [-a <°C>] [-x <sec> | -l <kb>] [options]
 
 Arguments:
-    <amplicon>
+    <amplicons>
         The names of the templates and forward/reverse primers to use for each 
-        reaction, separated by commas.  If a `freezerbox` database is present 
-        and these names can be found in it, default values for a number of 
-        parameters (e.g. annealing temperate, extension time, etc.) will be 
-        derived from it.
+        reaction, separated by commas as follows:
+
+            template,fwd,rev
+
+        If a `freezerbox` database is present, and these names can be found in 
+        it, default values for a number of parameters (e.g. annealing 
+        temerature, extension time, etc.) will be derived from it.
 
 <%! from stepwise_mol_bio import hanging_indent %>\
 Options:
@@ -645,18 +648,17 @@ Options:
         return self
 
     def __init__(self, amplicons):
-        self.amplicons = amplicons
+        self.amplicons = list(amplicons)
 
     def format_usage(self):
         return self.__doc__
 
     def get_protocol(self):
         protocol = stepwise.Protocol()
-        pcr, primer_mix = self.reaction
-        thermocycler = self.thermocycler_protocol
         footnotes = []
 
         if not self.only_thermocycler:
+            pcr, primer_mix = self.reaction
 
             # Primer mix (if applicable):
 
@@ -708,6 +710,7 @@ Options:
         # Thermocycler protocol:
 
         if not self.skip_thermocycler:
+            thermocycler = self.thermocycler_protocol
             protocol += pl(
                     "Run the following thermocycler protocol:",
                     thermocycler,
@@ -759,7 +762,7 @@ Options:
 
             return f"{temp(t)} for {time(getattr(self, f'{step}_time_s'))}"
 
-        three_step = not self.two_step and has_step('extend')
+        three_step = not self.two_step
 
         thermocycler_steps = [
                 f"- {step('initial_denature')}",
@@ -834,9 +837,9 @@ Options:
         if x := self.template_stock:
             pcr['template DNA'].stock_conc = x
 
-        # Setup the primers.  This is complicated because the primers might 
-        # get split into their own mix, if the volumes that would be added 
-        # to the PCR reaction are too small.
+        # Setup the primers.  This is complicated because the primers might get 
+        # split into their own mix, if the volumes that would be added to the 
+        # PCR reaction are too small.
 
         primer_mix = None
         primer_keys = [
