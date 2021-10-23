@@ -12,6 +12,8 @@ from contextlib import nullcontext
 from textwrap import indent
 
 class do_with:
+    # Parent class for `eval_with` and `exec_with`.  Not meant to be used 
+    # directly.
 
     def __init__(self, globals=None, **kw_globals):
         self.globals = globals or {}
@@ -34,6 +36,52 @@ class do_with:
         return self
 
 class eval_with(do_with):
+    # Evaluate snippets of python code, with powerful control over the names 
+    # available to that snippet.
+    # 
+    # Examples:
+    #
+    # With no arguments, this just creates a callable that will evaluate 
+    # snippets of python code:
+    #
+    #     >>> eval_with()('1 + 1')
+    #     2
+    #
+    # With arguments, you can add global variables to the namespace where the 
+    # snippet is evaluated.  This is most often use to "import" modules:
+    #
+    #    >>> import math
+    #    >>> eval_math = eval_with(math=math)
+    #    >>> eval_math('math.sqrt(2)')
+    #    1.4142135623730951
+    #
+    # You can use the fluent-style `use()` method to add global variables after 
+    # the object has been created.  This is mostly useful for building on 
+    # existing evaluators:
+    #
+    #    >>> import numpy as np
+    #    >>> eval_np = eval_math.use(np=np)
+    #    >>> eval_np('np.arange(3)')
+    #    array([0, 1, 2])
+    #
+    # The `all()` method provides a shorthand way to import all names from a 
+    # module:
+    #
+    #    >>> eval_math = eval_with().all(math)
+    #    >>> eval_math('sqrt(2)')
+    #    1.4142135623730951
+    #
+    # Details:
+    #
+    # The input to evaluate can be a list, dict, or string.  Strings are 
+    # directly evaluated.  List items and dict values are recursively 
+    # evaluated.  Dict keys are not processed.  This allows you to switch 
+    # freely between nested test and python syntax, depending on which makes 
+    # most sense for each particular input.
+    #
+    # This method is meant to be used with voluptuous, as it raises 
+    # `voluptuous.Invalid` in the event that the given input can't be 
+    # evaluated.
 
     def __call__(self, src):
         try:
@@ -48,9 +96,22 @@ class eval_with(do_with):
             raise Invalid(str(err)) from err
 
 class exec_with(do_with):
+    # This has the same API as `eval_with`, except the given snippet is exec'd 
+    # instead of eval'd.  You must specify a name, and the value of the 
+    # variable with that name in the exec'd namespace is what will be 
+    # returned.
+    # 
+    # Example:
+    # 
+    #     >>> f = exec_with('x')
+    #     >>> f('x = 1')
+    #     1
 
     def __init__(self, get, globals=None, **kw_globals):
         super().__init__(globals, **kw_globals)
+        self.get = get
+
+    def get(self, get):
         self.get = get
 
     def __call__(self, src):
