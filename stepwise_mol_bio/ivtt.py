@@ -5,15 +5,39 @@ from inform import fatal, warn, plural
 from appcli import Key, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, pl, ul
 from stepwise_mol_bio import (
-        Main, Argument, ShareConfigs, bind_arguments, require_reagent,
+        Main, BindableReagent, bind, require_reagent,
 )
 from freezerbox import ReagentConfig, unanimous
 from copy import deepcopy
 from operator import not_
 
+# `Ivtt` has the ability to add user-specified reagents and instructions to the 
+# reaction.  I'd like for all my reaction-centric protocols to support those 
+# features, but I'll need to generalize the implementation a bit first.  The 
+# basic idea will be to create a `Reaction` class that inherits from `Main` and 
+# provides the basic framework for describing a reaction.  (I might want to 
+# choose a different name, to avoid conflicts with `stepwise.Reaction`, but 
+# nothing else comes to mind at the moment.)
+#
+# One problem with `Ivtt` is that it has two versions of many of its 
+# attributes.  This is because the volume of an additive specified in a config 
+# file should be scaled if the reaction volume is changed on the command line, 
+# but the volume of an additive specified on the command line should not.  So 
+# the two version are basically "scale with volume" and "don't scale with 
+# volume".
+#
+# To get the same effect without requiring duplicate attributes, I had the 
+# thought that I could basically wrap the value of a single attribute in an 
+# object that describes when that attribute should be evaluated.  For example, 
+# `ivtt.volume_uL = Early(5)` would mean that the volume should be set before 
+# reaction is scaled, while `ivtt.volume_uL = 5` would mean after.  I would 
+# still need `volume_uL` and `default_volume_uL` attributes, because the volume 
+# might be set in both the config file and the command line.  But for every 
+# other parameter, only the final specification matters.
+
 def parse_templates_from_docopt(args):
     return [
-            InVitroTranslation.Template(tag)
+            Ivtt.Template(tag)
             for tag in args['<templates>']
     ]
 
@@ -27,7 +51,7 @@ def del_reagents_by_flag(rxn, flag):
         del rxn[reagent.key]
 
 @autoprop
-class InVitroTranslation(Main):
+class Ivtt(Main):
     """\
 Express proteins from purified DNA templates.
 
@@ -61,6 +85,10 @@ Options:
         How much extra master mix to prepare, as a percentage of the minimum 
         required master mix volume.
 
+    -V --template-volume <µL>
+        The volume of template to add to the reaction.  This overrides the 
+        `--template-conc` option.
+
     -c --template-conc <nM>
         The desired final concentration of template in the reaction.
 
@@ -92,12 +120,12 @@ Options:
         identified either by its name or by its flag.  This can be used to 
         remove an additive added by the preset, for example.
 
-    -t --incubation-time <time>         [default: ${app.incubation_time}]
+    -t --incubation-time <time>
         The amount of time to incubate the reactions.  No unit is assumed, so 
         be sure to include one.  If '0', the incubation step will be removed 
         from the protocol (e.g. so it can be added back at a later point).
 
-    -T --incubation-temperature <°C>    [default: ${app.incubation_temp_C}]
+    -T --incubation-temperature <°C>
         The temperature to incubate the reactions at, in °C.
 """
     __config__ = [
@@ -108,21 +136,17 @@ Options:
     preset_briefs = appcli.config_attr()
     preset_brief_template = '{kit}'
 
-    class Template(ShareConfigs, Argument):
-        __config__ = [
-                ReagentConfig.setup(
-                    db_getter=lambda self: self.db,
-                ),
-        ]
-
+    class Template(BindableReagent, use_app_configs=True):
         stock_nM = appcli.param(
                 Key(DocoptConfig, '--template-stock', cast=float),
                 Key(ReagentConfig, 'conc_nM'),
                 Key(PresetConfig, 'template_stock_nM'),
+                default=None,
         )
         is_mrna = appcli.param(
                 Key(DocoptConfig, '--mrna'),
                 Key(ReagentConfig, 'molecule', cast=lambda x: x == 'RNA'),
+                default=None,  # interpreted as "unknown"
         )
 
     presets = appcli.param(
@@ -143,7 +167,7 @@ Options:
     )
     templates = appcli.param(
             Key(DocoptConfig, parse_templates_from_docopt),
-            get=bind_arguments,
+            get=bind,
     )
     volume_uL = appcli.param(
             Key(DocoptConfig, '--volume', cast=eval),
@@ -169,6 +193,15 @@ Options:
             Key(DocoptConfig, '--extra-percent', cast=float),
             default=10,
     )
+    template_volume_uL = appcli.param(
+            Key(DocoptConfig, '--template-volume', cast=float),
+            default=None,
+    )
+    default_template_volume_uL = appcli.param(
+            # See `default_volume_uL`.
+            Key(PresetConfig, 'template_volume_uL'),
+            default=None,
+    )
     template_conc_nM = appcli.param(
             Key(DocoptConfig, '--template-conc', cast=float),
             Key(PresetConfig, 'template_conc_nM'),
@@ -191,6 +224,7 @@ Options:
             default_factory=list,
     )
     default_additives = appcli.param(
+            # See `default_volume_uL`.
             Key(PresetConfig, 'additives'),
             default_factory=list,
     )
@@ -219,6 +253,9 @@ Options:
             Key(PresetConfig, 'incubation_footnote'),
             default=None,
     )
+
+    def __init__(self, templates):
+        self.templates = templates
 
     def get_protocol(self):
         p = stepwise.Protocol()
@@ -262,6 +299,11 @@ Options:
         if self.default_volume_uL:
             rxn.hold_ratios.volume = self.default_volume_uL, 'µL'
 
+        if self.default_template_volume_uL:
+            for template in ['DNA', 'mRNA']:
+                if template in rxn:
+                    rxn[template].volume = self.default_template_volume_uL, 'µL'
+
         add_reagents(self.default_additives)
 
         if self.volume_uL:
@@ -283,23 +325,26 @@ Options:
 
         rxn[template].name = f"{','.join(x.tag for x in self.templates)}"
         rxn[template].master_mix = self.master_mix
-        rxn[template].hold_conc.stock_conc = self.template_stock_nM, 'nM'
 
-        if self.template_conc_nM:
+        if self.template_stock_nM:
+            rxn[template].hold_conc.stock_conc = self.template_stock_nM, 'nM'
+
+        if self.template_volume_uL:
+            rxn[template].volume = self.template_volume_uL, 'µL'
+        elif self.template_conc_nM:
             rxn[template].hold_stock_conc.conc = self.template_conc_nM, 'nM'
         elif self.use_template:
             warn("Template concentrations must be empirically optimized.\nThe default value is just a plausible starting point.")
 
-        if not self.use_template:
-            del rxn[template]
+        # Make sure the template is added last.
+        rxn[template].order = i+1
 
         if not self.use_rnase_inhibitor:
             del_reagents_by_flag(rxn, 'rnase')
 
-        # Make sure the template is added last.
-        rxn[template].order = i+1
-
-        if self.use_template:
+        if not self.use_template:
+            del rxn[template]
+        else:
             rxn.fix_volumes(template)
 
         rxn.extra_percent = self.extra_percent
@@ -307,11 +352,20 @@ Options:
         return rxn
 
     def get_template_stock_nM(self):
-        return min(x.stock_nM for x in self.templates)
+        return min(
+                (c for x in self.templates if (c := x.stock_nM)),
+                default=None,
+        )
 
     @property
     def use_mrna(self):
-        return unanimous(x.is_mrna for x in self.templates)
+        return unanimous(
+                items=(
+                    r for x in self.templates
+                    if (r := x.is_mrna) is not None
+                ),
+                default=False,
+        )
 
 if __name__ == '__main__':
-    InVitroTranslation.main()
+    Ivtt.main()

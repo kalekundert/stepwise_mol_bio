@@ -1,0 +1,246 @@
+test_reaction:
+  -
+    id: base
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              2.00 µL
+      > solution A                         4.00 µL
+      > solution B                         3.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL
+      > f1                         75 nM   0.80 µL
+      > ──────────────────────────────────────────
+      >                                   10.00 µL
+  -
+    id: master-mix
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      >     Ivtt.Template('f2'),
+      > ])
+    expected:
+      > Reagent                    Stock    Volume     2.2x
+      > ───────────────────────────────────────────────────
+      > water                              2.00 µL  4.40 µL
+      > solution A                         4.00 µL  8.80 µL
+      > solution B                         3.00 µL  6.60 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL  0.44 µL
+      > f1,f2                      75 nM   0.80 µL
+      > ───────────────────────────────────────────────────
+      >                                   10.00 µL  9.20 µL/rxn
+  -
+    id: mrna
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1', is_mrna=True),
+      > ])
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              1.80 µL
+      > solution A                         4.00 µL
+      > solution B                         3.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL
+      > f1                       5000 nM   1.00 µL
+      > ──────────────────────────────────────────
+      >                                   10.00 µL
+  -
+    id: assume-unspecified-molecule-type-matches-specified-types
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1', is_mrna=True),
+      >     Ivtt.Template('f2'),
+      > ])
+    expected:
+      > Reagent                    Stock    Volume     2.2x
+      > ───────────────────────────────────────────────────
+      > water                              1.80 µL  3.96 µL
+      > solution A                         4.00 µL  8.80 µL
+      > solution B                         3.00 µL  6.60 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL  0.44 µL
+      > f1,f2                    5000 nM   1.00 µL
+      > ───────────────────────────────────────────────────
+      >                                   10.00 µL  9.00 µL/rxn
+  -
+    id: template-stock
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1', stock_nM=150),
+      > ])
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              2.40 µL
+      > solution A                         4.00 µL
+      > solution B                         3.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL
+      > f1                        150 nM   0.40 µL
+      > ──────────────────────────────────────────
+      >                                   10.00 µL
+  -
+    id: template-volume
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.template_volume_uL = 1
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              1.80 µL
+      > solution A                         4.00 µL
+      > solution B                         3.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL
+      > f1                         75 nM   1.00 µL
+      > ──────────────────────────────────────────
+      >                                   10.00 µL
+  -
+    id: default-template-volume
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.default_template_volume_uL = 1
+      > app.volume_uL = 20
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              3.60 µL
+      > solution A                         8.00 µL
+      > solution B                         6.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.40 µL
+      > f1                         75 nM   2.00 µL
+      > ──────────────────────────────────────────
+      >                                   20.00 µL
+  -
+    id: template-conc
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.template_conc_nM = 12
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              1.20 µL
+      > solution A                         4.00 µL
+      > solution B                         3.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL
+      > f1                         75 nM   1.60 µL
+      > ──────────────────────────────────────────
+      >                                   10.00 µL
+  -
+    id: use-template
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.use_template = False
+    expected:
+      > Reagent                    Stock    Volume
+      > ──────────────────────────────────────────
+      > water                              2.80 µL
+      > solution A                         4.00 µL
+      > solution B                         3.00 µL
+      > RNase inhibitor, murine  40 U/µL   0.20 µL
+      > ──────────────────────────────────────────
+      >                                   10.00 µL
+  -
+    id: use-rnase-inhibitor
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.use_rnase_inhibitor = False
+    expected:
+      > Reagent     Stock    Volume
+      > ───────────────────────────
+      > water               2.20 µL
+      > solution A          4.00 µL
+      > solution B          3.00 µL
+      > f1          75 nM   0.80 µL
+      > ───────────────────────────
+      >                    10.00 µL
+
+test_protocol:
+  -
+    id: title
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.title = 'IVTT'
+    expected:
+      - Setup 1 IVTT reaction [1]:
+  -
+    id: plural
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      >     Ivtt.Template('f2'),
+      > ])
+      > app.title = 'IVTT'
+    expected:
+      - Setup 2 IVTT reactions [1]:
+  -
+    id: instructions
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.setup_instructions = ['Step 1', 'Step 2']
+    expected:
+      - - Step 1
+      - - Step 2
+  -
+    id: incubation
+    app:
+      > app = Ivtt([
+      >     Ivtt.Template('f1'),
+      > ])
+      > app.incubation_temp_C = 25
+      > app.incubation_time = '90 min'
+    expected:
+      - Incubate at 25°C for 90 min.
+
+test_cli:
+  -
+    cmd: sw ivtt f1
+    stdout:
+      > {DATE}
+      >
+      > \$ sw ivtt f1
+      >
+      > 1. Setup 1 PURExpress \(NEB E6800\) reaction \[1\]:
+      >
+      >    Reagent                    Stock    Volume
+      >    ──────────────────────────────────────────
+      >    water                              2.00 µL
+      >    solution A                         4.00 µL
+      >    solution B                         3.00 µL
+      >    RNase inhibitor, murine  40 U/µL   0.20 µL
+      >    f1                         75 nM   0.80 µL
+      >    ──────────────────────────────────────────
+      >                                      10.00 µL
+      >
+      >    - Thaw all components on ice.
+      >    - Mix A well; certain components may precipitate
+      >      during storage.
+      >    - Mix B gently; do not vortex.
+      >    - Add A before B.
+      >
+      > 2. Incubate at 37°C for 2h.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/dxapyo69
+    stderr:
+      > .*
+      >     Template concentrations must be empirically optimized.
+      >     The default value is just a plausible starting point.
+
+
+

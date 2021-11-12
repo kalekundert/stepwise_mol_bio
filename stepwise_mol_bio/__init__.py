@@ -20,7 +20,7 @@ from .gels.transilluminator import Transilluminator
 from .gibson import Gibson
 from .golden_gate import GoldenGate
 from .ivt import Ivt
-from .ivtt import InVitroTranslation
+from .ivtt import Ivtt
 from .kld import Kld
 from .ligate import Ligate
 from .lyophilize import Lyophilize
