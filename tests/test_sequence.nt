@@ -1,0 +1,185 @@
+test_protocol:
+  -
+    id: base
+    app:
+      > app = Sequence({'p1': ['o1']})
+    expected:
+      - Sequence p1 with o1.
+  -
+    id: multiple-primers
+    app:
+      > app = Sequence({'p1': ['o1', 'o2']})
+    expected:
+      - Sequence p1 with o1, o2.
+  -
+    id: multiple-plasmids
+    app:
+      > app = Sequence({'p1': ['o1'], 'p2': ['o1']})
+    expected:
+      - Sequence the following plasmids:
+      - Plasmid  Primers
+      - p1       o1
+      - p2       o1
+
+test_cli:
+  -
+    cmd: sw sequence p1:o2
+    stdout:
+      > {DATE}
+      >
+      > \$ sw sequence p1:o2
+      >
+      > 1. Sequence p1 with o2.
+  -
+    cmd: sw sequence p1,p2:o1,o2
+    stdout:
+      > {DATE}
+      >
+      > \$ sw sequence p1,p2:o1,o2
+      >
+      > 1. Sequence the following plasmids:
+      >
+      >    Plasmid  Primers
+      >    ────────────────
+      >    p1       o1,o2
+      >    p2       o1,o2
+
+test_freezerbox_make:
+  -
+    id: base
+    db:
+      p1:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('sequence o1'),
+        > )
+    tags:
+      - p1
+
+    expected:
+      - Sequence p1 with o1.
+  -
+    id: multiple-primers
+    db:
+      p1:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('sequence o1 o2'),
+        > )
+    tags:
+      - p1
+
+    expected:
+      - Sequence p1 with o1, o2.
+  -
+    id: multiple-plasmids
+    db:
+      p1:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('sequence o1'),
+        > )
+      p2:
+        > Plasmid(
+        >     synthesis=parse_fields('order vendor=IDT'),
+        >     cleanups=parse_fields_list('sequence o1'),
+        > )
+    tags:
+      - p1
+      - p2
+
+    expected:
+      - Sequence the following plasmids:
+      - Plasmid  Primers
+      - p1       o1
+      - p2       o1
+
+test_parse_reactions_docopt:
+  -
+    given:
+      - a:b
+    expected:
+      a:
+        [b]
+  -
+    given:
+      - a:b,c
+    expected:
+      a:
+        [b,c]
+  -
+    given:
+      - a,b:c
+    expected:
+      a:
+        [c]
+      b:
+        [c]
+  -
+    given:
+      - a,b:c,d
+    expected:
+      a:
+        [c,d]
+      b:
+        [c,d]
+  -
+    given:
+      - a:b
+      - c:d
+    expected:
+      a:
+        [b]
+      c:
+        [d]
+  -
+    given:
+      - a:b
+      - a:c
+    expected:
+      a:
+        [b,c]
+  -
+    given:
+      - a,b:d
+      - b,c:e
+    expected:
+      a:
+        [d]
+      b:
+        [d,e]
+      c:
+        [e]
+
+test_merge_reactions:
+  -
+    given:
+      - {'a': [1]}
+    expected:
+      a: [1]
+  -
+    given:
+      - {'a': [1]}
+      - {'b': [2]}
+    expected:
+      a: [1]
+      b: [2]
+  -
+    given:
+      - {'b': [2]}
+      - {'a': [1]}
+    expected:
+      b: [2]
+      a: [1]
+  -
+    given:
+      - {'a': [1]}
+      - {'a': [2]}
+    expected:
+      a: [1, 2]
+  -
+    given:
+      - {'a': [2]}
+      - {'a': [1]}
+    expected:
+      a: [2, 1]

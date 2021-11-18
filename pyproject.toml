@@ -67,6 +67,7 @@ aliquot = "stepwise_mol_bio:Aliquot"
 lyophilize = "stepwise_mol_bio:Lyophilize"
 miniprep = "stepwise_mol_bio:Miniprep"
 page-purify = "stepwise_mol_bio:PagePurify"
+sequence = "stepwise_mol_bio:Sequence"
 spin-cleanup = "stepwise_mol_bio:SpinCleanup"
 
 [tool.pytest.ini_options]
@@ -102,6 +103,7 @@ scopes = [
   "retransform",
   "rnasezap",
   "serial_dilution",
+  "sequence",
   "spin_cleanup",
   "stain",
   "transform",

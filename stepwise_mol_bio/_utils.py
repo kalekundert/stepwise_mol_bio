@@ -6,7 +6,7 @@ import autoprop
 import tidyexc
 import freezerbox
 
-from freezerbox import MakerConfig, iter_combo_makers
+from freezerbox import ReagentConfig, ProductConfig, iter_combo_makers
 from appcli import Method, DocoptConfig
 from appdirs import AppDirs
 from inform import format_range, error
@@ -26,7 +26,7 @@ class Main(appcli.App):
     def main(cls):
         app = cls.from_params()
         app.load(DocoptConfig)
-        app.load(MakerConfig)
+        app.load(ProductConfig)
         
         try:
             app.protocol.print()
@@ -66,7 +66,7 @@ class Main(appcli.App):
         app = cls.from_params()
         app.db = product.db
         app.products = [product]
-        app.load(MakerConfig)
+        app.load(ProductConfig)
         return app
 
     @classmethod
