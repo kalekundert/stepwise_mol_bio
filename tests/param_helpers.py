@@ -214,8 +214,10 @@ def eval_db(reagents):
     db = freezerbox.Database({'use': 'TEST_DB'})
     reagents = Schema(empty_ok({str: str}))(reagents)
 
+    eval_local = eval_with(DB=db, **eval_swmb.globals)
+
     for tag, reagent in reagents.items():
-        db[tag] = eval_swmb(reagent)
+        db[tag] = eval_local(reagent)
 
     return db
 

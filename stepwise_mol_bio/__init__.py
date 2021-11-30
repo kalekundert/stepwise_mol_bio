@@ -29,6 +29,7 @@ from .pcr import Pcr
 from .serial_dilution import SerialDilution
 from .sequence import Sequence
 from .spin_cleanup import SpinCleanup
+from .transform import Transform
 
 # Avoid circular imports
 from .invpcr import InversePcr

@@ -62,6 +62,7 @@ inverse-pcr = "stepwise_mol_bio:InversePcr"
 ivt = "stepwise_mol_bio:Ivt"
 ligate = "stepwise_mol_bio:Ligate"
 pcr = "stepwise_mol_bio:Pcr"
+transform = "stepwise_mol_bio:Transform"
 
 aliquot = "stepwise_mol_bio:Aliquot"
 lyophilize = "stepwise_mol_bio:Lyophilize"

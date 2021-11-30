@@ -1,0 +1,283 @@
+# I only had one preset when I wrote theses tests (MACH1), so I wasn't able to 
+# test changing the preset.  Hopefully I can revisit this once I get some more 
+# presets.
+
+test_protocol:
+  -
+    id: base
+    app:
+      > app = Transform.from_tags(['p1'], antibiotics=['Amp'])
+    expected:
+      -
+        # Match the exact string, to check that the rest/recovery steps are 
+        # correctly skipped.
+        > 1. Transform p1 into MACH1 [1]:
+        >
+        >    - Pre-warm 1 LB+Amp plate.
+        >    - Thaw 50 µL competent MACH1 cells on ice.
+        >    - Add ≤10% cell volume (e.g. 5 µL for 50 µL cells) plasmid.
+        >    - Gently flick to mix
+        >
+        >    - Incubate at 42°C for 30s.
+        >    - Incubate on ice for 2 min.
+        >    - Add 250 µL SOC.
+        >
+        >    - Dilute cells 1:10.
+        >    - Plate 100 µL cells.
+        >    - Incubate at 37°C for 16h.
+        >
+        > Note:
+        > [1] https://tinyurl.com/fwk2c36b
+  -
+    id: multiple-plasmids
+    app:
+      > app = Transform.from_tags(['p1', 'p2'], antibiotics=['Amp'])
+    expected:
+      - Transform p1+p2 into MACH1 [1]:
+      - - Pre-warm 1 LB+Amp plate.
+      - - Thaw 50 µL competent MACH1 cells on ice.
+      - - Add ≤10% cell volume (e.g. 5 µL for 50 µL cells) plasmid.
+      - - Gently flick to mix
+
+      - - Incubate at 42°C for 30s.
+      - - Incubate on ice for 2 min.
+      - - Add 250 µL SOC.
+
+      - - Dilute cells 1:10.
+      - - Plate 100 µL cells.
+      - - Incubate at 37°C for 16h.
+
+      - https://tinyurl.com/fwk2c36b
+  -
+    id: multiple-transformations
+    app:
+      > app = Transform([
+      >       Transform.Reaction.from_tags(['p1'], antibiotics=['Amp']),
+      >       Transform.Reaction.from_tags(['p2'], antibiotics=['Amp']),
+      > ])
+    expected:
+      - Transform the following plasmids: p1, p2 [1]
+
+      - - Pre-warm 2 LB+Amp plates.
+      - - For each transformation:
+
+      -   - Thaw 50 µL competent MACH1 cells on ice.
+      -   - Add ≤10% cell volume (e.g. 5 µL for 50 µL cells) plasmid.
+      -   - Gently flick to mix
+
+      -   - Incubate at 42°C for 30s.
+      -   - Incubate on ice for 2 min.
+      -   - Add 250 µL SOC.
+
+      -   - Dilute cells 1:10.
+      -   - Plate 100 µL cells.
+      -   - Incubate at 37°C for 16h.
+
+      - https://tinyurl.com/fwk2c36b
+  -
+    id: multiple-antibiotics
+    app:
+      > app = Transform([
+      >       Transform.Reaction.from_tags(['p1'], antibiotics=['Amp']),
+      >       Transform.Reaction.from_tags(['p2'], antibiotics=['Kan']),
+      > ])
+    expected:
+      - Transform the following plasmids: p1, p2 [1]
+
+      - - Pre-warm selective plates:
+      -   LB+Amp: p1
+      -   LB+Kan: p2
+  -
+    id: multiple-strains
+    app:
+      > app = Transform([
+      >       Transform.Reaction.from_tags(['p1'], 's1', antibiotics=['Amp']),
+      >       Transform.Reaction.from_tags(['p1'], 's2', antibiotics=['Amp']),
+      > ])
+    expected:
+      - Transform the following plasmid: p1 [1]
+      - - For each transformation:
+      -   - Thaw 50 µL of the appropriate competent cells on ice:
+      -     s1: p1
+      -     s2: p1
+  -
+    id: multiple-quantities
+    app:
+      > p1 = Transform.Plasmid('p1', quantity='1 µL')
+      > p2 = Transform.Plasmid('p2', quantity='2 µL')
+      > app = Transform([
+      >       Transform.Reaction([p1], antibiotics=['Amp']),
+      >       Transform.Reaction([p2], antibiotics=['Amp']),
+      > ])
+    expected:
+      - Transform the following plasmids: p1, p2 [1]
+      - - For each transformation:
+      -   - Add the following quantities of plasmids:
+      -     p1: 1 µL
+      -     p2: 2 µL
+  -
+    id: multiple-quantities-diff-strains
+    app:
+      > p1 = Transform.Plasmid('p1', quantity='1 µL')
+      > p2 = Transform.Plasmid('p2', quantity='2 µL')
+      > s1 = Transform.Strain('s1')
+      > s2 = Transform.Strain('s2')
+      > app = Transform([
+      >       Transform.Reaction([p1], s1, antibiotics=['Amp']),
+      >       Transform.Reaction([p2], s2, antibiotics=['Amp']),
+      > ])
+    expected:
+      - Transform the following plasmids: p1, p2 [1]
+      - - For each transformation:
+      -   - Add the following quantities of plasmids:
+      -     p1→s1: 1 µL
+      -     p2→s2: 2 µL
+  -
+    id: rest-recovery
+    app:
+      > app = Transform.from_tags(['p1'], antibiotics=['Amp'])
+      > app.skip_rest = False
+      > app.skip_recovery = False
+    expected:
+      - Transform p1 into MACH1 [1]:
+      - - Gently flick to mix
+      - - Incubate on ice for 30 min.
+      - - Incubate at 42°C for 30s.
+      - - Incubate on ice for 2 min.
+      - - Incubate at 37°C for 60 min with end-over-end mixing.
+      - - Plate 100 µL cells.
+  -
+    id: concentrate
+    app:
+      > app = Transform.from_tags(['p1'], antibiotics=['Amp'])
+      > app.skip_rest = False
+      > app.skip_recovery = False
+      > app.concentrate = True
+      > app.conc_spin_speed_g = 3000
+      > app.conc_spin_time_min = 5
+      > app.conc_volume_uL = 100
+    expected:
+      - Transform p1 into MACH1 [1]:
+      - - Add 250 µL SOC.
+      - - Incubate at 37°C for 60 min with end-over-end mixing.
+      - - Spin at 3000g for 5 min.
+      - - Remove 200 µL media.
+      - - Resuspend pelleted cells.
+      - - Plate 100 µL cells.
+      - - Incubate at 37°C for 16h.
+  -
+    id: incompatible-antibiotics
+    app:
+      > p1 = Transform.Plasmid('p1', antibiotic='Amp')
+      > p2 = Transform.Plasmid('p2', antibiotic='Amp')
+      > app = Transform([
+      >       Transform.Reaction([p1, p2]),
+      > ])
+    error:
+      type: UsageError
+      message:
+        - can't use the same antibiotic to select for multiple constructs
+        - the following constructs provide Amp resistance:
+        - p1
+        - p2
+  -
+    id: incompatible-oris
+    app:
+      > p1 = Transform.Plasmid('p1', ori='pUC')
+      > p2 = Transform.Plasmid('p2', ori='pET')
+      > app = Transform([
+      >       Transform.Reaction([p1, p2], antibiotics=['Amp']),
+      > ])
+    error:
+      type: UsageError
+      message:
+        - can't co-transform two plasmids with incompatible ORIs
+        - p1: pUC
+        - p2: pET
+
+test_cli:
+  -
+    cmd: sw transform p1 -s s1 -a Amp
+    stdout:
+      > {DATE}
+      >
+      > \$ sw transform p1 -s s1 -a Amp
+      >
+      > 1. Transform p1 into s1 \[1\]:
+      >
+      >    - Pre-warm 1 LB\+Amp plate.
+      >    - Thaw 50 µL competent s1 cells on ice.
+      >    - Add ≤10% cell volume \(e.g. 5 µL for 50 µL cells\)
+      >      plasmid.
+      >    - Gently flick to mix
+      >
+      >    - Incubate at 42°C for 30s.
+      >    - Incubate on ice for 2 min.
+      >    - Add 250 µL SOC.
+      >
+      >    - Dilute cells 1:10.
+      >    - Plate 100 µL cells.
+      >    - Incubate at 37°C for 16h.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/fwk2c36b
+  -
+    cmd: sw transform 'p1+p2>s1' -a Amp
+    stdout:
+      > {DATE}
+      >
+      > \$ sw transform 'p1\+p2>s1' -a Amp
+      >
+      > 1. Transform p1\+p2 into s1 \[1\]:
+      >
+      >    - Pre-warm 1 LB\+Amp plate.
+      >    - Thaw 50 µL competent s1 cells on ice.
+      >    - Add ≤10% cell volume \(e.g. 5 µL for 50 µL cells\)
+      >      plasmid.
+      >    - Gently flick to mix
+      >
+      >    - Incubate at 42°C for 30s.
+      >    - Incubate on ice for 2 min.
+      >    - Add 250 µL SOC.
+      >
+      >    - Dilute cells 1:10.
+      >    - Plate 100 µL cells.
+      >    - Incubate at 37°C for 16h.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/fwk2c36b
+
+test_freezerbox_make:
+  -
+    id: strain-attrs
+    db:
+      p1:
+        > Plasmid(
+        >     antibiotics=['Amp'],
+        > )
+      s1:
+        > Strain(
+        >     synthesis=parse_fields('transform'),
+        >     parent_strain='s0',
+        >     plasmids=[DB['p1']],
+        > )
+    tags:
+      - s1
+
+    expected:
+      - Transform p1 into s0 [1]:
+      - - Pre-warm 1 LB+Amp plate.
+  -
+    id: plasmid-attrs
+    db:
+      p1:
+        > Plasmid(
+        >     antibiotics=['Amp'],
+        >     synthesis=parse_fields('transform')
+        > )
+    tags:
+      - p1
+
+    expected:
+      - Transform p1 into MACH1 [1]:
+      - - Pre-warm 1 LB+Amp plate.
