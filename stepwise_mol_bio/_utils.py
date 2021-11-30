@@ -236,6 +236,15 @@ def round_down_to_1_sig_fig(x):
 
     return floor(mantissa) * factor
 
+def round_up_to_1_sig_fig(x):
+    from math import log10, floor, ceil
+
+    exponent = floor(log10(abs(x)))
+    factor = 10**exponent
+    mantissa = x / factor
+
+    return ceil(mantissa) * factor
+
 def format_sec(x):
     if x < 60:
         return f'{x}s'
