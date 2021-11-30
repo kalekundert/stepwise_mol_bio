@@ -6,7 +6,7 @@ from stepwise import (
         paragraph_list, unordered_list,
 )
 from stepwise_mol_bio import (
-        Main, Argument, ShareConfigs, UsageError, bind_arguments, format_min,
+        Main, BindableReagent, UsageError, bind, format_min,
 )
 from freezerbox import (
         ReagentConfig, MakerConfig,
@@ -272,9 +272,7 @@ Template Preparation:
     preset_briefs = appcli.config_attr()
     config_paths = appcli.config_attr()
 
-    class Template(ShareConfigs, Argument):
-        __config__ = [ReagentConfig]
-
+    class Template(BindableReagent, use_app_configs=True):
         seq = appcli.param(
                 Key(ReagentConfig, 'seq'),
         )
@@ -313,7 +311,7 @@ Template Preparation:
     templates = appcli.param(
             Key(DocoptConfig, '<templates>', cast=lambda tags: [Ivt.Template(x) for x in tags]),
             Key(MakerConfig, 'template', cast=lambda x: [Ivt.Template(x)]),
-            get=bind_arguments,
+            get=bind,
     )
     template_length_threshold = appcli.param(
             Key(PresetConfig, 'length_threshold'),

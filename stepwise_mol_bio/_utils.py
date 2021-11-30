@@ -6,7 +6,7 @@ import autoprop
 import tidyexc
 import freezerbox
 
-from freezerbox import ReagentConfig, ProductConfig, iter_combo_makers
+from freezerbox import ReagentConfig, BaseProductConfig, iter_combo_makers
 from appcli import Method, DocoptConfig
 from appdirs import AppDirs
 from inform import format_range, error
@@ -26,7 +26,7 @@ class Main(appcli.App):
     def main(cls):
         app = cls.from_params()
         app.load(DocoptConfig)
-        app.load(ProductConfig)
+        app.load(BaseProductConfig)
         
         try:
             app.protocol.print()
@@ -66,7 +66,7 @@ class Main(appcli.App):
         app = cls.from_params()
         app.db = product.db
         app.products = [product]
-        app.load(ProductConfig)
+        app.load(BaseProductConfig)
         return app
 
     @classmethod
@@ -98,40 +98,31 @@ class Cleanup(Main):
 
 
 @autoprop
-class Argument(appcli.App):
-    _use_main_configs = False
+class Bindable:
+    """
+    Superclass for objects that can be bound to a Main/Cleanup instance, for 
+    the purpose of gaining access to its FreezerBox database, appcli config, 
+    etc.
 
-    def __init__(self, *args, **kwargs):
-        self.tags = args
-        if len(self.tags) == 1:
-            self.tag = args[0]
+    See also: `bind()`
+    """
+    __config__ = []
+    _use_app_configs = False
+
+    def __init__(self, **kwargs):
         self._set_known_attrs(kwargs)
 
     def __init_subclass__(cls, **kwargs):
-        cls._use_main_configs = kwargs.pop('use_main_configs', False)
+        cls._use_app_configs = kwargs.pop('use_app_configs', False)
         super().__init_subclass__(**kwargs)
-
-    def __str__(self):
-        return self.tag
-
-    def __repr__(self):
-        tag_strs = ", ".join(map(repr, self.tags))
-        return f'{self.__class__.__qualname__}({tag_strs})'
-
-    def __eq__(self, other):
-        try:
-            # Doesn't compare attributes, so be careful.
-            return self.tags == other.tags
-        except AttributeError:
-            return NotImplemented
 
     def bind(self, app, force=False):
         if not hasattr(self, 'app') or force:
             self.app = app
-            self.on_bind(app)
+            self.on_bind(app, force=force)
 
-    def on_bind(self, app):
-        if self._use_main_configs:
+    def on_bind(self, app, force=False):
+        if self._use_app_configs:
             appcli.share_configs(app, self)
 
     def get_db(self):
@@ -143,11 +134,52 @@ class Argument(appcli.App):
                 raise AttributeError(f"unknown attribute {attr!r}")
             setattr(self, attr, value)
 
+@autoprop
+class BindableReagent(Bindable):
+    __config__ = [ReagentConfig]
 
-class ShareConfigs:
+    def __init__(self, tag, **kwargs):
+        super().__init__(**kwargs)
+        self.tag = tag
 
-    def on_bind(self, app):
-        appcli.share_configs(app, self)
+    def __str__(self):
+        return self.tag
+
+    def __repr__(self):
+        return f'{self.__class__.__qualname__}({self.tag})'
+
+    def __eq__(self, other):
+        try:
+            # Doesn't compare attributes, so be careful.
+            return self.tag == other.tag
+        except AttributeError:
+            return NotImplemented
+
+    def __hash__(self):
+        return hash(self.tag)
+
+@autoprop
+class BindableReagents(Bindable):
+    # Don't know if this is actually used anywhere, and should be deprecated 
+    # anyways.
+
+    def __init__(self, tags, **kwargs):
+        super().__init__(**kwargs)
+        self.tags = tags
+
+    def __str__(self):
+        return ','.join(self.tags)
+
+    def __repr__(self):
+        tag_reprs = ', '.join(map(repr, self.tags))
+        return f'{self.__class__.__qualname__}({tag_reprs})'
+
+    def __eq__(self, other):
+        try:
+            # Doesn't compare attributes, so be careful.
+            return self.tags == other.tags
+        except AttributeError:
+            return NotImplemented
 
 
 
@@ -162,10 +194,10 @@ class UsageError(StepwiseMolBioError):
     # For if the program isn't being used correctly, e.g. missing information.
     pass
 
-def bind_arguments(app, reagents, iter=iter):
-    for reagent in iter(reagents):
-        reagent.bind(app)
-    return reagents
+def bind(app, bindables, iter=always_iterable, force=False):
+    for bindable in iter(bindables):
+        bindable.bind(app, force=force)
+    return bindables
 
 def try_except(expr, exc, failure, success=None):
     try:

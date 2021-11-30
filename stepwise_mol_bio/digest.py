@@ -8,8 +8,8 @@ import json
 import requests
 
 from stepwise_mol_bio import (
-        Main, Argument, ShareConfigs, UsageError, ConfigError,
-        bind_arguments, app_dirs, comma_list, match_len, int_or_expr,
+        Main, BindableReagent, UsageError, ConfigError,
+        bind, app_dirs, comma_list, match_len, int_or_expr,
 )
 from stepwise import StepwiseConfig, pl, ul
 from freezerbox import (
@@ -169,9 +169,7 @@ Options:
             StepwiseConfig.setup('molbio.digest'),
     ]
 
-    class Template(ShareConfigs, Argument):
-        __config__ = [ReagentConfig]
-
+    class Template(BindableReagent, use_app_configs=True):
         seq = appcli.param(
                 Key(ReagentConfig, 'seq'),
         )
@@ -197,7 +195,7 @@ Options:
     templates = appcli.param(
             Key(DocoptConfig, '<templates>', cast=parse_templates_from_csv),
             Key(MakerConfig, 'template', cast=parse_template_from_freezerbox),
-            get=bind_arguments,
+            get=bind,
     )
     enzyme_names = appcli.param(
             Key(DocoptConfig, '<enzymes>', cast=comma_list),

@@ -10,8 +10,8 @@ from stepwise import (
         pl, ul, pre
 )
 from stepwise_mol_bio import (
-        Main, Argument, ShareConfigs, ConfigError,
-        comma_set, bind_arguments, require_reagent,
+        Main, Bindable, BindableReagent, ConfigError,
+        comma_set, bind, require_reagent,
         int_or_expr, float_or_expr, merge_names,
 )
 from freezerbox import (
@@ -301,8 +301,7 @@ Options:
     preset_briefs = appcli.config_attr()
 
     @autoprop
-    class Amplicon(ShareConfigs, Argument):
-        __config__ = []
+    class Amplicon(Bindable, use_app_configs=True):
 
         def _calc_seq(self):
             try:
@@ -363,20 +362,16 @@ Options:
         def set_primers(self, primers):
             self.fwd, self.rev = primers
 
-        def on_bind(self, app):
+        def on_bind(self, app, force=False):
             super().on_bind(app)
             for reagent in self.reagents:
-                reagent.bind(app)
+                reagent.bind(app, force=force)
 
-    class Template(Argument):
-        __config__ = [ReagentConfig]
-
+    class Template(BindableReagent):
         seq = appcli.param('seq')
         is_circular = appcli.param('is_circular')
 
-    class Primer(ShareConfigs, Argument):
-        __config__ = [ReagentConfig]
-
+    class Primer(BindableReagent, use_app_configs=True):
         seq = appcli.param(
                 Key(ReagentConfig, 'seq'),
         )
@@ -425,7 +420,7 @@ Options:
     amplicons = appcli.param(
             Key(DocoptConfig, parse_amplicons_from_docopt),
             Key(MakerConfig, parse_amplicons_from_freezerbox),
-            get=bind_arguments,
+            get=bind,
     )
     product_tag = appcli.param(
             Key(DocoptConfig, '--product'),

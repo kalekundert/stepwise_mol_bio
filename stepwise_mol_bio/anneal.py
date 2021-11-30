@@ -4,8 +4,8 @@ import stepwise, appcli, autoprop
 
 from stepwise import StepwiseConfig, pl, ul
 from stepwise_mol_bio import (
-        Main, Argument, UsageError,
-        bind_arguments, merge_names,
+        Main, BindableReagent, UsageError,
+        bind, merge_names,
 )
 from freezerbox import (
         ReagentConfig, MakerConfig, QueryError,
@@ -121,8 +121,7 @@ FreezerBox:
             StepwiseConfig.setup('molbio.anneal')
     ]
 
-    class Oligo(Argument, use_main_configs=True):
-        __config__ = [ReagentConfig]
+    class Oligo(BindableReagent, use_app_configs=True):
         stock_uM = appcli.param(
                 Key(DocoptConfig, '--oligo-stock', cast=parse_oligo_stock_docopt),
                 Key(ReagentConfig, 'conc_uM'),
@@ -132,7 +131,7 @@ FreezerBox:
     oligo_pairs = appcli.param(
             Key(DocoptConfig, '<oligo_1,oligo_2>', cast=parse_oligo_pairs_docopt),
             Key(MakerConfig, parse_oligo_pair_freezerbox),
-            get=partial(bind_arguments, iter=flatten),
+            get=partial(bind, iter=flatten),
     )
     num_reactions = appcli.param(
             Key(DocoptConfig, '--num-reactions'),
