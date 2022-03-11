@@ -25,6 +25,18 @@ Options:
         Include a unit.  It is assumed that the experimenter will measure the 
         concentration of the sample before lyophilization and calculate the 
         correct volume of buffer to add.
+
+Database:
+    The lyophilize protocol can appear in the "Cleanup" column of a FreezerBox 
+    database:
+        
+        lyophilize [volume=<volume>] [conc=<conc>]
+
+    volume=<volume>
+        See --volume.  You must specify a unit.
+
+    conc=<conc>
+        See --conc.  You must specify a unit.
 """
     __config__ = [
             DocoptConfig,
