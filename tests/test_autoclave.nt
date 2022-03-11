@@ -1,0 +1,140 @@
+test_protocol:
+  -
+    id: volume
+    app:
+      > app = Autoclave(500)
+    expected:
+      - Autoclave at 121°C for 40 min.
+  -
+    id: time
+    app:
+      > app = Autoclave(time_min=35)
+    expected:
+      - Autoclave at 121°C for 35 min.
+ 
+test_cli:
+  -
+    id: volume
+    cmd: sw autoclave 500
+    stdout:
+      > {DATE}
+      >
+      > \$ sw autoclave 500
+      >
+      > 1. Autoclave at 121°C for 40 min.
+  -
+    id: time
+    cmd: sw autoclave -t 35
+    stdout:
+      > {DATE}
+      >
+      > \$ sw autoclave -t 35
+      >
+      > 1. Autoclave at 121°C for 35 min.
+
+test_freezerbox_make:
+  -
+    id: volume-mL
+    db:
+      b1:
+        > Buffer(
+        >     synthesis=parse_fields('order vendor=Teknova'),
+        >     cleanups=parse_fields_list('autoclave 500mL'),
+        > )
+    tags:
+      - b1
+    expected:
+      - Autoclave at 121°C for 40 min.
+  -
+    id: volume-L
+    db:
+      b1:
+        > Buffer(
+        >     synthesis=parse_fields('order vendor=Teknova'),
+        >     cleanups=parse_fields_list('autoclave 1L'),
+        > )
+    tags:
+      - b1
+    expected:
+      - Autoclave at 121°C for 45 min.
+  -
+    id: time
+    db:
+      b1:
+        > Buffer(
+        >     synthesis=parse_fields('order vendor=Teknova'),
+        >     cleanups=parse_fields_list('autoclave time=35min'),
+        > )
+    tags:
+      - b1
+    expected:
+      - Autoclave at 121°C for 35 min.
+  -
+    id: merge
+    db:
+      b1:
+        > Buffer(
+        >     synthesis=parse_fields('order vendor=Teknova'),
+        >     cleanups=parse_fields_list('autoclave 250mL'),
+        > )
+      b2:
+        > Buffer(
+        >     synthesis=parse_fields('order vendor=Teknova'),
+        >     cleanups=parse_fields_list('autoclave 500mL'),
+        > )
+    tags:
+      - b1
+      - b2
+    expected:
+      - Autoclave at 121°C for 40 min.
+
+test_calc_sterilization_time:
+  -
+    volume_mL: 0
+    expected: 25
+  -
+    volume_mL: 75
+    expected: 25
+  -
+    volume_mL: 76
+    expected: 30
+  -
+    volume_mL: 250
+    expected: 30
+  -
+    volume_mL: 251
+    expected: 40
+  -
+    volume_mL: 500
+    expected: 40
+  -
+    volume_mL: 501
+    expected: 45
+  -
+    volume_mL: 1000
+    expected: 45
+  -
+    volume_mL: 1001
+    expected: 50
+  -
+    volume_mL: 1500
+    expected: 50
+  -
+    volume_mL: 1501
+    expected: 55
+  -
+    volume_mL: 2000
+    expected: 55
+  -
+    volume_mL: 2001
+    expected: 65
+  -
+    volume_mL: 3000
+    expected: 65
+  -
+    volume_mL: 3001
+    expected: 75
+  -
+    volume_mL: 4000
+    expected: 75
+

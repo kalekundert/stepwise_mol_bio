@@ -65,6 +65,7 @@ pcr = "stepwise_mol_bio:Pcr"
 transform = "stepwise_mol_bio:Transform"
 
 aliquot = "stepwise_mol_bio:Aliquot"
+autoclave = "stepwise_mol_bio:Autoclave"
 lyophilize = "stepwise_mol_bio:Lyophilize"
 miniprep = "stepwise_mol_bio:Miniprep"
 page-purify = "stepwise_mol_bio:PagePurify"

@@ -10,6 +10,7 @@ from ._utils import *
 from ._assembly import Assembly
 from .aliquot import Aliquot
 from .anneal import Anneal
+from .autoclave import Autoclave
 from .digest import RestrictionDigest
 from .direct_dilution import DirectDilution
 from .ethanol_precipitation import EthanolPrecipitation
