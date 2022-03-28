@@ -90,6 +90,33 @@ footnote = 'https://tinyurl.com/y4qffgss'
 default_preset = 'ssoadv'
 
 
+[molbio.kld]
+default_preset = 'neb'
+
+[molbio.kld.presets.neb]
+reaction = '''
+Reagent                  Stock        Volume  Master Mix
+===================  =========   ===========  ==========
+water                            to 10.00 μL         yes
+KLD reaction buffer         2x       5.00 μL         yes
+KLD enzyme mix             10x       1.00 μL         yes
+DNA                   50 ng/μL       1.00 μL
+'''
+catalog_number = 'NEB M0554'
+
+[molbio.kld.presets.a-la-carte]
+reaction = '''
+Reagent               Stock        Volume  Master Mix
+================  =========   ===========  ==========
+water                         to 10.00 μL         yes
+T4 ligase buffer        10x       1.00 μL         yes
+T4 PNK              10 U/μL       0.25 μL         yes
+T4 DNA ligase      400 U/μL       0.25 μL         yes
+DpnI                20 U/μL       0.25 μL         yes
+DNA                50 ng/μL       1.50 μL
+'''
+
+
 [molbio.anneal]
 volume_uL = 4
 stock_conc_uM = 100
