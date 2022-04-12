@@ -47,7 +47,7 @@ def test_neb_restriction_enzyme_database(tmp_path):
     # This doesn't test the case where the internet is inaccessible.
 
     assert db['EcoRI'] == db['ecori'] == {
-            'amt': '50000/10000/50000/10000 units',
+            'amt': '50000/10000/50000/10000/5000 units',
             'bcn': 'R0101',
             'blueWhite': True,
             'buf1': 25,
@@ -77,7 +77,7 @@ def test_neb_restriction_enzyme_database(tmp_path):
             'recombinant': True,
             'recommBuffer': 'NEBuffer EcoRI/SspI',
             'reducedStarActivity': False,
-            'size': 'L/S/M/T ',
+            'size': 'L/S/M/T/V ',
             'star1': False,
             'star2': True,
             'star3': False,
@@ -142,12 +142,14 @@ def test_reaction_unknown_supplement():
 
     assert err.match(r"'XyzX' requires an unknown supplement: 'enzact'")
 
-@parametrize_from_file(schema=app_expected_protocol)
-def test_protocol(app, expected):
+@parametrize_from_file(schema=app_expected_forbidden_protocol)
+def test_protocol(app, expected, forbidden):
     actual = app.protocol.format_text()
     print(actual)
     for x in expected:
         assert x in actual
+    for x in forbidden:
+        assert x not in actual
 
 @parametrize_from_file(
         key='test_freezerbox_make',

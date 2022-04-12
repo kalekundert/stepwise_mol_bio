@@ -447,6 +447,16 @@ test_protocol:
       - Setup 1 BsaI-HFv2 digestion
       - 37°C for 60 min
       - 80°C for 20 min
+  -
+    id: hottest-denaturation
+    app:
+      > app = RestrictionDigest.from_tags(['f1'], ['EcoRI-HF', 'BsrGI-HF'])
+    expected:
+      - Setup 1 restriction digestion
+      - 37°C for 5–15 min
+      - 80°C for 20 min
+    forbidden:
+      - 65°C for 20 min
 
 test_freezerbox_make:
   -

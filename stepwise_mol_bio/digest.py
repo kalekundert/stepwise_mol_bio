@@ -389,10 +389,10 @@ Options:
                 'restriction'
         )
 
-        def incubate(temp_getter, time_getter, time_formatter=lambda x: f'{x} min'):
+        def incubate(enzymes, temp_getter, time_getter, time_formatter=lambda x: f'{x} min'):
             incubate_params = [
                     (k, max(time_getter(x) for x in group))
-                    for k, group in groupby(self.enzymes, temp_getter)
+                    for k, group in groupby(enzymes, temp_getter)
             ]
             return [
                     f"{temp}°C for {time_formatter(time)}"
@@ -401,18 +401,28 @@ Options:
 
         if self.time:
             digest_steps = incubate(
+                    self.enzymes,
                     itemgetter('incubateTemp'),
                     lambda x: self.time,
                     lambda x: x,
             )
         else:
             digest_steps = incubate(
+                    self.enzymes,
                     itemgetter('incubateTemp'),
                     lambda x: 15 if x['timeSaver'] else 60,
                     lambda x: '5–15 min' if x == 15 else '1 hour',
             )
 
+        most_heat_resistant_enzyme = max(
+                self.enzymes,
+                key=itemgetter(
+                    'heatInactivationTemp',
+                    'heatInactivationTime',
+                ),
+        )
         inactivate_steps = incubate(
+                [most_heat_resistant_enzyme],
                 itemgetter('heatInactivationTemp'),
                 itemgetter('heatInactivationTime'),
         )
