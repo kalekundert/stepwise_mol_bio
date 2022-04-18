@@ -129,10 +129,10 @@ References:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig('molbio.ethanol_precipitation'),
+            StepwiseConfig.setup('molbio.ethanol_precipitation'),
     ]
 
-    presets = {
+    presets = [{
             'plasmid': {
                 'solvent': 'etoh',
                 'solvent_volume': {
@@ -229,7 +229,7 @@ References:
                 'centrifugation_temp_C': 4,
                 'centrifugation_speed': '>21000g',
             },
-    }
+    }]
     solvents = {
             'etoh': {
                 'name': '100% ethanol',
