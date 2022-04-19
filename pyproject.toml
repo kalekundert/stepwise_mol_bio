@@ -1,15 +1,16 @@
 [build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-module = "stepwise_mol_bio"
-author = "Kale Kundert"
-author-email = "kale@thekunderts.net"
-home-page = 'https://github.com/kalekundert/stepwise_mol_bio'
-description-file = 'README.rst'
+[project]
+name = "stepwise_mol_bio"
+authors = [
+  {name = "Kale Kundert", email = "kale@thekunderts.net"},
+]
+readme = "README.rst"
+dynamic = ["version", "description"]
 requires-python = "~=3.8"
-requires = [
+dependencies = [
   'appcli',
   'appdirs',
   'autoprop',
@@ -25,10 +26,9 @@ requires = [
 ]
 classifiers = [
   'Programming Language :: Python :: 3',
-  'License :: OSI Approved :: MIT License',
 ]
 
-[tool.flit.metadata.requires-extra]
+[project.optional-dependencies]
 test = [
   'pytest',
   'pytest-cov',
@@ -44,17 +44,17 @@ doc = [
   'autoclasstoc',
 ]
 
-[tool.flit.metadata.urls]
+[project.urls]
 'Documentation' = 'https://stepwise_mol_bio.readthedocs.io/en/latest/'
 'Version Control' = 'https://github.com/kalekundert/stepwise_mol_bio'
 'Bug Tracker' = 'https://github.com/kalekundert/stepwise_mol_bio/issues'
 'Continuous Integration' = 'https://github.com/kalekundert/stepwise_mol_bio/actions'
 'Test Coverage' = 'https://coveralls.io/github/kalekundert/stepwise_mol_bio'
 
-[tool.flit.entrypoints."stepwise.protocols"]
+[project.entry-points."stepwise.protocols"]
 molbio = "stepwise_mol_bio:Plugin"
 
-[tool.flit.entrypoints."freezerbox.make"]
+[project.entry-points."freezerbox.make"]
 anneal = "stepwise_mol_bio:Anneal"
 digest = "stepwise_mol_bio:RestrictionDigest"
 gibson = "stepwise_mol_bio:Gibson"
