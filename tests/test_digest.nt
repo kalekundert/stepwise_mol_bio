@@ -361,30 +361,6 @@ test_reaction:
       > ─────────────────────────────────────
       >                              12.22 µL
   -
-    id: supplement-sam
-    app:
-      > app = RestrictionDigest.from_tags(['x1'], ['BaeI'])
-      > # Increase the volume because BaeI is more dilute than BsaI-HFv2.
-      > app.target_volume_uL = 50
-
-    # NEBcloner (link below) has a bug.  It says that the final concentration 
-    # of SAM should be 20 µM, but it also calls for 0.125 µL of 32 mM SAM in a 
-    # 50 µL reaction, which works out to 80 µM.  I'm not totally sure which is 
-    # right, but my protocol gives a final concentration of 20 µM (0.03125 µL 
-    # in a 50 µL reaction).
-    #
-    # http://nebcloner.neb.com/#!/protocol/re/single/BaeI
-    expected:
-      > Reagent               Stock    Volume
-      > ─────────────────────────────────────
-      > water                        37.97 µL
-      > x1                200 ng/µL   5.00 µL
-      > rCutSmart Buffer        10x   5.00 µL
-      > SAM                   32 mM   0.03 µL
-      > BaeI                 5 U/µL   2.00 µL
-      > ─────────────────────────────────────
-      >                              50.00 µL
-  -
     id: supplement-bsa
     app:
       > app = RestrictionDigest.from_tags(['x1'], ['PI-PspI'])
