@@ -49,7 +49,6 @@ test_protocol:
       - ladder: 5 µL SeeBlue Plus2 (Invitrogen LC5925)
       - samples: 10 µL/lane
       - run: 165V for 42 min
-
   -
     id: sample-conc
     app:
@@ -119,7 +118,7 @@ test_protocol:
       - prerun: 100V for 30 min
       - run: 100V for 60 min
   -
-    id: prerun
+    id: prerun-volts
     app:
       > app = Gel('agarose/1')
       > app.prerun_time_min = 30

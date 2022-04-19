@@ -114,7 +114,7 @@ test_calc_digest_products:
     target_size: None
     error:
       type: ConfigError
-      message: unknown enzyme\(s\): 'unknown enzyme'
+      message: unknown enzyme(s): 'unknown enzyme'
 
 test_pick_compatible_buffer:
   -

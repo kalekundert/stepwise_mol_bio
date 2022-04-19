@@ -35,14 +35,14 @@ test_match_len:
     length: 1
     error:
       type: ValueError
-      message: expected 1 item\(s\), got 2
+      message: expected 1 item(s), got 2
   -
     id: err-too-short
     given: [1, 2]
     length: 3
     error:
       type: ValueError
-      message: expected 3 item\(s\), got 2
+      message: expected 3 item(s), got 2
 
 test_int_or_expr:
   -

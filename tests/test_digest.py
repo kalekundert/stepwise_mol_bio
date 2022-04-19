@@ -3,10 +3,7 @@
 import pytest
 import parametrize_from_file
 
-from stepwise.testing import disable_capture
 from stepwise_mol_bio.digest import *
-from freezerbox import Database, Plasmid
-from freezerbox.stepwise import Make
 from more_itertools import one
 from warnings import catch_warnings, simplefilter
 from param_helpers import *
@@ -17,13 +14,13 @@ with catch_warnings():
 
 @parametrize_from_file(
         schema=Schema({
-            'seq': eval,
-            'enzymes': eval,
-            'is_circular': eval,
-            'target_size': eval,
-            **error_or({
-                'product': eval,
-                'products': eval,
+            'seq': with_py.eval,
+            'enzymes': with_py.eval,
+            'is_circular': with_py.eval,
+            'target_size': with_py.eval,
+            **with_swmb.error_or({
+                'product': with_py.eval,
+                'products': with_py.eval,
             }),
         }),
 )
@@ -108,16 +105,12 @@ def test_neb_restriction_enzyme_database_offline(tmp_path):
 
 @parametrize_from_file(
         schema=Schema({
-            'enzymes': eval_with(),
+            'enzymes': with_py.eval,
             'expected': str,
         }),
 )
 def test_pick_compatible_buffer(enzymes, expected):
     assert pick_compatible_buffer(enzymes) == expected
-
-@parametrize_from_file(schema=app_expected_reaction)
-def test_reaction(app, expected):
-    assert app.reaction.format_text() == expected
 
 def test_reaction_unknown_supplement():
     mock_db = {
@@ -142,39 +135,13 @@ def test_reaction_unknown_supplement():
 
     assert err.match(r"'XyzX' requires an unknown supplement: 'enzact'")
 
-@parametrize_from_file(schema=app_expected_forbidden_protocol)
-def test_protocol(app, expected, forbidden):
-    actual = app.protocol.format_text()
-    print(actual)
-    for x in expected:
-        assert x in actual
-    for x in forbidden:
-        assert x not in actual
-
-@parametrize_from_file(
-        key='test_freezerbox_make',
-        schema=db_tags_expected_protocol,
-)
+@parametrize_from_file(key='test_freezerbox_make')
 def test_protocol_product(db, tags, expected):
     if len(tags) != 1:
         pytest.skip()
 
     app = RestrictionDigest.from_product(one(tags))
-    app.db = db
+    app.db = eval_db(db)
 
     assert match_protocol(app, expected)
-
-@parametrize_from_file(schema=db_tags_expected_protocol)
-def test_freezerbox_make(db, tags, expected, disable_capture):
-    app = Make(db, tags)
-    assert match_protocol(app, expected, disable_capture)
-
-@parametrize_from_file(schema=db_expected)
-def test_freezerbox_attrs(db, expected):
-    for tag in expected:
-        print(db[tag].synthesis_maker.reaction)
-        assert db[tag].seq == expected[tag]['seq']
-        assert db[tag].dependencies == expected[tag]['dependencies']
-        assert db[tag].conc == expected[tag]['conc']
-        assert db[tag].volume == expected[tag]['volume']
 

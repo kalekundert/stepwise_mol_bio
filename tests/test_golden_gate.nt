@@ -1,4 +1,4 @@
-test_python_protocol:
+test_protocol:
   -
     app:
       > app = GoldenGate([[
@@ -196,7 +196,7 @@ test_python_protocol:
       - ───────────────────────────────────
       -                             5.00 µL
 
-test_cli_protocol:
+test_cli:
   -
     id: conc
     cmd: sw golden_gate A,B -c 200nM
@@ -360,7 +360,7 @@ test_cli_protocol:
       > Note:
       > \[1\] https://tinyurl.com/yaa5mqz5
 
-test_freezerbox_protocol:
+test_freezerbox_make:
   -
     db:
       p1:

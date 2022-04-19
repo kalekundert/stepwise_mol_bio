@@ -4,23 +4,19 @@ import parametrize_from_file
 from stepwise_mol_bio import ivt
 from param_helpers import *
 
-@parametrize_from_file(schema=app_expected_reaction)
-def test_reaction(app, expected):
-    assert app.reaction.format_text() == expected
-
-@parametrize_from_file(schema=app_expected_reaction)
+@parametrize_from_file
 def test_dnase_reaction(app, expected):
+    app = exec_app(app)
     assert app.dnase_reaction.format_text() == expected
 
-@parametrize_from_file(schema=app_expected_protocol)
-def test_protocol(app, expected):
-    actual = app.protocol.format_text()
-    print(actual)
-    for x in expected:
-        assert x in actual
-
-@parametrize_from_file(schema=app_expected)
+@parametrize_from_file(
+        schema=Schema({
+            'app': str,
+            'expected': eval,
+        }),
+)
 def test_short(app, expected):
+    app = exec_app(app)
     assert app.short == expected
 
 @parametrize_from_file(schema=Schema({str: eval}))
@@ -34,7 +30,7 @@ def test_affected_by_short(values, expected):
 @parametrize_from_file(
         schema=Schema({
             'template': str,
-            **error_or({
+            **with_swmb.error_or({
                 'expected': str,
             }),
         }),
@@ -42,13 +38,4 @@ def test_affected_by_short(values, expected):
 def test_transcribe(template, expected, error):
     with error:
         assert ivt.transcribe(template) == expected
-
-@parametrize_from_file(schema=db_expected)
-def test_freezerbox_attrs(db, expected):
-    for tag in expected:
-        assert db[tag].seq == expected[tag]['seq']
-        assert db[tag].dependencies == expected[tag]['dependencies']
-        assert db[tag].molecule == 'RNA'
-        assert db[tag].is_single_stranded == True
-
 

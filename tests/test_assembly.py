@@ -17,9 +17,9 @@ def test_parse_fragment_attrs(args, parse_value, expected):
 
 @parametrize_from_file(
         schema=Schema({
-            'args': {str: eval_with()},
-            **error_or({
-                'expected': eval_swmb,
+            'args': {str: with_py.eval},
+            **with_swmb.error_or({
+                'expected': with_swmb.eval,
             })
         }),
 )
@@ -29,8 +29,8 @@ def test_parse_assemblies_from_docopt(args, expected, error):
 
 @parametrize_from_file(
         schema=Schema({
-            'assemblies': [[eval_swmb]],
-            Optional('kwargs', default={}): {str: eval_swmb},
+            'assemblies': [[with_swmb.eval]],
+            Optional('kwargs', default={}): {str: with_swmb.eval},
             'expected': str,
             Optional('warning', default=''): str,
         }),

@@ -1,11 +1,11 @@
-test_python_protocol:
+test_protocol:
   -
     app:
       > app = Miniprep()
     expected:
       - Miniprep.
 
-test_cli_protocol:
+test_cli:
   -
     cmd: sw miniprep
     stdout:
@@ -15,7 +15,7 @@ test_cli_protocol:
       >
       > 1. Miniprep.
 
-test_freezerbox_protocol:
+test_freezerbox_make:
   -
     db:
       p1:

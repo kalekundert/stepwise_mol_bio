@@ -135,6 +135,9 @@ test_freezerbox_attrs:
     expected:
       p1:
         volume: Quantity(40, 'µL')
+    errors:
+      p1:
+        conc: QueryError
   -
     id: yield
     db:

@@ -1,4 +1,4 @@
-test_python_protocol:
+test_protocol:
   -
     app:
       > app = Ligate([[
@@ -67,7 +67,7 @@ test_python_protocol:
       - ───────────────────────────────────
       -                             5.00 µL
 
-test_cli_protocol:
+test_cli:
   -
     id: conc
     cmd: sw ligate A,B -c 200nM
@@ -207,7 +207,7 @@ test_cli_protocol:
       > Note:
       > \[1\] https://tinyurl.com/y7gxfv5m
 
-test_freezerbox_protocol:
+test_freezerbox_make:
   -
     db:
       p1:

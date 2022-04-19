@@ -353,4 +353,4 @@ test_freezerbox_attrs:
         seq: 'GAUUACA'
         dependencies: {'f1'}
         molecule: 'RNA'
-        strandedness: 1
+        is_single_stranded: True

@@ -1,4 +1,4 @@
-test_python_protocol:
+test_protocol:
   -
     app:
       > app = PagePurify([
@@ -200,7 +200,7 @@ test_python_protocol:
     expected:
       - Purify using Qiagen MinElute PCR purification kit
 
-test_cli_protocol:
+test_cli:
   -
     cmd: sw page_purify A B -c 2
     stdout:
@@ -316,7 +316,7 @@ test_cli_protocol:
       >    samples: 10 µL/lane
       >    run: 180V for 40 min
 
-test_freezerbox_protocol:
+test_freezerbox_make:
   -
     db:
       f1:

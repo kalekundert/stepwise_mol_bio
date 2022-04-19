@@ -58,7 +58,7 @@ test_parse_amplicon:
       type: ConfigError
       message:
         - can't interpret '' as an amplicon
-        - expected 3 comma-separated fields \(template, fwd, rev\)
+        - expected 3 comma-separated fields (template, fwd, rev)
         - found 0
   -
     id: err-2
@@ -67,7 +67,7 @@ test_parse_amplicon:
       type: ConfigError
       message:
         - can't interpret 'a,b' as an amplicon
-        - expected 3 comma-separated fields \(template, fwd, rev\)
+        - expected 3 comma-separated fields (template, fwd, rev)
         - found 2
 
 test_parse_primers:
@@ -80,7 +80,7 @@ test_parse_primers:
       type: ConfigError
       message:
         - can't interpret '' as a primer pair
-        - expected 2 comma-separated fields \(fwd, rev\)
+        - expected 2 comma-separated fields (fwd, rev)
         - found 0
   -
     given: a
@@ -88,7 +88,7 @@ test_parse_primers:
       type: ConfigError
       message:
         - can't interpret 'a' as a primer pair
-        - expected 2 comma-separated fields \(fwd, rev\)
+        - expected 2 comma-separated fields (fwd, rev)
         - found 1
   -
     given: a,b,c
@@ -96,10 +96,10 @@ test_parse_primers:
       type: ConfigError
       message:
         - can't interpret 'a,b,c' as a primer pair
-        - expected 2 comma-separated fields \(fwd, rev\)
+        - expected 2 comma-separated fields (fwd, rev)
         - found 3
 
-test_reaction:
+test_reactions:
   -
     id: baseline
     app:
@@ -972,7 +972,7 @@ test_freezerbox_attrs:
 
     expected:
       f2:
-        seq: 'tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga'
+        seq: 'TATAACAGGCTGCTGAGACCGATTACACCTCCGGTGATAGTCCTAGA'
         dependencies: {'f1', 'o1', 'o2'}
         conc_ng_uL: 50
         volume_uL: 5

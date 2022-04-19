@@ -32,6 +32,7 @@ classifiers = [
 test = [
   'pytest',
   'pytest-cov',
+  'pytest-env',
   'parametrize_from_file',
   'requests_testing',
   're_assert',
@@ -76,6 +77,7 @@ spin-cleanup = "stepwise_mol_bio:SpinCleanup"
 addopts = "--doctest-modules --doctest-glob='*.rst'"
 doctest_optionflags = 'NORMALIZE_WHITESPACE'
 markers = """slow: marks tests as slow (deselect with '-m "not slow"')"""
+env = "STEPWISE_IGNORE_LOCAL_CONFIG=1"
 
 [tool.pccc]
 header_length = 72
