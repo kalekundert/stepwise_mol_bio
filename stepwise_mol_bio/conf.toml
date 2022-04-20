@@ -103,6 +103,7 @@ KLD enzyme mix             10x       1.00 μL         yes
 DNA                   50 ng/μL       1.00 μL
 '''
 catalog_number = 'NEB M0554'
+incubation_time_min = 5
 
 [molbio.kld.presets.a-la-carte]
 reaction = '''
@@ -115,6 +116,7 @@ T4 DNA ligase      400 U/μL       0.25 μL         yes
 DpnI                20 U/μL       0.25 μL         yes
 DNA                50 ng/μL       1.50 μL
 '''
+incubation_time_min = 60
 
 
 [molbio.anneal]

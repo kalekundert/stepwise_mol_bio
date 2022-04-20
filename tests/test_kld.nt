@@ -1,0 +1,118 @@
+test_reaction:
+  -
+    id: default
+    app:
+      > app = Kld('f1')
+    expected:
+      > Reagent                 Stock    Volume
+      > ───────────────────────────────────────
+      > water                           3.00 µL
+      > KLD reaction buffer        2x   5.00 µL
+      > KLD enzyme mix            10x   1.00 µL
+      > f1                   50 ng/µL   1.00 µL
+      > ───────────────────────────────────────
+      >                                10.00 µL
+  -
+    id: preset
+    app:
+      > app = Kld('f1')
+      > app.preset = 'a-la-carte'
+
+    expected:
+      > Reagent              Stock    Volume
+      > ────────────────────────────────────
+      > water                        6.75 µL
+      > T4 ligase buffer       10x   1.00 µL
+      > T4 PNK             10 U/µL   0.25 µL
+      > T4 DNA ligase     400 U/µL   0.25 µL
+      > DpnI               20 U/µL   0.25 µL
+      > f1                50 ng/µL   1.50 µL
+      > ────────────────────────────────────
+      >                             10.00 µL
+  -
+    id: reaction
+    app:
+      > app = Kld('f1')
+      > app.base_reaction = MasterMix("""\
+      >     Reagent                  Stock        Volume  Master Mix
+      >     ===================  =========   ===========  ==========
+      >     water                            to 10.00 μL         yes
+      >     KLD reaction buffer         2x       5.00 μL         yes
+      >     KLD enzyme mix             10x       1.00 μL         yes
+      >     mock additive              10x       1.00 µL         yes
+      >     DNA                   50 ng/μL       1.00 μL
+      > """)
+
+    expected:
+      > Reagent                 Stock    Volume
+      > ───────────────────────────────────────
+      > water                           2.00 µL
+      > KLD reaction buffer        2x   5.00 µL
+      > KLD enzyme mix            10x   1.00 µL
+      > mock additive             10x   1.00 µL
+      > f1                   50 ng/µL   1.00 µL
+      > ───────────────────────────────────────
+      >                                10.00 µL
+  -
+    id: num_reactions
+    app:
+      > app = Kld('f1')
+      > app.preset = 'neb'
+      > app.num_reactions = 2
+    expected:
+      > Reagent                 Stock    Volume      2.3x
+      > ─────────────────────────────────────────────────
+      > water                           3.00 µL   6.90 µL
+      > KLD reaction buffer        2x   5.00 µL  11.50 µL
+      > KLD enzyme mix            10x   1.00 µL   2.30 µL
+      > f1                   50 ng/µL   1.00 µL
+      > ─────────────────────────────────────────────────
+      >                                10.00 µL   9.00 µL/rxn
+
+test_protocol:
+  -
+    id: default
+    app:
+      > app = Kld('f1')
+    expected:
+      - Setup 1 ligation reaction:
+      - 
+      - Reagent                 Stock    Volume
+      - ───────────────────────────────────────
+      - water                           3.00 µL
+      - KLD reaction buffer        2x   5.00 µL
+      - KLD enzyme mix            10x   1.00 µL
+      - f1                   50 ng/µL   1.00 µL
+      - ───────────────────────────────────────
+      -                                10.00 µL
+      -
+      - Incubate at room temperature for 5m.
+  -
+    id: incubation_time_min
+    app:
+      > app = Kld('f1')
+      > app.incubation_time_min = 10
+    expected:
+      - Incubate at room temperature for 10m.
+
+test_cli:
+  -
+    id: default
+    cmd: sw kld f1
+    stdout:
+      > {DATE}
+      >
+      > \$ sw kld f1
+      >
+      > 1\. Setup 1 ligation reaction:
+      >
+      >    Reagent                 Stock    Volume
+      >    ───────────────────────────────────────
+      >    water                           3.00 µL
+      >    KLD reaction buffer        2x   5.00 µL
+      >    KLD enzyme mix            10x   1.00 µL
+      >    f1                   50 ng/µL   1.00 µL
+      >    ───────────────────────────────────────
+      >                                   10.00 µL
+      >
+      > 2\. Incubate at room temperature for 5m.

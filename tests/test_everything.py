@@ -12,6 +12,7 @@ from param_helpers import *
 def add_protocol_to_id(params, context):
     import re
     prefix = re.match('test_(.*).nt', context.path.name).group(1)
+    prefix = prefix.replace('_', '-')
 
     for param in params:
         if 'id' in param:
@@ -46,6 +47,7 @@ parametrize_from_files = partial(
             'test_golden_gate.nt',
             'test_ivt.nt',
             'test_ivtt.nt',
+            'test_kld.nt',
             'test_laser_scanner.nt',
             'test_ligate.nt',
             'test_lyophilize.nt',

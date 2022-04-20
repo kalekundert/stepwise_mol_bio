@@ -3,7 +3,7 @@
 import stepwise, appcli, autoprop
 
 from stepwise import StepwiseConfig, PresetConfig, MasterMix, pl, ul
-from stepwise_mol_bio import Main
+from stepwise_mol_bio import Main, format_min
 from appcli import Key, DocoptConfig
 from inform import plural
 from copy import deepcopy
@@ -74,6 +74,10 @@ Configuration:
             cast=lambda x: int(eval(x)),
             default=1,
     )
+    incubation_time_min = appcli.param(
+            Key(DocoptConfig, '--time'),
+            Key(PresetConfig, 'incubation_time_min'),
+    )
 
     def __init__(self, dna):
         self.dna = dna
@@ -92,7 +96,7 @@ Configuration:
                 f"Setup {plural(self.num_reactions):# ligation reaction/s}:",
                 self.reaction,
         )
-        p += "Incubate at room temperature for 1h."
+        p += f"Incubate at room temperature for {format_min(self.incubation_time_min)}."
         return p
 
 if __name__ == '__main__':
