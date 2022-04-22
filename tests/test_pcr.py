@@ -5,6 +5,7 @@ from stepwise_mol_bio.pcr import *
 from pytest import approx
 from param_helpers import *
 
+test_protocol()
 test_freezerbox_make()
 test_freezerbox_attrs()
 

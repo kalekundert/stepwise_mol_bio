@@ -486,6 +486,36 @@ test_reactions:
         > ─────────────────────────────
         >                     100.00 µL
   -
+    id: duplicates
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.num_duplicates = 2
+      > app.extra_percent = 0
+      > app.extra_volume_uL = 0
+
+    expected:
+      pcr:
+        > Reagent        Stock     Volume
+        > ───────────────────────────────
+        > water                  85.80 µL
+        > a           20 pg/µL   22.00 µL
+        > b             100 µM    1.10 µL
+        > c             100 µM    1.10 µL
+        > master mix        2x  110.00 µL
+        > ───────────────────────────────
+        >                       220.00 µL
+  -
     id: primer-conc
     app:
       > app = Pcr([
@@ -658,6 +688,80 @@ test_reactions:
         > master mix        2x   50.00 µL
         > ───────────────────────────────
         >                       100.00 µL
+
+test_protocol:
+  -
+    id: baseline
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock     Volume  MM?
+      >     ==============  ========  =========  ===
+      >     water                     to 100 µL  yes
+      >     template DNA    20 pg/µL      10 µL
+      >     forward primer     10 µM       5 µL
+      >     reverse primer     10 µM       5 µL
+      >     master mix            2x      50 µL  yes
+      > """)
+      > app.anneal_temp_C = 60
+      > app.extend_time_s = 30
+
+    expected:
+      - Setup 1 PCR reaction [1-3]:
+      - 
+      - Reagent        Stock     Volume
+      - ───────────────────────────────
+      - water                  39.00 µL
+      - a           20 pg/µL   10.00 µL
+      - b             100 µM    0.50 µL
+      - c             100 µM    0.50 µL
+      - master mix        2x   50.00 µL
+      - ───────────────────────────────
+      -                       100.00 µL
+      - 
+      - - Split each reaction into 2 tubes.
+      - 
+      - Run the following thermocycler protocol:
+      - 
+      - - 98°C for 30s
+      - - Repeat 35x:
+      -   - 98°C for 10s
+      -   - 60°C for 20s
+      -   - 72°C for 30s
+      - - 72°C for 2 min
+      - - 4°C hold
+      - 
+      - Notes:
+      - [1] https://tinyurl.com/y27ralt4
+      - 
+      - [2] For resuspending lyophilized primers:
+      -     100 µM = 10 µL/nmol
+      - 
+      - [3] For diluting template DNA to 20 pg/µL:
+      -     Dilute 1 µL twice into 7*sqrt([DNA]) µL
+  -
+    id: duplicates
+    app:
+      > app = Pcr([
+      >     Pcr.Amplicon.from_tags('a', 'b', 'c'),
+      > ])
+      > app.base_reaction = MasterMix("""\
+      >     Reagent            Stock    Volume  MM?
+      >     ==============  ========  ========  ===
+      >     water                     to 20 µL  yes
+      >     template DNA    20 pg/µL      2 µL
+      >     forward primer     10 µM      1 µL
+      >     reverse primer     10 µM      1 µL
+      >     master mix            2x     10 µL  yes
+      > """)
+      > app.anneal_temp_C = 60
+      > app.extend_time_s = 30
+      > app.num_duplicates = 2
+
+    expected:
+      - Split into 2 identical 20 µL reactions.
 
 test_product_seqs:
   -

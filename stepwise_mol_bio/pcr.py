@@ -157,6 +157,11 @@ Options:
         The number of reactions to set up.  By default, this is the number of 
         amplicons specified.
 
+    -d --num-duplicates <int>
+        How many duplicates of each reaction to set up (e.g. for gradient PCR).  
+        This just has the effect of multiplying the volume of the reaction by 
+        the given number, plus 10% extra.
+
     -v --reaction-volume <μL>
         The volume of the PCR reaction.
 
@@ -452,6 +457,10 @@ Options:
             Key(DocoptConfig, '--num-reactions', cast=int_or_expr),
             Method(lambda self: len(self.amplicons)),
     )
+    num_duplicates = appcli.param(
+            Key(DocoptConfig, '--num-duplicates', cast=int_or_expr),
+            default=1,
+    )
     reaction_volume_uL = appcli.param(
             Key(DocoptConfig, '--reaction-volume'),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
@@ -697,8 +706,10 @@ Options:
                     instructions,
             )
 
-            if pcr.volume > '50 µL':
-                instructions += f"Split each reaction into {ceil(pcr.volume.value / 50)} tubes."
+            if self.num_duplicates > 1:
+                instructions += f"Split into {self.num_duplicates} identical {pcr.true_volume} reactions."
+            if pcr.true_volume > '50 µL':
+                instructions += f"Split each reaction into {ceil(pcr.true_volume.value / 50)} tubes."
             if pcr.num_reactions > 1:
                 instructions += "Use any extra master mix as a negative control."
 
@@ -823,14 +834,17 @@ Options:
         pcr['water'].order = 1
 
         pcr['template DNA'].order = 2
-        pcr['template DNA'].name = merge_names(self.template_tags)
-        pcr['template DNA'].master_mix = eval_master_mix(
-                {'dna'}, all_equal(self.template_tags))
 
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
         if x := self.template_stock:
             pcr['template DNA'].stock_conc = x
+
+        self._add_template_to_reaction(pcr, eval_master_mix)
+
+        pcr.true_volume = pcr.volume
+        if self.num_duplicates != 1:
+            pcr.hold_ratios.volume *= self.num_duplicates * 1.1
 
         # Setup the primers.  This is complicated because the primers might get 
         # split into their own mix, if the volumes that would be added to the 
@@ -912,6 +926,13 @@ Options:
 
     def get_dependencies(self):
         return set(flatten(x.reagent_tags for x in self.amplicons))
+
+
+    def _add_template_to_reaction(self, rxn, eval_master_mix):
+        tags = [x.tag for x in self.templates]
+        rxn['template DNA'].name = merge_names(tags)
+        rxn['template DNA'].master_mix = eval_master_mix(
+                {'dna'}, all_equal(tags))
 
 if __name__ == '__main__':
     Pcr.main()
