@@ -29,6 +29,12 @@ outgrowth_temp_C = 37
 outgrowth_time_h = 16
 
 
+[molbio.miniprep.yield_ng_uL]
+pUC = 200
+pSC101 = 50
+default = 200
+
+
 [molbio.pcr]
 primer_stock_uM = 100
 extra_volume_uL = 10

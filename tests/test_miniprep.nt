@@ -39,4 +39,28 @@ test_freezerbox_attrs:
     expected:
       p1:
         conc: Quantity(200, 'ng/µL')
+  -
+    id: ori-pUC
+    db:
+      p1:
+        > Plasmid(
+        >   synthesis=parse_fields('order vendor=IDT'),
+        >   cleanups=parse_fields_list('miniprep'),
+        >   origin='pUC',
+        > )
+    expected:
+      p1:
+        conc: Quantity(200, 'ng/µL')
+  -
+    id: ori-pSC101
+    db:
+      p1:
+        > Plasmid(
+        >   synthesis=parse_fields('order vendor=IDT'),
+        >   cleanups=parse_fields_list('miniprep'),
+        >   origin='pSC101',
+        > )
+    expected:
+      p1:
+        conc: Quantity(50, 'ng/µL')
 
