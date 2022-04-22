@@ -1066,6 +1066,28 @@ test_freezerbox_make:
       - - 72°C for 2 min
       - - 4°C hold
 
+  -
+    id: length
+    db:
+      o1: Oligo(seq='tataacaggctgctgagacc')
+      o2: Oligo(seq='tctaggactatcaccggagg')
+      f1: NucleicAcid()
+      f2: NucleicAcid(synthesis=parse_fields('pcr template=f1 primers=o1,o2 length=2kb'))
+
+    tags:
+      - f2
+
+    expected:
+      - Run the following thermocycler protocol:
+
+      - - 98°C for 30s
+      - - Repeat 35x:
+      -   - 98°C for 10s
+      -   - 61°C for 20s
+      -   - 72°C for 1 min
+      - - 72°C for 2 min
+      - - 4°C hold
+
 test_freezerbox_attrs:
   -
     db:

@@ -16,7 +16,7 @@ from stepwise_mol_bio import (
 )
 from freezerbox import (
         ReagentConfig, MakerConfig, unanimous,
-        parse_volume_uL, parse_temp_C, parse_time_s,
+        parse_volume_uL, parse_temp_C, parse_time_s, parse_size_bp,
         group_by_identity, join_lists,
 )
 from more_itertools import first_true, flatten, chunked, all_equal, always_iterable
@@ -333,6 +333,7 @@ Options:
         )
         length_bp = appcli.param(
                 Key(DocoptConfig, '--amplicon-length', cast=float),
+                Key(MakerConfig, 'length', cast=parse_size_bp),
                 Method(lambda self: len(self.seq)),
                 default=None
         )
