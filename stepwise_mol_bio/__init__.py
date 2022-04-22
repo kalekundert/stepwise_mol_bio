@@ -14,7 +14,7 @@ from .autoclave import Autoclave
 from .digest import RestrictionDigest
 from .direct_dilution import DirectDilution
 from .ethanol_precipitation import EthanolPrecipitation
-from .gels.gel import Gel
+from .gels.gel import Gel, Ladder
 from .gels.laser_scanner import LaserScanner
 from .gels.stain import Stain
 from .gels.transilluminator import Transilluminator

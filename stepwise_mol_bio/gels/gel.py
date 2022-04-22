@@ -4,6 +4,7 @@ import stepwise, appcli, autoprop
 from appcli import Key, Method, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, dl
 from stepwise_mol_bio import Main, ConfigError
+from dataclasses import dataclass
 from inform import plural
 
 def parse_num_samples(name):
@@ -19,6 +20,43 @@ def parse_sample_name(name):
     except ValueError:
         return name
 
+@dataclass
+class Ladder:
+    name: str
+    volume_uL: float
+
+    @classmethod
+    def from_docopt(cls, args):
+        return cls.from_string(args['--ladder'])
+
+    @classmethod
+    def from_preset(cls, preset):
+        return cls(
+                name=preset['ladder'],
+                volume_uL=preset['ladder_volume_uL'],
+        )
+
+    @classmethod
+    def from_string(cls, ladder_str):
+        import re
+        if m := re.fullmatch(r'([0-9.]+)\s+[uµ]L (.*)', ladder_str):
+            return cls(
+                    name=m.group(2),
+                    volume_uL=float(m.group(1)),
+            )
+        else:
+            return cls(
+                    name=ladder_str,
+                    volume_uL=None,
+            )
+
+    def __str__(self):
+        if self.volume_uL is not None:
+            return f"{self.volume_uL:g} µL {self.name}"
+        else:
+            return self.name
+
+
 @autoprop.cache
 class Gel(Main):
     """\
@@ -26,6 +64,7 @@ Load, run, and stain gels.
 
 Usage:
     gel <preset> <samples> [options]
+    gel <preset> -M [options]
 
 <%! from stepwise_mol_bio import hanging_indent %>\
 Arguments:
@@ -47,6 +86,14 @@ Options:
 
     -b --buffer <str>
         The buffer to run the gel in, e.g. TAE.
+
+    -L --ladder <volume name>
+        The name ladder to use.  You must also specify the volume to load, 
+        using the following format: "<volume> uL <name>"
+
+    -n --num-samples <expr>
+        The number of samples to run.  By default, this is inferred from the 
+        <samples> argument.
 
     -c --sample-stock <value>
         The stock concentration of the sample.  This will be used to scale how 
@@ -215,6 +262,7 @@ Configuration:
             default='electrophoresis',
     )
     num_samples = appcli.param(
+            Key(DocoptConfig, '--num-samples', cast=eval),
             Key(DocoptConfig, '<samples>', cast=parse_num_samples),
             ignore=None,
             default=1,
@@ -240,12 +288,10 @@ Configuration:
             cast=float,
             default=None,
     )
-    ladder_name = appcli.param(
-            Key(PresetConfig, 'ladder'),
+    ladder = appcli.param(
+            Key(DocoptConfig, Ladder.from_docopt),
+            Key(PresetConfig, Ladder.from_preset),
             default=None,
-    )
-    ladder_volume_uL = appcli.param(
-            Key(PresetConfig, 'ladder_volume_uL'),
     )
     mix_volume_uL = appcli.param(
             Key(DocoptConfig, '--mix-volume'),
@@ -380,7 +426,7 @@ Configuration:
         p += pl(f"Run a gel{p.add_footnotes(self.protocol_link)}:", dl(
             ("gel", f"{percent}% {self.gel_type}{additive}"),
             ("buffer", f"{self.gel_buffer}"),
-            ("ladder", self.ladder_name and f"{self.ladder_volume_uL:g} µL {self.ladder_name}"),
+            ("ladder", self.ladder and f"{self.ladder}"),
             ("samples", self.load_volume_uL and f"{self.load_volume_uL:.3g} µL/lane"),
             ("prerun", self.prerun_time_min and f"{self.prerun_volts:g}V for {self.prerun_time_min:g} min"),
             ("run", f"{self.run_volts:g}V for {self.run_time_min:g} min"),
@@ -412,7 +458,6 @@ Configuration:
             mix.fix_volumes('sample')
 
         return mix
-
 
 if __name__ == '__main__':
     Gel.main()

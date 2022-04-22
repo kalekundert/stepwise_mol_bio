@@ -3,9 +3,6 @@ test_protocol:
   # now, I'm just skipping the staining step.
   -
     id: presets-agarose/1
-    # I overwrote this preset in my personal config, so I need a way to run the 
-    # tests independently of my configs before I can re-enable this.
-    marks: skip
     app:
       > app = Gel('agarose/1')
       > app.stain = None
@@ -127,3 +124,147 @@ test_protocol:
     expected:
       - prerun: 150V for 30 min
       - run: 100V for 60 min
+
+test_cli:
+  -
+    id: ladder
+    cmd: sw gel agarose/1 1 -L '5 uL 1 kb+ DNA ladder'
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/gel agarose/1 1 -L '5 uL 1 kb\+ DNA ladder'
+      >
+      > 1\. Prepare 1 sample for electrophoresis:
+      >
+      >    Reagent         Stock   Volume
+      >    ──────────────────────────────
+      >    loading buffer     6x  1.00 µL
+      >    sample                 5.00 µL
+      >    ──────────────────────────────
+      >                           6.00 µL
+      >
+      > 2\. Run a gel:
+      >
+      >    gel: 1% agarose/TAE
+      >    buffer: 1x TAE
+      >    ladder: 5 µL 1 kb\+ DNA ladder
+      >    samples: 5 µL/lane
+      >    run: 100V for 60 min
+      >
+      > 3\. Stain gel with GelRed \[1,2\]:
+      > 
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 30m\.
+      > 
+      > 4\. Image with a 300 nm UV transilluminator\.
+      > 
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      > 
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused\.
+  -
+    id: num-samples
+    cmd: sw gel agarose/1 a,b -n 4
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/gel agarose/1 a,b -n 4
+      >
+      > 1\. Prepare 4 samples for electrophoresis:
+      >
+      >    Reagent         Stock   Volume
+      >    ──────────────────────────────
+      >    loading buffer     6x  1.00 µL
+      >    a,b                    5.00 µL
+      >    ──────────────────────────────
+      >                           6.00 µL
+      >
+      > 2\. Run a gel:
+      >
+      >    gel: 1% agarose/TAE
+      >    buffer: 1x TAE
+      >    samples: 5 µL/lane
+      >    run: 100V for 60 min
+      >
+      > 3\. Stain gel with GelRed \[1,2\]:
+      > 
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 30m\.
+      > 
+      > 4\. Image with a 300 nm UV transilluminator\.
+      > 
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      > 
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused\.
+  -
+    id: no-mix
+    cmd: sw gel agarose/1 -M
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/gel agarose/1 -M
+      >
+      > 1\. Run a gel:
+      >
+      >    gel: 1% agarose/TAE
+      >    buffer: 1x TAE
+      >    samples: 5 µL/lane
+      >    run: 100V for 60 min
+      >
+      > 2\. Stain gel with GelRed \[1,2\]:
+      > 
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 30m\.
+      > 
+      > 3\. Image with a 300 nm UV transilluminator\.
+      > 
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      > 
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused\.
+
+test_parse_num_samples:
+  -
+    name: 1
+    expected: 1
+  -
+    name: 2
+    expected: 2
+  -
+    name: a
+    expected: 1
+  -
+    name: a,b
+    expected: 2
+  -
+    name: a,b,c
+    expected: 3
+
+test_ladder_from_string:
+  -
+    ladder_str: mock ladder
+    name: mock ladder
+    volume_uL: None
+  -
+    ladder_str: 5 µL mock ladder
+    name: mock ladder
+    volume_uL: 5
+  -
+    ladder_str: 0.5 µL mock ladder
+    name: mock ladder
+    volume_uL: 0.5
+  -
+    ladder_str: 5 uL mock ladder
+    name: mock ladder
+    volume_uL: 5
+
