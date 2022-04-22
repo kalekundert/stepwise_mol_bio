@@ -1,0 +1,33 @@
+test_protocol:
+  -
+    id: preset-uv
+    app:
+      > app = Transilluminator('uv')
+    expected:
+      - Image with a 300 nm UV transilluminator.
+  -
+    id: preset-blue
+    app:
+      > app = Transilluminator('blue')
+    expected:
+      - Image with a 470 nm blue-light transilluminator.
+  -
+    id: preset-white
+    app:
+      > app = Transilluminator('white')
+    expected:
+      - Image with a white-light transilluminator.
+  -
+    id: colloquial-name
+    app:
+      > app = Transilluminator()
+      > app.colloquial_name = 'green-light'
+    expected:
+      - Image with a green-light transilluminator.
+  -
+    id: wavelength_nm
+    app:
+      > app = Transilluminator('uv')
+      > app.wavelength_nm = 270
+    expected:
+      - Image with a 270 nm UV transilluminator.

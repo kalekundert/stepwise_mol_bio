@@ -59,6 +59,7 @@ Configuration:
     preset = appcli.param(
             Key(DocoptConfig, '<preset>'),
             Key(StepwiseConfig, 'default_preset'),
+            default=None,
     )
     colloquial_name = appcli.param(
             Key(PresetConfig, 'colloquial_name'),
@@ -66,7 +67,12 @@ Configuration:
     wavelength_nm = appcli.param(
             Key(DocoptConfig, '--wavelength'),
             Key(PresetConfig, 'default_wavelength_nm'),
+            default=None,
     )
+
+    def __init__(self, preset=None):
+        if preset:
+            self.preset = preset
 
     def get_protocol(self):
         phrases = ["Image with a"]

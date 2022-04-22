@@ -739,6 +739,10 @@ brief = "Blue-light transilluminator (470 nm default)"
 colloquial_name = 'blue-light'
 default_wavelength_nm = 470
 
+[molbio.transilluminator.presets.white]
+brief = "White-light transilluminator"
+colloquial_name = 'white-light'
+
 
 [molbio.page_purify]
 default_preset = 'default'
@@ -787,7 +791,7 @@ stain_buffer = '3x GelGreen, 100 mM NaCl'
 stain_time_min = 30
 light_sensitive = true
 
-imaging_protocol = 'stepwise_mol_bio/uv'
+imaging_protocol = 'stepwise_mol_bio/transilluminator uv'
 
 protocol_link = 'https://tinyurl.com/etxhfxws'
 footnotes = [
