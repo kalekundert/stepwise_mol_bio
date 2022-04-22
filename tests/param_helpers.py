@@ -8,6 +8,7 @@ from voluptuous import Schema, Invalid, Coerce, And, Or, Optional
 from parametrize_from_file.voluptuous import Namespace, empty_ok
 from stepwise.testing import check_command, disable_capture
 from freezerbox.stepwise import Make
+from more_itertools import always_iterable
 from contextlib import nullcontext
 
 with_py = Namespace()
@@ -40,7 +41,7 @@ def match_protocol(app, expected, forbidden=[], *, capture=nullcontext()):
     print(actual.strip() + '\n')
 
     i = 0
-    for x in expected:
+    for x in always_iterable(expected):
         j = actual.find(x, i)
 
         if j == -1:
@@ -53,7 +54,7 @@ def match_protocol(app, expected, forbidden=[], *, capture=nullcontext()):
         i = j + len(x)
         prev = x
 
-    for x in forbidden:
+    for x in always_iterable(forbidden):
         if x in actual:
             print(f"Didn't expect:\n  {x!r}")
             return False
@@ -124,8 +125,8 @@ def test_reaction(app, expected):
         schema=Schema({
             'app': str,
             **with_swmb.error_or({
-                'expected': [str],
-                'forbidden': [str],
+                'expected': Or(str, [str]),
+                'forbidden': Or(str, [str]),
             }),
         }),
 )

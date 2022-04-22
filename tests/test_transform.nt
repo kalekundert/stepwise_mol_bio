@@ -4,30 +4,50 @@
 
 test_protocol:
   -
-    id: base
+    id: antibiotic-amp
     app:
       > app = Transform.from_tags(['p1'], antibiotics=['Amp'])
     expected:
-      -
-        # Match the exact string, to check that the rest/recovery steps are 
-        # correctly skipped.
-        > 1. Transform p1 into MACH1 [1]:
-        >
-        >    - Pre-warm 1 LB+Amp plate.
-        >    - Thaw 50 µL competent MACH1 cells on ice.
-        >    - Add ≤10% cell volume (e.g. 5 µL for 50 µL cells) plasmid.
-        >    - Gently flick to mix
-        >
-        >    - Incubate at 42°C for 30s.
-        >    - Incubate on ice for 2 min.
-        >    - Add 250 µL SOC.
-        >
-        >    - Dilute cells 1:10.
-        >    - Plate 100 µL cells.
-        >    - Incubate at 37°C for 16h.
-        >
-        > Note:
-        > [1] https://tinyurl.com/fwk2c36b
+      # Match the exact string, to check paragraph spacing.
+      > 1. Transform p1 into MACH1 [1]:
+      >
+      >    - Pre-warm 1 LB+Amp plate.
+      >    - Thaw 50 µL competent MACH1 cells on ice.
+      >    - Add 5 µL plasmid.
+      >    - Gently flick to mix.
+      >
+      >    - Incubate at 42°C for 30s.
+      >    - Incubate on ice for 2 min.
+      >    - Plate 20 µL cells.
+      >    - Incubate at 37°C for 16h.
+      >
+      > Note:
+      > [1] https://tinyurl.com/fwk2c36b
+  -
+    id: antibiotic-kan
+    app:
+      > app = Transform.from_tags(['p1'], antibiotics=['Kan'])
+    expected:
+      # Match the exact string, to check paragraph spacing.
+      > 1. Transform p1 into MACH1 [1]:
+      >
+      >    - Pre-warm 1 LB+Kan plate.
+      >    - Thaw 50 µL competent MACH1 cells on ice.
+      >    - Add 5 µL plasmid.
+      >    - Gently flick to mix.
+      >    - Incubate on ice for 30 min.
+      >
+      >    - Incubate at 42°C for 30s.
+      >    - Incubate on ice for 2 min.
+      >    - Add 250 µL SOC.
+      >    - Incubate at 37°C for 60 min with end-over-end mixing.
+      >
+      >    - Dilute cells 1:10.
+      >    - Plate 100 µL cells.
+      >    - Incubate at 37°C for 16h.
+      >
+      > Note:
+      > [1] https://tinyurl.com/fwk2c36b
   -
     id: multiple-plasmids
     app:
@@ -36,15 +56,12 @@ test_protocol:
       - Transform p1+p2 into MACH1 [1]:
       - - Pre-warm 1 LB+Amp plate.
       - - Thaw 50 µL competent MACH1 cells on ice.
-      - - Add ≤10% cell volume (e.g. 5 µL for 50 µL cells) plasmid.
-      - - Gently flick to mix
+      - - Add 5 µL plasmid.
+      - - Gently flick to mix.
 
       - - Incubate at 42°C for 30s.
       - - Incubate on ice for 2 min.
-      - - Add 250 µL SOC.
-
-      - - Dilute cells 1:10.
-      - - Plate 100 µL cells.
+      - - Plate 20 µL cells.
       - - Incubate at 37°C for 16h.
 
       - https://tinyurl.com/fwk2c36b
@@ -62,15 +79,12 @@ test_protocol:
       - - For each transformation:
 
       -   - Thaw 50 µL competent MACH1 cells on ice.
-      -   - Add ≤10% cell volume (e.g. 5 µL for 50 µL cells) plasmid.
-      -   - Gently flick to mix
+      -   - Add 5 µL plasmid.
+      -   - Gently flick to mix.
 
       -   - Incubate at 42°C for 30s.
       -   - Incubate on ice for 2 min.
-      -   - Add 250 µL SOC.
-
-      -   - Dilute cells 1:10.
-      -   - Plate 100 µL cells.
+      -   - Plate 20 µL cells.
       -   - Incubate at 37°C for 16h.
 
       - https://tinyurl.com/fwk2c36b
@@ -205,19 +219,15 @@ test_cli:
       >
       > 1. Transform p1 into s1 \[1\]:
       >
-      >    - Pre-warm 1 LB\+Amp plate.
-      >    - Thaw 50 µL competent s1 cells on ice.
-      >    - Add ≤10% cell volume \(e.g. 5 µL for 50 µL cells\)
-      >      plasmid.
-      >    - Gently flick to mix
+      >    - Pre-warm 1 LB\+Amp plate\.
+      >    - Thaw 50 µL competent s1 cells on ice\.
+      >    - Add 5 µL plasmid\.
+      >    - Gently flick to mix\.
       >
-      >    - Incubate at 42°C for 30s.
-      >    - Incubate on ice for 2 min.
-      >    - Add 250 µL SOC.
-      >
-      >    - Dilute cells 1:10.
-      >    - Plate 100 µL cells.
-      >    - Incubate at 37°C for 16h.
+      >    - Incubate at 42°C for 30s\.
+      >    - Incubate on ice for 2 min\.
+      >    - Plate 20 µL cells\.
+      >    - Incubate at 37°C for 16h\.
       >
       > Note:
       > \[1\] https://tinyurl.com/fwk2c36b
@@ -232,17 +242,13 @@ test_cli:
       >
       >    - Pre-warm 1 LB\+Amp plate.
       >    - Thaw 50 µL competent s1 cells on ice.
-      >    - Add ≤10% cell volume \(e.g. 5 µL for 50 µL cells\)
-      >      plasmid.
-      >    - Gently flick to mix
+      >    - Add 5 µL plasmid\.
+      >    - Gently flick to mix\.
       >
-      >    - Incubate at 42°C for 30s.
-      >    - Incubate on ice for 2 min.
-      >    - Add 250 µL SOC.
-      >
-      >    - Dilute cells 1:10.
-      >    - Plate 100 µL cells.
-      >    - Incubate at 37°C for 16h.
+      >    - Incubate at 42°C for 30s\.
+      >    - Incubate on ice for 2 min\.
+      >    - Plate 20 µL cells\.
+      >    - Incubate at 37°C for 16h\.
       >
       > Note:
       > \[1\] https://tinyurl.com/fwk2c36b

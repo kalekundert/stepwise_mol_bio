@@ -14,7 +14,7 @@ brief = "MACH1 chemically competent E. coli (Thermo C869601)"
 footnotes = ['https://tinyurl.com/fwk2c36b']
 
 strain = 'MACH1'
-plasmid_quantity = '≤10% cell volume (e.g. 5 µL for 50 µL cells)'
+plasmid_quantity = '5 µL'
 cell_volume_uL = 50
 rest_time_min = 30
 heat_shock_temp_C = 42
@@ -24,7 +24,8 @@ recovery_media_volume_uL = 250
 recovery_temp_C = 37
 recovery_time_min = 60
 plate_dilution = 10
-plate_volume_uL = 100
+plate_volume_uL.recover = 100
+plate_volume_uL.no_recover = 20
 outgrowth_temp_C = 37
 outgrowth_time_h = 16
 

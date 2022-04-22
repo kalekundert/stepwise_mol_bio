@@ -55,6 +55,13 @@ def parse_transformation_from_str(rxn_str):
 
     return Transform.Reaction(plasmids, strain)
 
+def by_recovery(app, value):
+    if isinstance(value, dict):
+        key = 'no_recover' if app.skip_recovery else 'recover'
+        return value[key]
+    else:
+        return value
+
 @autoprop.cache
 class Transform(Main):
     """\
@@ -263,16 +270,18 @@ Options:
         else:
             ul2 += f"Add {quantity} plasmid."
 
-        ul2 += "Gently flick to mix"
+        ul2 += "Gently flick to mix."
         if not self.skip_rest:
             ul2 += f"Incubate on ice for {self.rest_time_min} min."
 
         ul2 = ul(); pl2 += ul2
 
-        ul2 += f"Incubate at {self.heat_shock_temp_C}°C for {self.heat_shock_time_sec}s."
-        ul2 += f"Incubate on ice for 2 min."
-        ul2 += f"Add {self.recovery_media_volume_uL} µL {self.recovery_media}."
+        if not self.skip_heat_shock:
+            ul2 += f"Incubate at {self.heat_shock_temp_C}°C for {self.heat_shock_time_sec}s."
+            ul2 += f"Incubate on ice for 2 min."
+
         if not self.skip_recovery:
+            ul2 += f"Add {self.recovery_media_volume_uL} µL {self.recovery_media}."
             ul2 += f"Incubate at {self.recovery_temp_C}°C for {self.recovery_time_min} min with end-over-end mixing."
 
             ul2 = ul(); pl2 += ul2
@@ -282,10 +291,10 @@ Options:
                 ul2 += f"Remove {self.cell_volume_uL + self.recovery_media_volume_uL - self.conc_volume_uL} µL media."
                 ul2 += f"Resuspend pelleted cells."
 
-        ul2 = ul(); pl2 += ul2
+                ul2 = ul(); pl2 += ul2
 
-        if self.plate_dilution != 1:
-            ul2 += f"Dilute cells 1:{self.plate_dilution}."
+            if self.plate_dilution != 1:
+                ul2 += f"Dilute cells 1:{self.plate_dilution}."
 
         ul2 += f"Plate {self.plate_volume_uL} µL cells."
         ul2 += f"Incubate at {self.outgrowth_temp_C}°C for {self.outgrowth_time_h}h."
@@ -334,6 +343,11 @@ Options:
             Key(DocoptConfig, '--skip-rest'),
             Key(PresetConfig, 'skip_rest'),
             Method(_skip_rest_recovery),
+    )
+    skip_heat_shock = appcli.param(
+            Key(DocoptConfig, '--skip-heat-shock'),
+            Key(PresetConfig, 'skip_heat_shock'),
+            default=False,
     )
     skip_recovery = appcli.param(
             Key(DocoptConfig, '--fast'),
@@ -387,6 +401,7 @@ Options:
     )
     plate_volume_uL = appcli.param(
             Key(PresetConfig, 'plate_volume_uL'),
+            get=by_recovery,
     )
     outgrowth_temp_C = appcli.param(
             Key(PresetConfig, 'outgrowth_temp_C'),
@@ -397,6 +412,7 @@ Options:
     )
     footnotes = appcli.param(
             Key(PresetConfig, 'footnotes'),
+            default_factory=list,
     )
 
     group_by = {
