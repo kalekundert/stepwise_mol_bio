@@ -86,6 +86,7 @@ scopes = [
   "aliquot",
   "anneal",
   "assembly",
+  "autoclave",
   "digest",
   "direct_dilution",
   "ethanol_precipitation",

@@ -58,8 +58,11 @@ class Autoclave(Cleanup):
 
     def get_protocol(self):
         p = stepwise.Protocol()
-        p += f"Autoclave at 121°C for {self.time_min} min."
+        p += self.step
         return p
+
+    def get_step(self):
+        return f"Autoclave at 121°C for {self.time_min} min."
 
     def _calc_sterilization_time_min(self):
         sterilization_mL_min = [
