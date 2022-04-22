@@ -1,8 +1,10 @@
-#!/usr/bin/env python3
-
 import parametrize_from_file
 from stepwise_mol_bio import ivt
 from param_helpers import *
+
+test_reaction()
+test_protocol()
+test_freezerbox_attrs()
 
 @parametrize_from_file
 def test_dnase_reaction(app, expected):

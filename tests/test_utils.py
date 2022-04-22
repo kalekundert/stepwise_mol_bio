@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import parametrize_from_file
 
 from pytest import approx

@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
-
 import pytest
 import parametrize_from_file
 
 from stepwise_mol_bio.pcr import *
 from pytest import approx
 from param_helpers import *
+
+test_freezerbox_make()
+test_freezerbox_attrs()
 
 @parametrize_from_file(
         schema=Schema({

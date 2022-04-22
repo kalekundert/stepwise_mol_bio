@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from stepwise_mol_bio._assembly import *
 from param_helpers import *
 

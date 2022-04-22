@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import pytest
 import parametrize_from_file
 
@@ -11,6 +9,11 @@ from param_helpers import *
 with catch_warnings():
     simplefilter('ignore', DeprecationWarning)
     import requests_testing
+
+test_reaction()
+test_protocol()
+test_freezerbox_make()
+test_freezerbox_attrs()
 
 @parametrize_from_file(
         schema=Schema({
