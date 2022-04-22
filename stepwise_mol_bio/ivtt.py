@@ -8,6 +8,7 @@ from stepwise_mol_bio import (
         Main, BindableReagent, bind, require_reagent,
 )
 from freezerbox import ReagentConfig, unanimous
+from more_itertools import flatten
 from copy import deepcopy
 from operator import not_
 
@@ -50,15 +51,15 @@ def del_reagents_by_flag(rxn, flag):
     for reagent in reagents:
         del rxn[reagent.key]
 
-@autoprop
+@autoprop.cache
 class Ivtt(Main):
     """\
 Express proteins from purified DNA templates.
 
 Usage:
-    ivtt <templates>... [-p <name>] [-v <µL>] [-n <rxns>] [-x <percent>] 
-        [-c <nM>] [-C <nM>] [-mrIX] [-a <name;conc;vol;mm>]... [-d <name>]...
-        [-t <time>] [-T <°C>]
+    ivtt <templates>... [-p <name>] [-v <µL>] [-V <µL>] [-n <rxns>]
+        [-x <percent>] [-c <nM>] [-C <nM>] [-mrIX] [-a <name;conc;vol;mm>]...
+        [-d <name>]...  [-i <instruction>]... [-t <time>] [-T <°C>]
 
 Arguments:
     <templates>
@@ -119,6 +120,11 @@ Options:
         Remove the given reagent from the reaction.  The reagent can be 
         identified either by its name or by its flag.  This can be used to 
         remove an additive added by the preset, for example.
+
+    -i --instruction <text>
+        Add the given instruction just below the reaction table, after any 
+        instructions specified by the preset.  This option can be specified 
+        multiple times to add multiple instructions.
 
     -t --incubation-time <time>
         The amount of time to incubate the reactions.  No unit is assumed, so 
@@ -234,7 +240,9 @@ Options:
     )
     setup_instructions = appcli.param(
             Key(PresetConfig, 'setup_instructions'),
+            Key(DocoptConfig, '--instruction'),
             default_factory=list,
+            pick=lambda x: list(flatten(x)),
     )
     setup_footnote = appcli.param(
             Key(PresetConfig, 'setup_footnote'),
@@ -253,6 +261,10 @@ Options:
             Key(PresetConfig, 'incubation_footnote'),
             default=None,
     )
+
+    @classmethod
+    def from_tags(cls, tags):
+        return cls([cls.Template(x) for x in tags])
 
     def __init__(self, templates):
         self.templates = templates

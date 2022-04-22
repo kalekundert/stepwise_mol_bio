@@ -227,20 +227,55 @@ test_cli:
       >    ──────────────────────────────────────────
       >                                      10.00 µL
       >
-      >    - Thaw all components on ice.
+      >    - Thaw all components on ice\.
       >    - Mix A well; certain components may precipitate
-      >      during storage.
-      >    - Mix B gently; do not vortex.
-      >    - Add A before B.
+      >      during storage\.
+      >    - Mix B gently; do not vortex\.
+      >    - Add A before B\.
       >
-      > 2. Incubate at 37°C for 2h.
+      > 2. Incubate at 37°C for 2h\.
       >
       > Note:
       > \[1\] https://tinyurl.com/dxapyo69
     stderr:
       > .*
-      >     Template concentrations must be empirically optimized.
-      >     The default value is just a plausible starting point.
+      >     Template concentrations must be empirically optimized\.
+      >     The default value is just a plausible starting point\.
+  -
+    cmd: sw ivtt f1 -i "Lorem ipsum." -i "Dolor sit amet."
+    stdout:
+      > {DATE}
+      >
+      > \$ sw ivtt f1 -i 'Lorem ipsum\.' -i 'Dolor sit amet\.'
+      >
+      > 1. Setup 1 PURExpress \(NEB E6800\) reaction \[1\]:
+      >
+      >    Reagent                    Stock    Volume
+      >    ──────────────────────────────────────────
+      >    water                              2.00 µL
+      >    solution A                         4.00 µL
+      >    solution B                         3.00 µL
+      >    RNase inhibitor, murine  40 U/µL   0.20 µL
+      >    f1                         75 nM   0.80 µL
+      >    ──────────────────────────────────────────
+      >                                      10.00 µL
+      >
+      >    - Thaw all components on ice\.
+      >    - Mix A well; certain components may precipitate
+      >      during storage\.
+      >    - Mix B gently; do not vortex\.
+      >    - Add A before B\.
+      >    - Lorem ipsum\.
+      >    - Dolor sit amet\.
+      >
+      > 2. Incubate at 37°C for 2h\.
+      >
+      > Note:
+      > \[1\] https://tinyurl.com/dxapyo69
+    stderr:
+      > .*
+      >     Template concentrations must be empirically optimized\.
+      >     The default value is just a plausible starting point\.
 
 
 
