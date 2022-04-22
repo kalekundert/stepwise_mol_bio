@@ -77,20 +77,25 @@ def parametrize_from_file_factory(*args, **kwargs):
 
     The purpose of making factories like these is to use the same test function 
     for multiple protocols.
+
+    The factory function accepts arbitrary keyword arguments.  These arguments 
+    are attached to the test function itself, and can be accessed from within 
+    the test function via the request fixture: `request.node.function.kwargs`.
     """
     import inspect, sys
     from pathlib import Path
 
     def decorator(f):
 
-        def factory():
+        def factory(**meta_kwargs):
             frame = inspect.currentframe()
             try:
                 ns = frame.f_back.f_globals
-                path_py = Path(ns['__file__'])
 
                 test_func = copy_func(f)
-                test_func.__module__ = path_py.stem
+                test_func.__module__ = Path(ns['__file__']).stem
+                test_func.kwargs = meta_kwargs
+
                 test_params = parametrize_from_file(*args, **kwargs)
                 ns[test_func.__name__] = test_params(test_func)
 
@@ -130,10 +135,14 @@ def test_reaction(app, expected):
             }),
         }),
 )
-def test_protocol(app, expected, forbidden, error):
+def test_protocol(app, expected, forbidden, error, request, disable_capture):
     app = exec_app(app)
+    
+    if not request.node.function.kwargs.get('disable_capture', False):
+        disable_capture = nullcontext()
+
     with error:
-        assert match_protocol(app, expected, forbidden)
+        assert match_protocol(app, expected, forbidden, capture=disable_capture)
 
 @parametrize_from_file_factory(
         schema=Schema({

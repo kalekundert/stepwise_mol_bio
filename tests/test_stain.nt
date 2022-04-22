@@ -1,0 +1,170 @@
+test_protocol:
+  -
+    id: preset-gelred
+    app:
+      > app = Stain('gelred')
+    expected:
+      > 1. Stain gel with GelRed [1,2]:
+      >
+      >    - Submerge gel in ≈30 mL 3x GelRed in electrophoresis buffer.
+      >    - Shake gently for 30m.
+      >
+      > 2. Image with a 300 nm UV transilluminator.
+      >
+      > Notes:
+      > [1] https://tinyurl.com/746v43ns
+      >
+      > [2] Including 100 mM NaCl in the staining solution
+  -
+    id: preset-gelgreen
+    app:
+      > app = Stain('gelgreen')
+    expected:
+      -
+        > 1. Stain gel with GelGreen [1-3]:
+        >
+        >    - Keep the stain protected from light.
+        >
+        >    - Submerge gel in ≈30 mL 3x GelGreen, 100 mM NaCl.
+        >    - Shake gently for 30m.
+        >
+        > 2. Image with a 470 nm blue-light transilluminator.
+        >
+        > Notes:
+        > [1] https://tinyurl.com/etxhfxws
+      - [2] Including 100 mM NaCl in the staining solution
+      - [3] Staining solution can be reused at least 2-3x.
+  -
+    id: preset-coomassie
+    app:
+      > app = Stain('coomassie')
+    expected:
+      > 1. Stain gel with Coomassie [1]:
+      >
+      >    - Submerge gel in ≈30 mL 0.1% Coomassie R250, 10% acetic acid, 40% methanol.
+      >    - Microwave until almost boiling (≈45s).
+      >    - Shake gently for 5m.
+      >    - Rinse 2x with water.
+      >
+      >    - Repeat until the background is clear (2-3x):
+      >      - Submerge gel in ≈30 mL 20% methanol, 10% acetic acid.
+      >      - Microwave until almost boiling (≈45s).
+      >      - Place a wadded-up kimwipe in the destain.
+      >      - Shake gently for 10m.
+      >
+      > Note:
+      > [1] https://tinyurl.com/4dtc22hz
+  -
+    id: preset-sypro-ruby
+    app:
+      > app = Stain('sypro-ruby')
+    expected:
+      > 1. Stain gel with SYPRO Ruby [1,2]:
+      >
+      >    - Submerge gel in ≈100 mL fix solution (50% methanol, 7% (v/v) acetic acid).
+      >    - Shake gently for 30m.
+      >
+      >    - Submerge gel in ≈60 mL SYPRO Ruby.
+      >    - Shake gently for 16h.
+      >
+      >    - Submerge gel in ≈100 mL wash solution (10% methanol, 7% (v/v) acetic acid).
+      >    - Shake gently for 30m.
+      >    - Rinse 2x for 5 min in ultrapure water.
+      >
+      > 2. Image with a laser scanner:
+      >
+      >    laser:    658 nm
+      >    filter:  710BP40
+      >
+      > Notes:
+      > [1] https://tinyurl.com/46jbd9nc
+      >
+      > [2] The staining protocol is optimized for standard 1 mm thick
+
+test_cli:
+  -
+    id: default
+    cmd: sw stain gelred
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/stain gelred
+      >
+      > 1. Stain gel with GelRed \[1,2\]:
+      >
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 30m\.
+      >
+      > 2. Image with a 300 nm UV transilluminator\.
+      >
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      >
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused.
+  -
+    id: time
+    cmd: sw stain gelred -t 15
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/stain gelred -t 15
+      >
+      > 1. Stain gel with GelRed \[1,2\]:
+      >
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 15m\.
+      >
+      > 2. Image with a 300 nm UV transilluminator\.
+      >
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      >
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused.
+  -
+    id: imaging-protocol
+    cmd: sw stain gelred -i 'step "Image magically."'
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/stain gelred -i 'step "Image magically."'
+      >
+      > 1. Stain gel with GelRed \[1,2\]:
+      >
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 30m\.
+      >
+      > 2. Image magically\.
+      >
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      >
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused.
+  -
+    id: no-imaging
+    cmd: sw stain gelred -I
+    stdout:
+      > {DATE}
+      >
+      > \$ sw gels/stain gelred -I
+      >
+      > 1. Stain gel with GelRed \[1,2\]:
+      >
+      >    - Submerge gel in ≈30 mL 3x GelRed in
+      >      electrophoresis buffer\.
+      >    - Shake gently for 30m\.
+      >
+      > Notes:
+      > \[1\] https://tinyurl.com/746v43ns
+      >
+      > \[2\] Including 100 mM NaCl in the staining solution
+      >     enhances sensitivity, but may promote dye
+      >     precipitation if the gel stain is reused.

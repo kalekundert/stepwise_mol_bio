@@ -85,7 +85,7 @@ Options:
             default=30,
     )
     stain_time_min = appcli.param(
-            Key(DocoptConfig, '--time'),
+            Key(DocoptConfig, '--time', cast=int),
             Key(PresetConfig),
             Key(PresetConfig, 'stain_time_hr', cast=lambda x: x*60),
     )
@@ -140,6 +140,10 @@ Options:
             Key(PresetConfig),
             default_factory=list,
     )
+
+    def __init__(self, preset=None):
+        if preset:
+            self.preset = preset
 
     def get_protocol(self):
         p = stepwise.Protocol()

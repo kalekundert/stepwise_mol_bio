@@ -767,11 +767,11 @@ title = 'GelRed'
 stain_buffer = '3x GelRed in electrophoresis buffer'
 stain_time_min = 30
 
-imaging_protocol = 'stepwise_mol_bio/uv 300'
+imaging_protocol = 'stepwise_mol_bio/transilluminator uv'
 
 protocol_link = 'https://tinyurl.com/746v43ns'
 footnotes = [
-"""Including 0.1 M NaCl in the staining solution enhances sensitivity, but may 
+"""Including 100 mM NaCl in the staining solution enhances sensitivity, but may 
 promote dye precipitation if the gel stain is reused.""",
 ]
 
@@ -780,7 +780,7 @@ title = 'PAGE GelRed'
 stain_buffer = '1x PAGE GelRed in water'
 stain_time_min = 30
 
-imaging_protocol = 'stepwise_mol_bio/uv 254'
+imaging_protocol = 'stepwise_mol_bio/transilluminator uv -w254'
 
 protocol_link = 'https://tinyurl.com/4msy6bf6'
 
@@ -791,7 +791,7 @@ stain_buffer = '3x GelGreen, 100 mM NaCl'
 stain_time_min = 30
 light_sensitive = true
 
-imaging_protocol = 'stepwise_mol_bio/transilluminator uv'
+imaging_protocol = 'stepwise_mol_bio/transilluminator blue'
 
 protocol_link = 'https://tinyurl.com/etxhfxws'
 footnotes = [
@@ -809,7 +809,7 @@ stain_buffer = "1x SYBR Green II, 1x TBE (89 mM Tris, 89 mM boric acid, 1 mM EDT
 stain_time_min = 10
 light_sensitive = true
 
-imaging_protocol = 'stepwise_mol_bio/uv'
+imaging_protocol = 'stepwise_mol_bio/transilluminator uv'
 
 protocol_link = 'https://tinyurl.com/y8n7237s'
 footnotes = [
@@ -840,7 +840,7 @@ destain_microwave = true
 destain_steps = [
   "submerge",
   "microwave",
-  "Place a wadded-up kimwipe in the destain",
+  "Place a wadded-up kimwipe in the destain.",
   "incubate",
 ]
 
