@@ -1,0 +1,190 @@
+test_dilution_table:
+  []
+
+test_pick_stock_concs:
+  -
+    target_concs:
+      [1]
+    max_dilution: 4
+    expected:
+      1: 1
+  -
+    target_concs:
+      [2, 1]
+    max_dilution: 4
+    expected:
+      2: 2
+      1: 2
+  -
+    target_concs:
+      [8, 7, 6, 5, 4, 3, 2, 1]
+    max_dilution: 2
+    expected:
+      8: 8
+      7: 8
+      6: 8
+      5: 8
+      4: 8
+      3: 4
+      2: 4
+      1: 2
+  -
+    id: realistic
+    target_concs:
+      [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
+    max_dilution: 10
+    expected:
+      1024: 1024
+      512: 1024
+      256: 1024
+      128: 1024
+      64: 128
+      32: 128
+      16: 128
+      8: 16
+      4: 16
+      2: 16
+      1: 2
+  -
+    id: include_zero
+    # Make sure we don't divide-by-zero.
+    target_concs:
+      [0]
+    max_dilution: 4
+    expected:
+      0: 0
+  -
+    id: exceed-max-dilution
+    target_concs:
+      [5, 1]
+    max_dilution: 4
+    error:
+      type: UsageError
+      message: 5x dilution to make 1.00 exceeds maximum (4x)
+
+test_protocol:
+  -
+    id: base
+    app:
+      > app = DirectDilution(10, 5)
+      > app.set_conc_high_low(16, 1)
+      > app.max_dilution = 4
+    expected:
+      - Prepare the following dilutions:
+
+      -               material  water
+      - Final  Stock      [µL]   [µL]
+      - ─────────────────────────────
+      - 16.00  16.00     19.38   0.00
+      -  8.00  16.00      5.00   5.00
+      -  4.00  16.00      4.38  13.12
+      -  2.00   4.00      5.00   5.00
+      -  1.00   4.00      2.50   7.50
+  -
+    id: conc-unit
+    app:
+      > app = DirectDilution(10, 5)
+      > app.set_conc_high_low('16 nM', 1)
+      > app.max_dilution = 4
+    expected:
+      - Prepare the following dilutions:
+
+      - Final  Stock  material  water
+      -  [nM]   [nM]      [µL]   [µL]
+      - ─────────────────────────────
+      - 16.00  16.00     19.38   0.00
+      -  8.00  16.00      5.00   5.00
+      -  4.00  16.00      4.38  13.12
+      -  2.00   4.00      5.00   5.00
+      -  1.00   4.00      2.50   7.50
+  -
+    id: material-diluent
+    app:
+      > app = DirectDilution(10, 5)
+      > app.set_conc_high_low('16 nM', 1)
+      > app.max_dilution = 4
+      > app.material = 'protein'
+      > app.diluent = 'buffer'
+    expected:
+      - Prepare the following dilutions:
+
+      - Final  Stock  protein  buffer
+      -  [nM]   [nM]     [µL]    [µL]
+      - ─────────────────────────────
+      - 16.00  16.00    19.38    0.00
+      -  8.00  16.00     5.00    5.00
+      -  4.00  16.00     4.38   13.12
+      -  2.00   4.00     5.00    5.00
+      -  1.00   4.00     2.50    7.50
+  -
+    id: include-zero
+    app:
+      > app = DirectDilution(10, 5)
+      > app.set_conc_high_low(16, 1)
+      > app.max_dilution = 4
+      > app.include_zero = True
+    expected:
+      - Prepare the following dilutions:
+
+      -               material  water
+      - Final  Stock      [µL]   [µL]
+      - ─────────────────────────────
+      - 16.00  16.00     19.38   0.00
+      -  8.00  16.00      5.00   5.00
+      -  4.00  16.00      4.38  13.12
+      -  2.00   4.00      5.00   5.00
+      -  1.00   4.00      2.50   7.50
+      -  0.00   4.00      0.00  10.00
+
+test_cli:
+  -
+    cmd: sw direct 16 to 1 -n 5 -v 10 -x 4
+    stdout:
+      > {DATE}
+      >
+      > \$ sw direct_dilution 16 to 1 -n 5 -v 10 -x 4
+      >
+      > 1\. Prepare the following dilutions:
+      >
+      >                  material  water
+      >    Final  Stock      \[µL\]   \[µL\]
+      >    ─────────────────────────────
+      >    16.00  16.00     19.38   0.00
+      >     8.00  16.00      5.00   5.00
+      >     4.00  16.00      4.38  13.12
+      >     2.00   4.00      5.00   5.00
+      >     1.00   4.00      2.50   7.50
+  -
+    cmd: sw direct 16 / 2 -n 5 -v 10 -x 4
+    stdout:
+      > {DATE}
+      >
+      > \$ sw direct_dilution 16 / 2 -n 5 -v 10 -x 4
+      >
+      > 1\. Prepare the following dilutions:
+      >
+      >                  material  water
+      >    Final  Stock      \[µL\]   \[µL\]
+      >    ─────────────────────────────
+      >    16.00  16.00     19.38   0.00
+      >     8.00  16.00      5.00   5.00
+      >     4.00  16.00      4.38  13.12
+      >     2.00   4.00      5.00   5.00
+      >     1.00   4.00      2.50   7.50
+  -
+    cmd: sw direct 1 x 2 -n 5 -v 10 -x 4
+    stdout:
+      > {DATE}
+      >
+      > \$ sw direct_dilution 1 x 2 -n 5 -v 10 -x 4
+      >
+      > 1\. Prepare the following dilutions:
+      >
+      >                  material  water
+      >    Final  Stock      \[µL\]   \[µL\]
+      >    ─────────────────────────────
+      >    16.00  16.00     19.38   0.00
+      >     8.00  16.00      5.00   5.00
+      >     4.00  16.00      4.38  13.12
+      >     2.00   4.00      5.00   5.00
+      >     1.00   4.00      2.50   7.50

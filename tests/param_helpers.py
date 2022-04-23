@@ -10,14 +10,19 @@ from stepwise.testing import check_command, disable_capture
 from freezerbox.stepwise import Make
 from more_itertools import always_iterable
 from contextlib import nullcontext
+from difflib import Differ
 
 with_py = Namespace()
+with_math = Namespace('from math import *')
 with_swmb = Namespace(
         'import stepwise',
         'from stepwise import *',
         'from freezerbox import *',
         'from stepwise_mol_bio import *',
 )
+
+Int = Coerce(int)
+Float = Coerce(float)
 
 def eval_db(reagents):
     db = freezerbox.Database({'use': 'TEST_DB'})
@@ -45,9 +50,16 @@ def match_protocol(app, expected, forbidden=[], *, capture=nullcontext()):
         j = actual.find(x, i)
 
         if j == -1:
-            print(f"Expected:\n  {x!r}")
+            print(f"Expected:\n  {x!r}\n")
             if prev:
-                print(f"After:\n  {prev!r}")
+                print(f"After:\n  {prev!r}\n")
+            if isinstance(expected, str):
+                delta = Differ().compare(
+                        expected.splitlines(),
+                        actual.splitlines(),
+                )
+                delta_str = '\n'.join(delta)
+                print(f"Diff:\n{delta_str}")
 
             return False
 

@@ -8,7 +8,7 @@ test_cli()
 @parametrize_from_file(
         schema=Schema({
             'name': str,
-            'expected': Coerce(int),
+            'expected': Int,
         }),
 )
 def test_parse_num_samples(name, expected):

@@ -29,10 +29,10 @@ def test_float_or_expr(given, expected):
     assert actual == approx(expected)
     assert isinstance(actual, float)
 
-@parametrize_from_file(schema=Schema({str: Coerce(float)}))
+@parametrize_from_file(schema=Schema({str: Float}))
 def test_round_down_to_1_sig_fig(given, expected):
     assert round_down_to_1_sig_fig(given) == approx(expected)
 
-@parametrize_from_file(schema=Schema({str: Coerce(float)}))
+@parametrize_from_file(schema=Schema({str: Float}))
 def test_round_up_to_1_sig_fig(given, expected):
     assert round_up_to_1_sig_fig(given) == approx(expected)

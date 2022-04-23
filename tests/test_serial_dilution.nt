@@ -1,0 +1,247 @@
+test_parse_high_low:
+  -
+    high_str: 100 nM
+    low_str: 1 nM
+    expected:
+      high: 100
+      low: 1
+      unit: 'nM'
+  -
+    high_str: 100 nM
+    low_str: 1
+    expected:
+      high: 100
+      low: 1
+      unit: 'nM'
+  -
+    high_str: 100
+    low_str: 1 nM
+    expected:
+      high: 100
+      low: 1
+      unit: 'nM'
+  -
+    high_str: 100
+    low_str: 1
+    expected:
+      high: 100
+      low: 1
+      unit: None
+  -
+    high_str: 100 nM
+    low_str: 1 ng/µL
+    error:
+      type: UsageError
+      message: units don't match: 'nM', 'ng/µL'
+
+test_concentrations:
+  -
+    high: 16
+    low: 1
+    factor: 16
+    expected:
+      [16, 1]
+  -
+    high: 32
+    low: 2
+    factor: 16
+    expected:
+      [32, 2]
+  -
+    high: 16
+    low: 1
+    factor: 4
+    expected:
+      [16, 4, 1]
+  -
+    high: 32
+    low: 2
+    factor: 4
+    expected:
+      [32, 8, 2]
+  -
+    high: 16
+    low: 1
+    factor: 2
+    expected:
+      [16, 8, 4, 2, 1]
+  -
+    high: 32
+    low: 2
+    factor: 2
+    expected:
+      [32, 16, 8, 4, 2]
+  -
+    high: 10
+    low: 1
+    factor: sqrt(10)
+    expected:
+      [10, sqrt(10), 1]
+
+test_protocol:
+  -
+    id: default
+    app:
+      > app = SerialDilution('10 µL', 6)
+      > app.set_conc_low_factor('1 nM', 2)
+    expected:
+      > 1. Perform a serial dilution [1]:
+      > 
+      >    - Put 20.00 µL 32 nM material in a tube.
+      >    - Put 10.00 µL water in 5 adjacent tubes.
+      >    - Transfer 10.00 µL between each tube to make 6 2-fold dilutions.
+      >
+      > Note:
+      > [1] The final concentrations will be:
+      >     1  3.200000e+01 nM
+      >     2  1.600000e+01 nM
+      >     3  8.000000e+00 nM
+      >     4  4.000000e+00 nM
+      >     5  2.000000e+00 nM
+      >     6  1.000000e+00 nM
+  -
+    id: include-zero
+    app:
+      > app = SerialDilution('10 µL', 6)
+      > app.set_conc_low_factor('1 nM', 2)
+      > app.include_zero = True
+    expected:
+      - Put 10.00 µL water in 6 adjacent tubes.
+      - Transfer 10.00 µL between each tube *except the last* to make 6 2-fold dilutions.
+  -
+    id: material
+    app:
+      > app = SerialDilution('10 µL', 6)
+      > app.set_conc_low_factor('1 nM', 2)
+      > app.material = 'mock reagent'
+    expected:
+      - Put 20.00 µL 32 nM mock reagent in a tube.
+  -
+    id: diluent
+    app:
+      > app = SerialDilution('10 µL', 6)
+      > app.set_conc_low_factor('1 nM', 2)
+      > app.diluent = 'mock diluent'
+    expected:
+      - Put 10.00 µL mock diluent in 5 adjacent tubes.
+  -
+    id: volume-units-mL
+    app:
+      > app = SerialDilution('10 mL', 6)
+      > app.set_conc_low_factor('1 mM', 2)
+    expected:
+      - Put 20.00 mL 32 mM material in a tube.
+      - Put 10.00 mL water in 5 adjacent tubes.
+      - Transfer 10.00 mL between each tube to make 6 2-fold dilutions.
+
+test_cli:
+  -
+    cmd: sw serial 32nM to 1 -n 6 -v 10
+    stdout:
+      > {DATE}
+      >
+      > \$ sw serial_dilution 32nM to 1 -n 6 -v 10
+      >
+      > 1\. Perform a serial dilution \[1\]:
+      > 
+      >    - Put 20\.00 µL 32 nM material in a tube\.
+      >    - Put 10\.00 µL water in 5 adjacent tubes\.
+      >    - Transfer 10\.00 µL between each tube to make 6
+      >      2-fold dilutions\.
+      >
+      > Note:
+      > \[1\] The final concentrations will be:
+      >     1  3\.200000e\+01 nM
+      >     2  1\.600000e\+01 nM
+      >     3  8\.000000e\+00 nM
+      >     4  4\.000000e\+00 nM
+      >     5  2\.000000e\+00 nM
+      >     6  1\.000000e\+00 nM
+  -
+    cmd: sw serial 32nM / 2 -n 6 -v 10
+    stdout:
+      > {DATE}
+      >
+      > \$ sw serial_dilution 32nM / 2 -n 6 -v 10
+      >
+      > 1\. Perform a serial dilution \[1\]:
+      > 
+      >    - Put 20\.00 µL 32 nM material in a tube\.
+      >    - Put 10\.00 µL water in 5 adjacent tubes\.
+      >    - Transfer 10\.00 µL between each tube to make 6
+      >      2-fold dilutions\.
+      >
+      > Note:
+      > \[1\] The final concentrations will be:
+      >     1  3\.200000e\+01 nM
+      >     2  1\.600000e\+01 nM
+      >     3  8\.000000e\+00 nM
+      >     4  4\.000000e\+00 nM
+      >     5  2\.000000e\+00 nM
+      >     6  1\.000000e\+00 nM
+  -
+    cmd: sw serial 1nM x 2 -n 6 -v 10
+    stdout:
+      > {DATE}
+      >
+      > \$ sw serial_dilution 1nM x 2 -n 6 -v 10
+      >
+      > 1\. Perform a serial dilution \[1\]:
+      > 
+      >    - Put 20\.00 µL 32 nM material in a tube\.
+      >    - Put 10\.00 µL water in 5 adjacent tubes\.
+      >    - Transfer 10\.00 µL between each tube to make 6
+      >      2-fold dilutions\.
+      >
+      > Note:
+      > \[1\] The final concentrations will be:
+      >     1  3\.200000e\+01 nM
+      >     2  1\.600000e\+01 nM
+      >     3  8\.000000e\+00 nM
+      >     4  4\.000000e\+00 nM
+      >     5  2\.000000e\+00 nM
+      >     6  1\.000000e\+00 nM
+  -
+    cmd: sw serial 32nM to 1 -n 6 -v 10 -m protein -d buffer
+    stdout:
+      > {DATE}
+      >
+      > \$ sw serial_dilution 32nM to 1 -n 6 -v 10 -m protein -d buffer
+      >
+      > 1\. Perform a serial dilution \[1\]:
+      > 
+      >    - Put 20\.00 µL 32 nM protein in a tube\.
+      >    - Put 10\.00 µL buffer in 5 adjacent tubes\.
+      >    - Transfer 10\.00 µL between each tube to make 6
+      >      2-fold dilutions\.
+      >
+      > Note:
+      > \[1\] The final concentrations will be:
+      >     1  3\.200000e\+01 nM
+      >     2  1\.600000e\+01 nM
+      >     3  8\.000000e\+00 nM
+      >     4  4\.000000e\+00 nM
+      >     5  2\.000000e\+00 nM
+      >     6  1\.000000e\+00 nM
+  -
+    cmd: sw serial 32nM to 1 -n 6 -v 10 -0
+    stdout:
+      > {DATE}
+      >
+      > \$ sw serial_dilution 32nM to 1 -n 6 -v 10 -0
+      >
+      > 1\. Perform a serial dilution \[1\]:
+      > 
+      >    - Put 20\.00 µL 32 nM material in a tube\.
+      >    - Put 10\.00 µL water in 6 adjacent tubes\.
+      >    - Transfer 10\.00 µL between each tube \*except the
+      >      last\* to make 6 2-fold dilutions\.
+      >
+      > Note:
+      > \[1\] The final concentrations will be:
+      >     1  3\.200000e\+01 nM
+      >     2  1\.600000e\+01 nM
+      >     3  8\.000000e\+00 nM
+      >     4  4\.000000e\+00 nM
+      >     5  2\.000000e\+00 nM
+      >     6  1\.000000e\+00 nM

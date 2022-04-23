@@ -8,8 +8,8 @@ test_freezerbox_make()
 
 @parametrize_from_file(
         schema=Schema({
-            'volume_mL': Coerce(int),
-            'expected': Coerce(int),
+            'volume_mL': Int,
+            'expected': Int,
         }),
 )
 def test_calc_sterilization_time(volume_mL, expected):
