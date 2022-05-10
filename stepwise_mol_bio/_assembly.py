@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import appcli
+import byoc
 import autoprop
 
 from stepwise import Quantity
@@ -10,7 +10,7 @@ from freezerbox import (
         parse_size_bp, parse_volume_uL, convert_conc_unit, iter_combos, 
         group_by_identity, group_by_cluster, unanimous, join_lists,
 )
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from dataclasses import dataclass
 from itertools import zip_longest
 from more_itertools import one
@@ -250,16 +250,16 @@ OPTION_DOC = """\
 class Fragment:
     __config__ = [ReagentConfig]
 
-    name = tag = appcli.param()
-    conc = appcli.param(
+    name = tag = byoc.param()
+    conc = byoc.param(
             Key(ReagentConfig),
     )
-    mw = appcli.param(
+    mw = byoc.param(
             Key(ReagentConfig),
             Method(lambda self: mw_from_length(self.length)),
             default=None,
     )
-    length = appcli.param(
+    length = byoc.param(
             Key(ReagentConfig),
     )
 
@@ -308,17 +308,17 @@ class Assembly(Main):
     target_pmol_per_frag = 0.06
     min_pmol_per_frag = 0.02
 
-    assemblies = appcli.param(
+    assemblies = byoc.param(
             Key(DocoptConfig, parse_assemblies_from_docopt),
             Key(MakerConfig, parse_assemblies_from_freezerbox),
             get=bind_assemblies
     )
-    volume_uL = appcli.param(
+    volume_uL = byoc.param(
             Key(DocoptConfig, '--volume', cast=float),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
             default=5,
     )
-    excess_insert = appcli.param(
+    excess_insert = byoc.param(
             Key(DocoptConfig, '--excess-insert', cast=float),
             default=2,
     )

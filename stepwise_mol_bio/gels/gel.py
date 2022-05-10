@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
-from appcli import Key, Method, DocoptConfig
+import stepwise, byoc, autoprop
+from byoc import Key, Method, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig, pl, ul, dl
 from stepwise_mol_bio import Main, ConfigError
 from dataclasses import dataclass
@@ -245,126 +245,126 @@ Configuration:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.gel'),
+            StepwiseConfig.setup(('molbio', 'gel')),
     ]
-    preset_briefs = appcli.config_attr()
-    config_paths = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
+    config_paths = byoc.config_attr()
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '<preset>'),
     )
-    title = appcli.param(
+    title = byoc.param(
             Key(PresetConfig, 'title'),
             default='electrophoresis',
     )
-    num_samples = appcli.param(
+    num_samples = byoc.param(
             Key(DocoptConfig, '--num-samples', cast=eval),
             Key(DocoptConfig, '<samples>', cast=parse_num_samples),
             ignore=None,
             default=1,
     )
-    sample_name = appcli.param(
+    sample_name = byoc.param(
             Key(DocoptConfig, '<samples>', cast=parse_sample_name),
             default=None,
     )
-    sample_mix_str = appcli.param(
+    sample_mix_str = byoc.param(
             Key(DocoptConfig, '--no-mix', cast=lambda x: None),
             Key(PresetConfig, 'sample_mix'),
             default=None,
     )
-    sample_conc = appcli.param(
+    sample_conc = byoc.param(
             Key(DocoptConfig, '--sample-stock'),
             Key(PresetConfig, 'sample_stock'),
             cast=float,
             default=None,
     )
-    sample_volume_uL = appcli.param(
+    sample_volume_uL = byoc.param(
             Key(DocoptConfig, '--sample-volume'),
             Key(PresetConfig, 'sample_volume_uL'),
             cast=float,
             default=None,
     )
-    ladder = appcli.param(
+    ladder = byoc.param(
             Key(DocoptConfig, Ladder.from_docopt),
             Key(PresetConfig, Ladder.from_preset),
             default=None,
     )
-    mix_volume_uL = appcli.param(
+    mix_volume_uL = byoc.param(
             Key(DocoptConfig, '--mix-volume'),
             Key(PresetConfig, 'mix_volume_uL'),
             cast=float,
             default=None,
     )
-    mix_extra_percent = appcli.param(
+    mix_extra_percent = byoc.param(
             Key(DocoptConfig, '--mix-extra'),
             Key(PresetConfig, 'mix_extra_percent'),
             cast=float,
             default=50,
     )
-    incubate_temp_C = appcli.param(
+    incubate_temp_C = byoc.param(
             Key(DocoptConfig, '--incubate-temp'),
             Key(PresetConfig, 'incubate_temp_C'),
             cast=float,
     )
-    incubate_time_min = appcli.param(
+    incubate_time_min = byoc.param(
             Key(DocoptConfig, '--incubate-time'),
             Key(PresetConfig, 'incubate_time_min'),
             cast=int,
     )
-    gel_type = appcli.param(
+    gel_type = byoc.param(
             Key(PresetConfig, 'gel_type'),
     )
-    gel_percent = appcli.param(
+    gel_percent = byoc.param(
             Key(DocoptConfig, '--percent'),
             Key(PresetConfig, 'gel_percent'),
     )
-    gel_additive = appcli.param(
+    gel_additive = byoc.param(
             Key(DocoptConfig, '--additive'),
             Key(PresetConfig, 'gel_additive'),
             default=None,
     )
-    gel_buffer = appcli.param(
+    gel_buffer = byoc.param(
             Key(DocoptConfig, '--buffer'),
             Key(PresetConfig, 'gel_buffer'),
     )
-    load_volume_uL = appcli.param(
+    load_volume_uL = byoc.param(
             Key(DocoptConfig, '--load-volume'),
             Key(PresetConfig, 'load_volume_uL'),
             cast=float,
     )
-    prerun_volts = appcli.param(
+    prerun_volts = byoc.param(
             Key(DocoptConfig, '--prerun-volts'),
             Key(PresetConfig, 'prerun_volts'),
             Method(lambda self: self.run_volts),
             cast=float,
     )
-    prerun_time_min = appcli.param(
+    prerun_time_min = byoc.param(
             Key(DocoptConfig, '--prerun-time'),
             Key(PresetConfig, 'prerun_time_min'),
             cast=int,
             default=None,
     )
-    run_volts = appcli.param(
+    run_volts = byoc.param(
             Key(DocoptConfig, '--run-volts'),
             Key(PresetConfig, 'run_volts'),
             cast=float,
     )
-    run_time_min = appcli.param(
+    run_time_min = byoc.param(
             Key(DocoptConfig, '--run-time'),
             Key(PresetConfig, 'run_time_min'),
             cast=int,
     )
-    stain = appcli.param(
+    stain = byoc.param(
             Key(DocoptConfig, '--stain'),
             Key(DocoptConfig, '--no-stain', cast=lambda x: None),
             Key(PresetConfig, 'stain'),
             default=None,
     )
-    protocol_link = appcli.param(
+    protocol_link = byoc.param(
             Key(PresetConfig, 'protocol_link'),
             default=None,
     )

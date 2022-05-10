@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 from inform import fatal, warn, plural
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, pl, ul
 from stepwise_mol_bio import (
         Main, BindableReagent, bind, require_reagent,
@@ -137,49 +137,49 @@ Options:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.ivtt'),
+            StepwiseConfig.setup(('molbio', 'ivtt')),
     ]
-    preset_briefs = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
     preset_brief_template = '{kit}'
 
     class Template(BindableReagent, use_app_configs=True):
-        stock_nM = appcli.param(
+        stock_nM = byoc.param(
                 Key(DocoptConfig, '--template-stock', cast=float),
                 Key(ReagentConfig, 'conc_nM'),
                 Key(PresetConfig, 'template_stock_nM'),
                 default=None,
         )
-        is_mrna = appcli.param(
+        is_mrna = byoc.param(
                 Key(DocoptConfig, '--mrna'),
                 Key(ReagentConfig, 'molecule', cast=lambda x: x == 'RNA'),
                 default=None,  # interpreted as "unknown"
         )
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    base_reaction = appcli.param(
+    base_reaction = byoc.param(
             Key(PresetConfig, 'reaction'),
             cast=stepwise.MasterMix.from_text,
     )
-    title = appcli.param(
+    title = byoc.param(
             Key(PresetConfig, 'title'),
             Key(PresetConfig, 'kit'),
     )
-    templates = appcli.param(
+    templates = byoc.param(
             Key(DocoptConfig, parse_templates_from_docopt),
             get=bind,
     )
-    volume_uL = appcli.param(
+    volume_uL = byoc.param(
             Key(DocoptConfig, '--volume', cast=eval),
             default=None,
     )
-    default_volume_uL = appcli.param(
+    default_volume_uL = byoc.param(
             # The difference between `default_volume_uL` and `volume_uL` is 
             # that the default additives are applied to the reaction after the 
             # default volume is set, but before the non-default volume is set.  
@@ -190,74 +190,74 @@ Options:
             Key(StepwiseConfig, 'default_volume_uL'),
             default=None,
     )
-    num_reactions = appcli.param(
+    num_reactions = byoc.param(
             Key(DocoptConfig, '--num-reactions', cast=eval),
             default=None,
             get=lambda self, x: x or len(self.templates),
     )
-    extra_percent = appcli.param(
+    extra_percent = byoc.param(
             Key(DocoptConfig, '--extra-percent', cast=float),
             default=10,
     )
-    template_volume_uL = appcli.param(
+    template_volume_uL = byoc.param(
             Key(DocoptConfig, '--template-volume', cast=float),
             default=None,
     )
-    default_template_volume_uL = appcli.param(
+    default_template_volume_uL = byoc.param(
             # See `default_volume_uL`.
             Key(PresetConfig, 'template_volume_uL'),
             default=None,
     )
-    template_conc_nM = appcli.param(
+    template_conc_nM = byoc.param(
             Key(DocoptConfig, '--template-conc', cast=float),
             Key(PresetConfig, 'template_conc_nM'),
             default=None,
     )
-    master_mix = appcli.param(
+    master_mix = byoc.param(
             Key(DocoptConfig, '--master-mix'),
             default=False,
     )
-    use_template = appcli.param(
+    use_template = byoc.param(
             Key(DocoptConfig, '--no-template', cast=not_),
             default=True,
     )
-    use_rnase_inhibitor = appcli.param(
+    use_rnase_inhibitor = byoc.param(
             Key(DocoptConfig, '--no-inhibitor', cast=not_),
             default=True,
     )
-    additives = appcli.param(
+    additives = byoc.param(
             Key(DocoptConfig, '--additive'),
             default_factory=list,
     )
-    default_additives = appcli.param(
+    default_additives = byoc.param(
             # See `default_volume_uL`.
             Key(PresetConfig, 'additives'),
             default_factory=list,
     )
-    exclude = appcli.param(
+    exclude = byoc.param(
             Key(DocoptConfig, '--exclude', cast=set),
             default_factory=set,
     )
-    setup_instructions = appcli.param(
+    setup_instructions = byoc.param(
             Key(PresetConfig, 'setup_instructions'),
             Key(DocoptConfig, '--instruction'),
             default_factory=list,
             pick=lambda x: list(flatten(x)),
     )
-    setup_footnote = appcli.param(
+    setup_footnote = byoc.param(
             Key(PresetConfig, 'setup_footnote'),
             default=None,
     )
-    incubation_time = appcli.param(
+    incubation_time = byoc.param(
             Key(DocoptConfig, '--incubation-time'),
             Key(PresetConfig, 'incubation_time'),
     )
-    incubation_temp_C = appcli.param(
+    incubation_temp_C = byoc.param(
             Key(DocoptConfig, '--incubation-temp'),
             Key(PresetConfig, 'incubation_temp_C'),
             cast=float,
     )
-    incubation_footnote = appcli.param(
+    incubation_footnote = byoc.param(
             Key(PresetConfig, 'incubation_footnote'),
             default=None,
     )

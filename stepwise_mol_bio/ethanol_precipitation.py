@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import stepwise
-import appcli
+import byoc
 import autoprop
 import textwrap
 from inform import plural
 from fractions import Fraction
 from operator import not_
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, pl, ul, pre
 from stepwise_mol_bio import Main
 
@@ -129,7 +129,7 @@ References:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.ethanol_precipitation'),
+            StepwiseConfig.setup(('molbio', 'ethanol_precipitation')),
     ]
 
     presets = [{
@@ -263,62 +263,62 @@ References:
             },
     }
 
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(StepwiseConfig, 'preset'),
             ignore=None,
     )
-    names = appcli.param(
+    names = byoc.param(
             Key(DocoptConfig, '<names>'),
             default=None,
     )
-    solvent = appcli.param(
+    solvent = byoc.param(
             Key(DocoptConfig, '--solvent'),
             Key(PresetConfig, 'solvent'),
     )
-    solvent_volume = appcli.param(
+    solvent_volume = byoc.param(
             Key(PresetConfig, 'solvent_volume'),
             get=by_solvent,
     )
-    buffer = appcli.param(
+    buffer = byoc.param(
             Key(DocoptConfig, '--buffer'),
             default='water',
     )
-    buffer_volume_uL = appcli.param(
+    buffer_volume_uL = byoc.param(
             Key(DocoptConfig, '--buffer-volume'),
             default=None,
     )
-    cation = appcli.param(
+    cation = byoc.param(
             Key(DocoptConfig, '--cation'),
             Key(PresetConfig, 'cation'),
             get=by_solvent,
     )
-    carrier = appcli.param(
+    carrier = byoc.param(
             Key(DocoptConfig, '--carrier'),
             Key(PresetConfig, 'carrier'),
             get=by_solvent,
     )
-    incubation = appcli.param(
+    incubation = byoc.param(
             Key(DocoptConfig, '--no-incubation', cast=not_),
             default=True,
     )
-    incubation_time = appcli.param(
+    incubation_time = byoc.param(
             Key(PresetConfig, 'incubation_time'),
     )
-    incubation_temp_C = appcli.param(
+    incubation_temp_C = byoc.param(
             Key(PresetConfig, 'incubation_temp_C'),
     )
-    wash = appcli.param(
+    wash = byoc.param(
             Key(DocoptConfig, '--no-wash', cast=not_),
             default=True,
     )
-    centrifugation_time_min = appcli.param(
+    centrifugation_time_min = byoc.param(
             Key(PresetConfig, 'centrifugation_time_min'),
     )
-    centrifugation_temp_C = appcli.param(
+    centrifugation_temp_C = byoc.param(
             Key(PresetConfig, 'centrifugation_temp_C'),
     )
-    centrifugation_speed = appcli.param(
+    centrifugation_speed = byoc.param(
             Key(PresetConfig, 'centrifugation_speed'),
     )
 

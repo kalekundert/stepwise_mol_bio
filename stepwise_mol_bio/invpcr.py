@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
-from appcli import Key, DocoptConfig
+import stepwise, byoc, autoprop
+from byoc import Key, DocoptConfig
 from stepwise_mol_bio import Main, Pcr, Kld
 
 @autoprop
@@ -20,11 +20,11 @@ Usage:
         Skip the PCR reaction.  This is equivalent to using the `kld` command 
         with a transformation step afterwards.
 """
-    skip_pcr = appcli.param(
+    skip_pcr = byoc.param(
             Key(DocoptConfig, '--skip-pcr'),
             default=False,
     )
-    skip_kld = appcli.param(
+    skip_kld = byoc.param(
             Key(DocoptConfig, '--skip-kld'),
             default=False,
     )

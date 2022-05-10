@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 from inform import indent, plural
-from appcli import DocoptConfig
+from byoc import DocoptConfig
 from stepwise import (
         StepwiseConfig, PresetConfig, Presets, UsageError, pl, ul, table,
 )
@@ -44,26 +44,26 @@ Options:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.laser'),
+            StepwiseConfig.setup(('molbio', 'laser')),
     ]
 
-    presets = appcli.param(
-            appcli.Key(StepwiseConfig, 'presets'),
+    presets = byoc.param(
+            byoc.Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset_briefs = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
     preset_brief_template = '{laser} nm'
 
     # This attribute is a list of:
     # - name of preset (str)
     # - laser/filter (str)
     # - {laser: filter} (dict)
-    optics = appcli.param(
-            appcli.Key(DocoptConfig, '<optics>'),
+    optics = byoc.param(
+            byoc.Key(DocoptConfig, '<optics>'),
             default_factory=list,
     )
-    instructions = appcli.param(
-            appcli.Key(DocoptConfig, '--instruction'),
+    instructions = byoc.param(
+            byoc.Key(DocoptConfig, '--instruction'),
             default_factory=list,
     )
 

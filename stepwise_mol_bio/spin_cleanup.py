@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 from inform import warn
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, Quantity, oxford_comma
 from stepwise_mol_bio import Cleanup, format_sec, round_down_to_1_sig_fig
 from freezerbox import MakerConfig, group_by_identity, parse_volume_uL, unanimous
@@ -194,126 +194,126 @@ Database:
             DocoptConfig,
             MakerConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.spin_cleanup'),
+            StepwiseConfig.setup(('molbio', 'spin_cleanup')),
     ]
-    preset_briefs = appcli.config_attr()
-    config_paths = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
+    config_paths = byoc.config_attr()
     preset_brief_template = '{protocol_name}'
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '<preset>'),
             Key(MakerConfig, 1),
             Key(StepwiseConfig, 'default_preset'),
     )
-    protocol_name = appcli.param(
+    protocol_name = byoc.param(
             Key(PresetConfig, 'protocol_name'),
     )
-    protocol_link = appcli.param(
+    protocol_link = byoc.param(
             Key(PresetConfig, 'protocol_link'),
             default=None,
     )
-    column_name = appcli.param(
+    column_name = byoc.param(
             Key(PresetConfig, 'column_name'),
             default='silica spin column',
     )
-    spin_speed_g = appcli.param(
+    spin_speed_g = byoc.param(
             Key(PresetConfig, 'spin_speed_g'),
             default=None,
     )
-    column_capacity_ug = appcli.param(
+    column_capacity_ug = byoc.param(
             Key(PresetConfig, 'column_capacity_ug'),
             default=None,
     )
-    sample_type = appcli.param(
+    sample_type = byoc.param(
             Key(PresetConfig, 'sample_type'),
             default='DNA',
     )
-    sample_volume_uL = appcli.param(
+    sample_volume_uL = byoc.param(
             Key(DocoptConfig, '--sample-volume', cast=float),
             default=None,
     )
-    target_sample_volume_uL = appcli.param(
+    target_sample_volume_uL = byoc.param(
             Key(PresetConfig, 'sample_volume_uL'),
             default=None,
     )
-    bind_buffer = appcli.param(
+    bind_buffer = byoc.param(
             Key(PresetConfig, 'bind_buffer'),
     )
-    bind_volume_uL = appcli.param(
+    bind_volume_uL = byoc.param(
             Key(PresetConfig, 'bind_volume_uL'),
             default=None
     )
-    bind_volume_x = appcli.param(
+    bind_volume_x = byoc.param(
             Key(PresetConfig, 'bind_volume_x'),
             default=None
     )
-    bind_spin_sec = appcli.param(
+    bind_spin_sec = byoc.param(
             Key(PresetConfig, 'bind_spin_sec'),
             default=None
     )
-    bind_vacuum = appcli.param(
+    bind_vacuum = byoc.param(
             Key(PresetConfig, 'bind_vacuum'),
             default=False,
     )
-    ph_buffer = appcli.param(
+    ph_buffer = byoc.param(
             Key(PresetConfig, 'pH_buffer'),
             default=None,
     )
-    ph_volume_uL = appcli.param(
+    ph_volume_uL = byoc.param(
             Key(PresetConfig, 'pH_volume_uL'),
             default=None
     )
-    ph_volume_x = appcli.param(
+    ph_volume_x = byoc.param(
             Key(PresetConfig, 'pH_volume_x'),
             default=None
     )
-    ph_color = appcli.param(
+    ph_color = byoc.param(
             Key(PresetConfig, 'pH_color'),
     )
-    wash_buffer = appcli.param(
+    wash_buffer = byoc.param(
             Key(PresetConfig, 'wash_buffer'),
     )
-    wash_volume_uL = appcli.param(
+    wash_volume_uL = byoc.param(
             Key(PresetConfig, 'wash_volume_uL'),
     )
-    wash_spin_sec = appcli.param(
+    wash_spin_sec = byoc.param(
             Key(PresetConfig, 'wash_spin_sec'),
             default=None,
     )
-    wash_vacuum = appcli.param(
+    wash_vacuum = byoc.param(
             Key(PresetConfig, 'wash_vacuum'),
             default=False,
     )
-    dry_spin_sec = appcli.param(
+    dry_spin_sec = byoc.param(
             Key(PresetConfig, 'dry_spin_sec'),
             default=None,
     )
-    elute_buffer = appcli.param(
+    elute_buffer = byoc.param(
             Key(DocoptConfig, '--elute-buffer'),
             Key(MakerConfig, 'buffer'),
             Key(PresetConfig, 'elute_buffer'),
     )
-    elute_volume_uL = appcli.param(
+    elute_volume_uL = byoc.param(
             Key(DocoptConfig, '--elute-volume', cast=float),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(PresetConfig, 'elute_volume_uL'),
     )
-    elute_min_volume_uL = appcli.param(
+    elute_min_volume_uL = byoc.param(
             Key(PresetConfig, 'elute_min_volume_uL'),
             default=None,
     )
-    elute_wait_sec = appcli.param(
+    elute_wait_sec = byoc.param(
             Key(PresetConfig, 'elute_wait_sec'),
             default=None,
     )
-    elute_spin_sec = appcli.param(
+    elute_spin_sec = byoc.param(
             Key(PresetConfig, 'elute_spin_sec'),
     )
-    expected_yield = appcli.param(
+    expected_yield = byoc.param(
             Key(MakerConfig, 'yield', cast=float),
             Key(PresetConfig, 'yield'),
             default=1,

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 
 from stepwise import StepwiseConfig, PresetConfig, MasterMix, pl, ul
 from stepwise_mol_bio import Main, format_min
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from inform import plural
 from copy import deepcopy
 
@@ -50,31 +50,31 @@ Configuration:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.kld'),
+            StepwiseConfig.setup(('molbio', 'kld')),
     ]
-    preset_briefs = appcli.config_attr()
-    config_paths = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
+    config_paths = byoc.config_attr()
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    base_reaction = appcli.param(
+    base_reaction = byoc.param(
             Key(PresetConfig, 'reaction', cast=MasterMix),
     )
-    dna = appcli.param(
+    dna = byoc.param(
             Key(DocoptConfig, '<dna>'),
     )
-    num_reactions = appcli.param(
+    num_reactions = byoc.param(
             Key(DocoptConfig, '--num-reactions'),
             cast=lambda x: int(eval(x)),
             default=1,
     )
-    incubation_time_min = appcli.param(
+    incubation_time_min = byoc.param(
             Key(DocoptConfig, '--time'),
             Key(PresetConfig, 'incubation_time_min'),
     )

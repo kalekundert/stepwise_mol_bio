@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop, freezerbox
+import stepwise, byoc, autoprop, freezerbox
 from math import sqrt, ceil
 from numbers import Real
 from inform import plural, indent
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from stepwise import (
         StepwiseConfig, PresetConfig, Quantity, UsageError,
         pl, ul, pre
@@ -295,15 +295,14 @@ Options:
         Specify that this is a qPCR protocol, i.e. that fluorescence should be 
         measured after each thermocyler cycle.
 """
-
     __config__ = [
             DocoptConfig.setup(usage_getter=lambda self: self.format_usage()),
             MakerConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.pcr'),
+            StepwiseConfig.setup(('molbio', 'pcr')),
     ]
-    usage = appcli.config_attr()
-    preset_briefs = appcli.config_attr()
+    usage = byoc.config_attr()
+    preset_briefs = byoc.config_attr()
 
     @autoprop
     class Amplicon(Bindable, use_app_configs=True):
@@ -328,10 +327,10 @@ Options:
                 err.info += "{rev.tag}: {rev.seq}"
                 raise err from None
 
-        seq = appcli.param(
+        seq = byoc.param(
                 Method(_calc_seq),
         )
-        length_bp = appcli.param(
+        length_bp = byoc.param(
                 Key(DocoptConfig, '--amplicon-length', cast=float),
                 Key(MakerConfig, 'length', cast=parse_size_bp),
                 Method(lambda self: len(self.seq)),
@@ -374,17 +373,17 @@ Options:
                 reagent.bind(app, force=force)
 
     class Template(BindableReagent):
-        seq = appcli.param('seq')
-        is_circular = appcli.param('is_circular')
+        seq = byoc.param('seq')
+        is_circular = byoc.param('is_circular')
 
     class Primer(BindableReagent, use_app_configs=True):
-        seq = appcli.param(
+        seq = byoc.param(
                 Key(ReagentConfig, 'seq'),
         )
-        melting_temp_C = appcli.param(
+        melting_temp_C = byoc.param(
                 Key(ReagentConfig, 'melting_temp_C'),
         )
-        stock_uM = appcli.param(
+        stock_uM = byoc.param(
                 Key(DocoptConfig, '--primer-stock', cast=float),
                 Key(ReagentConfig, 'conc_uM'),
                 Key(PresetConfig, 'primer_stock_uM'),
@@ -414,223 +413,223 @@ Options:
 
         return round(self.extend_time_func(bp))
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    amplicons = appcli.param(
+    amplicons = byoc.param(
             Key(DocoptConfig, parse_amplicons_from_docopt),
             Key(MakerConfig, parse_amplicons_from_freezerbox),
             get=bind,
     )
-    product_tag = appcli.param(
+    product_tag = byoc.param(
             Key(DocoptConfig, '--product'),
     )
-    products = appcli.param(
+    products = byoc.param(
             Method(lambda self: [
                 self.db[self.product_tag].make_intermediate(0)
             ]),
     )
-    template_volume_uL = appcli.param(
+    template_volume_uL = byoc.param(
             Key(DocoptConfig, '--template-volume', cast=float),
             default=None,
     )
-    template_stock = appcli.param(
+    template_stock = byoc.param(
             Key(DocoptConfig, '--template-stock', cast=float),
             # Don't try to get a value from the amplicons/freezerbox database, 
             # because the template volume is not affected by this setting.
             default=None,
     )
-    primer_conc_uM = appcli.param(
+    primer_conc_uM = byoc.param(
             Key(DocoptConfig, '--primer-conc', cast=float),
             default=None,
     )
-    product_conc_ng_uL = appcli.param(
+    product_conc_ng_uL = byoc.param(
             Key(PresetConfig, 'product_conc_ng_uL'),
             default=50,
     )
-    num_reactions = appcli.param(
+    num_reactions = byoc.param(
             Key(DocoptConfig, '--num-reactions', cast=int_or_expr),
             Method(lambda self: len(self.amplicons)),
     )
-    num_duplicates = appcli.param(
+    num_duplicates = byoc.param(
             Key(DocoptConfig, '--num-duplicates', cast=int_or_expr),
             default=1,
     )
-    reaction_volume_uL = appcli.param(
+    reaction_volume_uL = byoc.param(
             Key(DocoptConfig, '--reaction-volume'),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(PresetConfig, 'reaction_volume_uL'),
             cast=float_or_expr,
             default=None,
     )
-    extra_volume_uL = appcli.param(
+    extra_volume_uL = byoc.param(
             Key(PresetConfig, 'extra_volume_uL'),
             Key(StepwiseConfig, 'extra_volume_uL'),
             cast=float_or_expr,
     )
-    extra_percent = appcli.param(
+    extra_percent = byoc.param(
             Key(PresetConfig, 'extra_percent'),
             Key(StepwiseConfig, 'extra_percent'),
             cast=float_or_expr,
     )
-    master_mix = appcli.param(
+    master_mix = byoc.param(
             Key(DocoptConfig, '--master-mix', cast=comma_set),
             default=None,
     )
-    base_reaction = appcli.param(
+    base_reaction = byoc.param(
             Key(PresetConfig, 'reagents'),
             cast=stepwise.MasterMix.from_text,
     )
-    primer_mix_volume_uL = appcli.param(
+    primer_mix_volume_uL = byoc.param(
             Key(DocoptConfig, '--primer-mix-volume'),
             default=10,
     )
-    force_primer_mix = appcli.param(
+    force_primer_mix = byoc.param(
             Key(DocoptConfig, '--force-primer-mix'),
             Key(DocoptConfig, '--skip-primer-mix'),
             Key(DocoptConfig, '--only-primer-mix'),
             default=False,
     )
-    skip_primer_mix = appcli.param(
+    skip_primer_mix = byoc.param(
             Key(DocoptConfig, '--skip-primer-mix'),
             default=False,
     )
-    only_primer_mix = appcli.param(
+    only_primer_mix = byoc.param(
             Key(DocoptConfig, '--only-primer-mix'),
             default=False,
     )
-    num_cycles = appcli.param(
+    num_cycles = byoc.param(
             Key(DocoptConfig, '--num-cycles'),
             Key(PresetConfig, 'num_cycles'),
             cast=int,
     )
-    initial_denature_temp_C = appcli.param(
+    initial_denature_temp_C = byoc.param(
             Key(DocoptConfig, '--initial-denature-temp'),
             Key(PresetConfig, 'initial_denature_temp_C'),
             cast=temp,
     )
-    initial_denature_time_s = appcli.param(
+    initial_denature_time_s = byoc.param(
             Key(DocoptConfig, '--initial-denature-time'),
             Key(PresetConfig, 'initial_denature_time_s'),
             cast=time,
     )
-    denature_temp_C = appcli.param(
+    denature_temp_C = byoc.param(
             Key(DocoptConfig, '--denature-temp'),
             Key(PresetConfig, 'denature_temp_C'),
             cast=temp,
     )
-    denature_time_s = appcli.param(
+    denature_time_s = byoc.param(
             Key(DocoptConfig, '--denature-time'),
             Key(PresetConfig, 'denature_time_s'),
             cast=time,
     )
-    anneal_temp_C = appcli.param(
+    anneal_temp_C = byoc.param(
             Key(DocoptConfig, '--anneal-temp', cast=temp),
             Key(MakerConfig, 'Ta', cast=parse_temp_C),
             Method(_calc_anneal_temp_C),
             Key(PresetConfig, 'anneal_temp_C'),
     )
-    anneal_temp_func = appcli.param(
+    anneal_temp_func = byoc.param(
             Key(PresetConfig, 'anneal_temp_func', cast=eval),
             default=lambda t1, t2: min(t1, t2) + 1,
     )
-    anneal_temp_gradient_C = appcli.param(
+    anneal_temp_gradient_C = byoc.param(
             Key(DocoptConfig, '--anneal-temp-gradient'),
             Key(PresetConfig, 'anneal_temp_gradient_C'),
             cast=float,
     )
-    anneal_time_s = appcli.param(
+    anneal_time_s = byoc.param(
             Key(DocoptConfig, '--anneal-time'),
             Key(PresetConfig, 'anneal_time_s'),
             cast=time,
     )
-    extend_temp_C = appcli.param(
+    extend_temp_C = byoc.param(
             Key(DocoptConfig, '--extend-temp'),
             Key(PresetConfig, 'extend_temp_C'),
             cast=temp,
     )
-    extend_time_s = appcli.param(
+    extend_time_s = byoc.param(
             Key(DocoptConfig, '--extend-time', cast=time),
             Key(MakerConfig, 'tx', cast=parse_time_s),
             Method(_calc_extend_time_s, skip=ValueError),
             Key(PresetConfig, 'extend_time_s'),
     )
-    extend_time_s_per_kb = appcli.param(
+    extend_time_s_per_kb = byoc.param(
             Key(PresetConfig, 'extend_time_s_per_kb'),
             cast=float,
     )
-    extend_time_func = appcli.param(
+    extend_time_func = byoc.param(
             Key(PresetConfig, 'extend_time_func', cast=eval),
     )
-    round_extend_time = appcli.param(
+    round_extend_time = byoc.param(
             Key(DocoptConfig, '--no-round-extend-time', cast=not_),
             Key(PresetConfig, 'round_extend_time'),
             Key(StepwiseConfig, 'round_extend_time'),
             default=True,
     )
-    final_extend_temp_C = appcli.param(
+    final_extend_temp_C = byoc.param(
             Key(DocoptConfig, '--final-extend-temp'),
             Key(PresetConfig, 'final_extend_temp_C'),
             cast=temp,
     )
-    final_extend_time_s = appcli.param(
+    final_extend_time_s = byoc.param(
             Key(DocoptConfig, '--final-extend-time'),
             Key(PresetConfig, 'final_extend_time_s'),
             cast=time,
     )
-    hold_temp_C = appcli.param(
+    hold_temp_C = byoc.param(
             Key(DocoptConfig, '--hold-temp'),
             Key(PresetConfig, 'hold_temp_C'),
             cast=temp,
             default=None,
     )
-    skip_thermocycler = appcli.param(
+    skip_thermocycler = byoc.param(
             Key(DocoptConfig, '--skip-thermocycler'),
             default=False,
     )
-    only_thermocycler = appcli.param(
+    only_thermocycler = byoc.param(
             Key(DocoptConfig, '--only-thermocycler'),
             default=False,
     )
-    melt_curve_low_temp_C = appcli.param(
+    melt_curve_low_temp_C = byoc.param(
             Key(DocoptConfig, '--melt-curve-low-temp'),
             Key(PresetConfig, 'melt_curve_low_temp_C'),
             cast=temp,
     )
-    melt_curve_high_temp_C = appcli.param(
+    melt_curve_high_temp_C = byoc.param(
             Key(DocoptConfig, '--melt-curve-high-temp'),
             Key(PresetConfig, 'melt_curve_high_temp_C'),
             cast=temp,
     )
-    melt_curve_temp_step_C = appcli.param(
+    melt_curve_temp_step_C = byoc.param(
             Key(DocoptConfig, '--melt-curve-temp-step'),
             Key(PresetConfig, 'melt_curve_temp_step_C'),
             cast=temp,
     )
-    melt_curve_time_step_s = appcli.param(
+    melt_curve_time_step_s = byoc.param(
             Key(DocoptConfig, '--melt-curve-time-step'),
             Key(PresetConfig, 'melt_curve_time_step_s'),
             cast=temp,
     )
-    two_step = appcli.param(
+    two_step = byoc.param(
             Key(DocoptConfig, '--two-step'),
             Key(PresetConfig, 'two_step'),
             pick=first_true,
             default=False,
     )
-    qpcr = appcli.param(
+    qpcr = byoc.param(
             Key(DocoptConfig, '--qpcr'),
             Key(PresetConfig, 'qpcr'),
             pick=first_true,
             default=False,
     )
-    footnote = appcli.param(
+    footnote = byoc.param(
             Key(PresetConfig, 'footnote'),
             default=None,
     )
@@ -647,7 +646,7 @@ Options:
 
     @classmethod
     def from_product(cls, product_tag):
-        self = cls.from_params()
+        self = cls.from_bare()
         self.product_tag = product_tag
         self.load(MakerConfig)
         return self

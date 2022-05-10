@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
-from appcli import Key, DocoptConfig
+import stepwise, byoc, autoprop
+from byoc import Key, DocoptConfig
 from stepwise import StepwiseConfig, PresetConfig, pl, ul
 from stepwise_mol_bio import Main, format_min, format_sec
 from inform import plural
@@ -36,107 +36,107 @@ Options:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.stain'),
+            StepwiseConfig.setup(('molbio', 'stain')),
     ]
-    preset_briefs = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '<preset>'),
     )
-    title = appcli.param(
+    title = byoc.param(
             Key(PresetConfig),
     )
-    light_sensitive = appcli.param(
+    light_sensitive = byoc.param(
             Key(PresetConfig),
             default=False,
     )
-    prep_buffer = appcli.param(
+    prep_buffer = byoc.param(
             Key(PresetConfig),
     )
-    prep_volume_mL = appcli.param(
+    prep_volume_mL = byoc.param(
             Key(PresetConfig),
             default=30,
     )
-    prep_time_min = appcli.param(
+    prep_time_min = byoc.param(
             Key(PresetConfig),
             Key(PresetConfig, 'prep_time_hr', cast=lambda x: x*60),
     )
-    prep_microwave = appcli.param(
+    prep_microwave = byoc.param(
             Key(PresetConfig),
             default=False,
     )
-    prep_steps = appcli.param(
+    prep_steps = byoc.param(
             Key(PresetConfig),
     )
-    prep_repeats = appcli.param(
+    prep_repeats = byoc.param(
             Key(PresetConfig),
             default=1,
     )
-    stain_buffer = appcli.param(
+    stain_buffer = byoc.param(
             Key(PresetConfig),
     )
-    stain_volume_mL = appcli.param(
+    stain_volume_mL = byoc.param(
             Key(PresetConfig),
             Key(StepwiseConfig, 'default_stain_volume_mL'),
             default=30,
     )
-    stain_time_min = appcli.param(
+    stain_time_min = byoc.param(
             Key(DocoptConfig, '--time', cast=int),
             Key(PresetConfig),
             Key(PresetConfig, 'stain_time_hr', cast=lambda x: x*60),
     )
-    stain_microwave = appcli.param(
+    stain_microwave = byoc.param(
             Key(PresetConfig),
             default=False,
     )
-    stain_steps = appcli.param(
+    stain_steps = byoc.param(
             Key(PresetConfig),
     )
-    stain_repeats = appcli.param(
+    stain_repeats = byoc.param(
             Key(PresetConfig),
             default=1,
     )
-    stain_rinse_repeats = appcli.param(
+    stain_rinse_repeats = byoc.param(
             Key(PresetConfig),
             default=0,
     )
-    destain_buffer = appcli.param(
+    destain_buffer = byoc.param(
             Key(PresetConfig),
     )
-    destain_volume_mL = appcli.param(
+    destain_volume_mL = byoc.param(
             Key(PresetConfig),
             default=30,
     )
-    destain_time_min = appcli.param(
+    destain_time_min = byoc.param(
             Key(PresetConfig),
             Key(PresetConfig, 'destain_time_hr', cast=lambda x: x*60),
     )
-    destain_microwave = appcli.param(
+    destain_microwave = byoc.param(
             Key(PresetConfig),
             default=False,
     )
-    destain_steps = appcli.param(
+    destain_steps = byoc.param(
             Key(PresetConfig),
     )
-    destain_repeats = appcli.param(
+    destain_repeats = byoc.param(
             Key(PresetConfig),
             default=1,
     )
-    imaging_cmd = appcli.param(
+    imaging_cmd = byoc.param(
             Key(DocoptConfig, '--imaging-protocol'),
             Key(DocoptConfig, '--no-imaging', cast=not_),
             Key(PresetConfig, 'imaging_protocol'),
             default=None,
     )
-    protocol_link = appcli.param(
+    protocol_link = byoc.param(
             Key(PresetConfig),
             default=None,
     )
-    footnotes = appcli.param(
+    footnotes = byoc.param(
             Key(PresetConfig),
             default_factory=list,
     )

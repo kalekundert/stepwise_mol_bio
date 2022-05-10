@@ -2,11 +2,11 @@
 
 import stepwise
 import autoprop
-import appcli
+import byoc
 
 from stepwise_mol_bio import Cleanup
 from freezerbox import MakerConfig, parse_volume_mL, parse_time_m
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from more_itertools import pairwise
 from math import ceil
 
@@ -79,11 +79,11 @@ class Autoclave(Cleanup):
 
         return 35 + 10 * int(ceil(self.volume_mL / 1000))
 
-    volume_mL = appcli.param(
+    volume_mL = byoc.param(
             Key(DocoptConfig, '<volume_mL>', cast=int),
             Key(MakerConfig, 1, cast=[parse_volume_mL, int]),
     )
-    time_min = appcli.param(
+    time_min = byoc.param(
             Key(DocoptConfig, '--time', cast=int),
             Key(MakerConfig, 'time', cast=[parse_time_m, int]),
             Method(_calc_sterilization_time_min),

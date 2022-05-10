@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from stepwise import UsageError, StepwiseConfig, PresetConfig
 from stepwise_mol_bio import Pcr
 
@@ -17,8 +17,8 @@ Usage:
     __config__ = [
             DocoptConfig.setup(usage_getter=lambda self: self.format_usage()),
             PresetConfig,
-            StepwiseConfig.setup('molbio.qpcr'),
-            StepwiseConfig.setup('molbio.pcr'),
+            StepwiseConfig.setup(('molbio', 'qpcr')),
+            StepwiseConfig.setup(('molbio', 'pcr')),
     ]
     def format_usage(self):
         return self.__doc__.format(

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 
 from stepwise import StepwiseConfig, PresetConfig
 from stepwise_mol_bio import Main
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 
 @autoprop
 class Transilluminator(Main):
@@ -47,24 +47,24 @@ Configuration:
     __config__ = [
             DocoptConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.transilluminator'),
+            StepwiseConfig.setup(('molbio', 'transilluminator')),
     ]
-    config_paths = appcli.config_attr()
-    preset_briefs = appcli.config_attr()
+    config_paths = byoc.config_attr()
+    preset_briefs = byoc.config_attr()
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '<preset>'),
             Key(StepwiseConfig, 'default_preset'),
             default=None,
     )
-    colloquial_name = appcli.param(
+    colloquial_name = byoc.param(
             Key(PresetConfig, 'colloquial_name'),
     )
-    wavelength_nm = appcli.param(
+    wavelength_nm = byoc.param(
             Key(DocoptConfig, '--wavelength'),
             Key(PresetConfig, 'default_wavelength_nm'),
             default=None,

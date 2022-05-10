@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 from stepwise import (
         StepwiseConfig, PresetConfig, MasterMix,
         paragraph_list, unordered_list,
@@ -13,7 +13,7 @@ from freezerbox import (
         parse_volume_uL, parse_time_m, parse_temp_C, convert_conc_unit,
         unanimous, group_by_identity, normalize_seq, join_lists,
 )
-from appcli import DocoptConfig, Key, Method
+from byoc import DocoptConfig, Key, Method
 from inform import plural, warn
 
 def parse_reaction(reaction_input):
@@ -267,20 +267,20 @@ Template Preparation:
             MakerConfig,
             TemplateConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.ivt'),
+            StepwiseConfig.setup(('molbio', 'ivt')),
     ]
-    preset_briefs = appcli.config_attr()
-    config_paths = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
+    config_paths = byoc.config_attr()
 
     class Template(BindableReagent, use_app_configs=True):
-        seq = appcli.param(
+        seq = byoc.param(
                 Key(ReagentConfig, 'seq'),
         )
-        length = appcli.param(
+        length = byoc.param(
                 Key(ReagentConfig, 'length'),
                 Method(lambda self: len(self.seq)),
         )
-        stock_ng_uL = appcli.param(
+        stock_ng_uL = byoc.param(
                 Key(DocoptConfig, '--template-stock', cast=float),
                 Key(ReagentConfig, 'conc_ng_uL'),
                 default=None,
@@ -295,87 +295,87 @@ Template Preparation:
     def _pick_by_short(self, values):
         return pick_by_short(values, self.short)
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    reaction_prototype = appcli.param(
+    reaction_prototype = byoc.param(
             Key(PresetConfig, 'reaction', cast=parse_reaction),
             get=_pick_by_short,
     )
-    templates = appcli.param(
+    templates = byoc.param(
             Key(DocoptConfig, '<templates>', cast=lambda tags: [Ivt.Template(x) for x in tags]),
             Key(MakerConfig, 'template', cast=lambda x: [Ivt.Template(x)]),
             get=bind,
     )
-    template_length_threshold = appcli.param(
+    template_length_threshold = byoc.param(
             Key(PresetConfig, 'length_threshold'),
     )
-    template_volume_uL = appcli.param(
+    template_volume_uL = byoc.param(
             Key(DocoptConfig, '--template-volume', cast=float),
             default=None,
     )
-    template_mass_ng = appcli.param(
+    template_mass_ng = byoc.param(
             Key(DocoptConfig, '--template-mass', cast=float),
             default=None,
     )
-    short = appcli.param(
+    short = byoc.param(
             Key(DocoptConfig, '--short'),
             Method(_calc_short),
             default=False,
     )
-    volume_uL = appcli.param(
+    volume_uL = byoc.param(
             Key(DocoptConfig, '--volume-uL', cast=float),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(PresetConfig, 'volume_uL'),
             default=None,
     )
-    rntp_mix = appcli.toggle_param(
+    rntp_mix = byoc.toggle_param(
             Key(DocoptConfig, '--no-rntp-mix', toggle=True),
             Key(StepwiseConfig, 'rntp_mix'),
             default=True,
     )
-    extra_percent = appcli.param(
+    extra_percent = byoc.param(
             Key(DocoptConfig, '--extra-percent'),
             Key(PresetConfig, 'extra_percent'),
             cast=float,
             default=10,
     )
-    instructions = appcli.param(
+    instructions = byoc.param(
             Key(PresetConfig, 'instructions'),
             default_factory=list,
     )
-    incubation_times_min = appcli.param(
+    incubation_times_min = byoc.param(
             Key(DocoptConfig, '--incubation-time'),
             Key(MakerConfig, 'time', cast=parse_time_m),
             Key(PresetConfig, 'incubation_time_min'),
     )
-    incubation_temp_C = appcli.param(
+    incubation_temp_C = byoc.param(
             Key(DocoptConfig, '--incubation-temp'),
             Key(MakerConfig, 'temp', cast=parse_temp_C),
             Key(PresetConfig, 'incubation_temp_C'),
     )
-    dnase = appcli.toggle_param(
+    dnase = byoc.toggle_param(
             Key(DocoptConfig, '--toggle-dnase-treatment', toggle=True),
-            Key(PresetConfig, 'dnase.treatment'),
+            Key(PresetConfig, ('dnase', 'treatment')),
             Key(StepwiseConfig, 'dnase_treatment'),
             default=False,
     )
-    dnase_reaction_prototype = appcli.param(
-            Key(PresetConfig, 'dnase.reaction', cast=MasterMix),
+    dnase_reaction_prototype = byoc.param(
+            Key(PresetConfig, ('dnase', 'reaction'), cast=MasterMix),
     )
-    dnase_incubation_time_min = appcli.param(
-            Key(PresetConfig, 'dnase.incubation_time_min'),
+    dnase_incubation_time_min = byoc.param(
+            Key(PresetConfig, ('dnase', 'incubation_time_min')),
     )
-    dnase_incubation_temp_C = appcli.param(
-            Key(PresetConfig, 'dnase.incubation_temp_C'),
+    dnase_incubation_temp_C = byoc.param(
+            Key(PresetConfig, ('dnase', 'incubation_temp_C')),
     )
-    footnotes = appcli.param(
+    footnotes = byoc.param(
             Key(PresetConfig, 'footnotes'),
             default_factory=dict,
     )

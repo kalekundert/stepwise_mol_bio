@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 
 from stepwise import pl, table
 from stepwise_mol_bio import UsageError
@@ -55,7 +55,7 @@ Options:
     -0 --include-zero
         Include a "dilution" with no material in the protocol.
 """
-    max_dilution = appcli.param('--max-dilution', cast=float, default=10)
+    max_dilution = byoc.param('--max-dilution', cast=float, default=10)
 
     def get_protocol(self):
         protocol = stepwise.Protocol()

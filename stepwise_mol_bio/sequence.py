@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 
 from stepwise import pl, table
 from stepwise_mol_bio import Cleanup
 from freezerbox import ProductConfig
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from more_itertools import one
 
 def parse_reactions_docopt(rxn_strs):
@@ -57,7 +57,7 @@ Arguments:
             ProductConfig,
     ]
 
-    reactions = appcli.param(
+    reactions = byoc.param(
             Key(DocoptConfig, '<plasmids:primers>', cast=parse_reactions_docopt),
             Key(ProductConfig, parse_reactions_freezerbox),
     )

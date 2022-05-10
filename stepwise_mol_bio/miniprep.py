@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import autoprop
-import appcli
+import byoc
 
 from stepwise import Protocol, Quantity, StepwiseConfig
 from stepwise_mol_bio import Cleanup
 from freezerbox import ProductConfig
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 
 @autoprop
 class Miniprep(Cleanup):
@@ -28,13 +28,13 @@ Database:
     __config__ = [
             DocoptConfig,
             ProductConfig,
-            StepwiseConfig.setup('molbio.miniprep'),
+            StepwiseConfig.setup(('molbio', 'miniprep')),
     ]
 
-    product_ori = appcli.param(
+    product_ori = byoc.param(
             Key(ProductConfig, 'origin'),
     )
-    expected_yield_ng_uL = appcli.param(
+    expected_yield_ng_uL = byoc.param(
             Key(StepwiseConfig, 'yield_ng_uL'),
     )
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
-from appcli import DocoptConfig
+import stepwise, byoc, autoprop
+from byoc import DocoptConfig
 from inform import plural
 from stepwise import pl, ul, pre
 from stepwise_mol_bio import Main, UsageError
@@ -48,15 +48,15 @@ Options:
             DocoptConfig,
     ]
 
-    _conc_high_str = appcli.param('<high>', default=None)
-    _conc_low_str = appcli.param('<low>', default=None)
-    _factor = appcli.param('<factor>', cast=float, default=None)
-    _volume_str = appcli.param('--volume')
+    _conc_high_str = byoc.param('<high>', default=None)
+    _conc_low_str = byoc.param('<low>', default=None)
+    _factor = byoc.param('<factor>', cast=float, default=None)
+    _volume_str = byoc.param('--volume')
 
-    num_dilutions = appcli.param('--num-dilutions', cast=int)
-    material = appcli.param('--material', default='material')
-    diluent = appcli.param('--diluent', default='water')
-    include_zero = appcli.param('--include-zero', default=False)
+    num_dilutions = byoc.param('--num-dilutions', cast=int)
+    material = byoc.param('--material', default='material')
+    diluent = byoc.param('--diluent', default='water')
+    include_zero = byoc.param('--include-zero', default=False)
 
     def __bareinit__(self):
         self._volume = None
@@ -153,11 +153,11 @@ Options:
     def get_inv_factor(self):
         return 1 / self._factor
 
-    @appcli.on_load(DocoptConfig)
+    @byoc.on_load(DocoptConfig)
     def _load_volume(self):
         self.volume = self._volume_str
 
-    @appcli.on_load(DocoptConfig)
+    @byoc.on_load(DocoptConfig)
     def _load_conc(self):
         if self._conc_high_str and self._conc_low_str:
             self.set_conc_high_low(

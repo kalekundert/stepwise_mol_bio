@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import stepwise
-import appcli
+import byoc
 import autoprop
 import re
 import json
@@ -17,7 +17,7 @@ from freezerbox import (
         parse_mass_ug, parse_volume_uL, parse_size_bp, parse_time,
         group_by_identity, join_lists,
 )
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from inform import Error, plural, did_you_mean
 from functools import partial
 from pathlib import Path
@@ -166,72 +166,72 @@ Options:
     __config__ = [
             DocoptConfig,
             MakerConfig,
-            StepwiseConfig.setup('molbio.digest'),
+            StepwiseConfig.setup(('molbio', 'digest')),
     ]
 
     class Template(BindableReagent, use_app_configs=True):
-        seq = appcli.param(
+        seq = byoc.param(
                 Key(ReagentConfig, 'seq'),
         )
-        stock_ng_uL = appcli.param(
+        stock_ng_uL = byoc.param(
                 Key(DocoptConfig, '--dna-stock'),
                 Key(ReagentConfig, 'conc_ng_uL'),
                 Key(StepwiseConfig, 'dna_stock_ng_uL'),
                 cast=float,
         )
-        is_circular = appcli.param(
+        is_circular = byoc.param(
                 Key(ReagentConfig, 'is_circular'),
                 default=True,
         )
-        is_genomic = appcli.param(
+        is_genomic = byoc.param(
                 Key(DocoptConfig, '--genomic'),
                 default=False,
         )
-        target_size_bp = appcli.param(
+        target_size_bp = byoc.param(
                 Key(MakerConfig, 'size', cast=parse_size_bp),
                 default=None,
         )
 
-    templates = appcli.param(
+    templates = byoc.param(
             Key(DocoptConfig, '<templates>', cast=parse_templates_from_csv),
             Key(MakerConfig, 'template', cast=parse_template_from_freezerbox),
             get=bind,
     )
-    enzyme_names = appcli.param(
+    enzyme_names = byoc.param(
             Key(DocoptConfig, '<enzymes>', cast=comma_list),
             Key(DocoptConfig, '--enzymes', cast=comma_list),
             Key(MakerConfig, 'enzymes', cast=comma_list),
     )
-    product_tag = appcli.param(
+    product_tag = byoc.param(
             Key(DocoptConfig, '<product>'),
     )
-    products = appcli.param(
+    products = byoc.param(
             Method(lambda self: [
                 self.db[self.product_tag].make_intermediate(0)
             ]),
     )
-    num_reactions = appcli.param(
+    num_reactions = byoc.param(
             Key(DocoptConfig, '--num-reactions', cast=int_or_expr),
             Method(lambda self: len(self.templates)),
     )
-    dna_ug = appcli.param(
+    dna_ug = byoc.param(
             Key(DocoptConfig, '--dna', cast=partial(parse_mass_ug, default_unit='µg')),
             Key(MakerConfig, 'mass', cast=parse_mass_ug),
             Key(StepwiseConfig),
             cast=float,
             default=1,
     )
-    target_volume_uL = appcli.param(
+    target_volume_uL = byoc.param(
             Key(DocoptConfig, '--target-volume', cast=partial(parse_volume_uL, default_unit='µL')),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(StepwiseConfig),
             default=10,
     )
-    target_size_bp = appcli.param(
+    target_size_bp = byoc.param(
             Key(MakerConfig, 'size', cast=parse_size_bp),
             default=None,
     )
-    time = appcli.param(
+    time = byoc.param(
             Key(DocoptConfig, '--time', cast=partial(parse_time, default_unit='min')),
             Key(MakerConfig, 'time', cast=parse_time),
             default=None,
@@ -254,7 +254,7 @@ Options:
 
     @classmethod
     def from_product(cls, product_tag):
-        self = cls.from_params()
+        self = cls.from_bare()
         self.product_tag = product_tag
         self.load(MakerConfig)
         return self

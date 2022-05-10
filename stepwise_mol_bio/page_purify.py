@@ -2,19 +2,19 @@
 
 import stepwise
 import autoprop
-import appcli
+import byoc
 
 from stepwise import (
         PresetConfig, StepwiseConfig, Quantity, pl, ul, oxford_comma,
 )
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from freezerbox import (
         ReagentConfig, MakerConfig, ParseError, unanimous, 
         convert_conc_unit, group_by_identity, join_lists,
         parse_volume_uL as parse_strict_volume_uL,
 )
 from stepwise_mol_bio import (
-        Cleanup, Gel, SpinCleanup, ConfigError, comma_list,
+        Cleanup, Gel, SpinCleanup, ConfigError, bind, comma_list,
 )
 from operator import not_
 from more_itertools import one
@@ -78,28 +78,28 @@ class Sample:
         else:
             return Quantity(stock_conc_ug_uL.value * self.volume_uL, 'µg')
 
-    name = appcli.param()
-    molecule = appcli.param(
+    name = byoc.param()
+    molecule = byoc.param(
             Method(lambda self: self.app.default_molecule),
             Key(ReagentConfig, 'molecule'),
             default='RNA',
             ignore=None,
     )
-    stock_conc = appcli.param(
+    stock_conc = byoc.param(
             Method(lambda self: self.app.default_stock_conc),
             Key(ReagentConfig, 'conc'),
             ignore=None,
     )
-    volume_uL = appcli.param(
+    volume_uL = byoc.param(
             Method(lambda self: self.app.default_volume_uL),
             ignore=None,
     )
-    mw = appcli.param(
+    mw = byoc.param(
             Key(ReagentConfig, 'mw'),
             default=None,
             ignore=None,
     )
-    mass_ug = appcli.param(
+    mass_ug = byoc.param(
             Method(_calc_mass_ug),
             ignore=None,
     )
@@ -281,70 +281,71 @@ Database:
             DocoptConfig,
             MakerConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.page_purify'),
+            StepwiseConfig.setup(('molbio', 'page_purify')),
     ]
     Sample = Sample
-    preset_briefs = appcli.config_attr()
-    config_paths = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
+    config_paths = byoc.config_attr()
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    samples = appcli.param(
+    samples = byoc.param(
             Key(DocoptConfig, '<samples>', cast=parse_samples),
             Method(lambda self: [Sample(name=x.tag) for x in self.products]),
+            get=bind,
     )
-    default_stock_conc = appcli.param(
+    default_stock_conc = byoc.param(
             Key(DocoptConfig, '--conc', cast=parse_conc),
             Key(MakerConfig, 'conc', cast=Quantity.from_string),
             Key(PresetConfig, 'conc', cast=Quantity.from_string),
     )
-    default_volume_uL = appcli.param(
+    default_volume_uL = byoc.param(
             Key(DocoptConfig, '--volume', cast=parse_volume_uL),
             Key(MakerConfig, 'volume', cast=parse_strict_volume_uL),
             Key(PresetConfig, 'volume_uL', cast=parse_volume_uL),
             default=5,
     )
-    default_molecule = appcli.param(
+    default_molecule = byoc.param(
             Key(DocoptConfig, '--dna', cast=lambda x: 'DNA'),
             Key(DocoptConfig, '--rna', cast=lambda x: 'RNA'),
             Key(PresetConfig, 'molecule'),
     )
-    gel_preset = appcli.param(
+    gel_preset = byoc.param(
             Key(DocoptConfig, '--gel-preset'),
             Key(MakerConfig, 'gel'),
             Key(PresetConfig, 'gel_preset'),
     )
-    gel_percent = appcli.param(
+    gel_percent = byoc.param(
             Key(DocoptConfig, '--gel-percent'),
             default=None,
     )
-    gel_run_volts = appcli.param(
+    gel_run_volts = byoc.param(
             Key(DocoptConfig, '--gel-run-volts'),
             default=None,
     )
-    gel_run_time_min = appcli.param(
+    gel_run_time_min = byoc.param(
             Key(DocoptConfig, '--gel-run-time-min'),
             default=None,
     )
-    desired_bands = appcli.param(
+    desired_bands = byoc.param(
             Key(DocoptConfig, '--bands', cast=comma_list),
             Key(PresetConfig, 'bands'),
             default_factory=list,
     )
-    rna_cleanup_preset = appcli.param(
-            Key(PresetConfig, 'cleanup_preset.rna'),
+    rna_cleanup_preset = byoc.param(
+            Key(PresetConfig, ('cleanup_preset', 'rna')),
     )
-    dna_cleanup_preset = appcli.param(
-            Key(PresetConfig, 'cleanup_preset.dna'),
+    dna_cleanup_preset = byoc.param(
+            Key(PresetConfig, ('cleanup_preset', 'dna')),
     )
-    cleanup = appcli.param(
+    cleanup = byoc.param(
             Key(DocoptConfig, '--no-cleanup', cast=not_),
             Key(PresetConfig, 'cleanup_preset', cast=bool),
     )
@@ -361,8 +362,6 @@ Database:
         self.samples = samples
 
     def get_protocol(self):
-        self._bind_samples()
-
         p = stepwise.Protocol()
         p += self.gel_electrophoresis_steps
         p += self.gel_extraction_steps
@@ -505,23 +504,12 @@ Database:
 
         return p
 
-    def _bind_samples(self):
-        assert self.samples
-
-        for sample in self.samples:
-            sample.bind(self)
-
     def _cluster_names_by_molecule(self):
         names = {'RNA': [], 'DNA': []}
         for sample in self.samples:
             names[sample.molecule].append(sample.name)
         return names
 
-    @classmethod
-    def _solo_maker_factory(cls, product):
-        app = super()._solo_maker_factory(product)
-        app._bind_samples()
-        return app
 
 if __name__ == '__main__':
     PagePurify.main()

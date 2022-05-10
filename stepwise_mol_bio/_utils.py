@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import sys
-import appcli
+import byoc
 import autoprop
 import tidyexc
 import freezerbox
 
 from freezerbox import ReagentConfig, BaseProductConfig, iter_combo_makers
-from appcli import Method, DocoptConfig
+from byoc import Method, DocoptConfig
 from appdirs import AppDirs
 from inform import format_range, error
 from more_itertools import all_equal, always_iterable, first
@@ -17,16 +17,16 @@ from pathlib import Path
 app_dirs = AppDirs("stepwise_mol_bio")
 
 @autoprop
-class Main(appcli.App):
+class Main(byoc.App):
     usage_io = sys.stderr
     group_by = {}
     merge_by = {}
 
     @classmethod
     def main(cls):
-        app = cls.from_params()
-        app.load(DocoptConfig)
-        app.load(BaseProductConfig)
+        app = cls.from_bare()
+        byoc.load(app, DocoptConfig)
+        byoc.load(app, BaseProductConfig)
         
         try:
             app.protocol.print()
@@ -63,23 +63,26 @@ class Main(appcli.App):
 
     @classmethod
     def _solo_maker_factory(cls, product):
-        app = cls.from_params()
+        app = cls.from_bare()
         app.db = product.db
         app.products = [product]
-        app.load(BaseProductConfig)
+        byoc.load(app, BaseProductConfig)
         return app
 
     @classmethod
     def _combo_maker_factory(cls, db):
-        app = cls.from_params()
+        app = cls.from_bare()
         app.db = db
+        # Shouldn't need to load `BaseProductConfig` here.  Any params that 
+        # need it should be loaded in the solo makers and then copied into the 
+        # combo maker.
         return app
 
 
 class Cleanup(Main):
 
-    product_tags = appcli.param(
-            Method(lambda self: [x.tag for x in self.products]),
+    product_tags = byoc.param(
+            Method(lambda self: [x.tag for x in self.products], skip=AttributeError),
             default_factory=list,
     )
 
@@ -101,7 +104,7 @@ class Cleanup(Main):
 class Bindable:
     """
     Superclass for objects that can be bound to a Main/Cleanup instance, for 
-    the purpose of gaining access to its FreezerBox database, appcli config, 
+    the purpose of gaining access to its FreezerBox database, BYOC config, 
     etc.
 
     See also: `bind()`
@@ -123,7 +126,7 @@ class Bindable:
 
     def on_bind(self, app, force=False):
         if self._use_app_configs:
-            appcli.share_configs(app, self)
+            byoc.share_configs(app, self)
 
     def get_db(self):
         return self.app.db
@@ -195,6 +198,7 @@ class UsageError(StepwiseMolBioError):
     pass
 
 def bind(app, bindables, iter=always_iterable, force=False):
+    # Would `funcy.walk()` be a good way to handle any level of nesting?
     for bindable in iter(bindables):
         bindable.bind(app, force=force)
     return bindables

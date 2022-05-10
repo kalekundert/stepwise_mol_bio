@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import stepwise
-import appcli
+import byoc
 import autoprop
 
 from stepwise import pl, ul
@@ -9,7 +9,7 @@ from stepwise_mol_bio import Assembly
 from stepwise_mol_bio.digest import NebRestrictionEnzymeDatabase
 from stepwise_mol_bio._assembly import ARGUMENT_DOC, OPTION_DOC
 from freezerbox import MakerConfig, group_by_identity
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from inform import plural
 
 @autoprop.cache
@@ -47,7 +47,7 @@ Database:
         See --enzymes.
 """
 
-    enzymes = appcli.param(
+    enzymes = byoc.param(
             Key(DocoptConfig, '--enzymes'),
             Key(MakerConfig, 'enzymes'),
             cast=lambda x: x.split(','),

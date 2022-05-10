@@ -2,13 +2,13 @@
 
 import stepwise
 import autoprop
-import appcli
+import byoc
 
 from stepwise import pl, ul
 from stepwise_mol_bio import Assembly
 from stepwise_mol_bio._assembly import ARGUMENT_DOC, OPTION_DOC
 from freezerbox import MakerConfig, group_by_identity, parse_bool
-from appcli import Key, DocoptConfig
+from byoc import Key, DocoptConfig
 from inform import plural
 
 @autoprop.cache
@@ -46,11 +46,11 @@ Database:
         See --kinase.  Specify "yes" or "no".
 """
 
-    excess_insert = appcli.param(
+    excess_insert = byoc.param(
             Key(DocoptConfig, '--excess-insert', cast=float),
             default=3,
     )
-    use_kinase = appcli.param(
+    use_kinase = byoc.param(
             Key(DocoptConfig, '--kinase'),
             Key(MakerConfig, 'kinase', cast=parse_bool),
             default=False,

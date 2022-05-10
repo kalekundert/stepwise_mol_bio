@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 from stepwise import Quantity
 from stepwise_mol_bio import Cleanup
 from freezerbox import MakerConfig, group_by_identity
-from appcli import DocoptConfig, Key, Method
+from byoc import DocoptConfig, Key, Method
 
 @autoprop
 class Aliquot(Cleanup):
@@ -27,11 +27,11 @@ Arguments:
             DocoptConfig,
             MakerConfig,
     ]
-    volume = appcli.param(
+    volume = byoc.param(
             Key(DocoptConfig, '<volume>'),
             Key(MakerConfig, 'volume'),
     )
-    conc = appcli.param(
+    conc = byoc.param(
             Key(DocoptConfig, '<conc>'),
             Key(MakerConfig, 'conc'),
             default=None,

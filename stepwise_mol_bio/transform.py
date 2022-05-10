@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop, freezerbox
+import stepwise, byoc, autoprop, freezerbox
 
 from stepwise import (
         StepwiseConfig, PresetConfig, pl, ul, dl,
@@ -13,7 +13,7 @@ from freezerbox import (
         MakerConfig, ProductConfig, ReagentConfig, Plasmid, Strain,
         parse_bool, join_lists, group_by_identity, unanimous,
 )
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from itertools import combinations
 from more_itertools import (
         one, flatten, always_iterable, unique_everseen as unique,
@@ -104,7 +104,7 @@ Options:
             MakerConfig,
             ProductConfig,
             PresetConfig,
-            StepwiseConfig.setup('molbio.transform'),
+            StepwiseConfig.setup(('molbio', 'transform')),
     ]
 
     class Reaction(Bindable, use_app_configs=True):
@@ -136,43 +136,43 @@ Options:
                     self.strain,
             )
 
-        strain = appcli.param(
+        strain = byoc.param(
                 Key(DocoptConfig, '--strain'),
                 Key(MakerConfig, 'strain'),
                 Key(PresetConfig, 'strain'),
                 cast=lambda x: Transform.Strain(x),
         )
-        plate_media = appcli.param(
+        plate_media = byoc.param(
                 Key(PresetConfig, 'plate_media'),
                 default='LB',
         )
-        plate_antibiotics = appcli.param(
+        plate_antibiotics = byoc.param(
                 Key(DocoptConfig, '--antibiotics', cast=comma_list),
                 Key(PresetConfig, 'antibiotics'),
                 Method(_infer_antibiotics),
         )
 
     class Plasmid(BindableReagent, use_app_configs=True):
-        quantity = appcli.param(
+        quantity = byoc.param(
                 Key(PresetConfig, 'plasmid_quantity'),
         )
-        antibiotic = appcli.param(
+        antibiotic = byoc.param(
                 # It's possible for plasmids to have multiple resistance genes, 
                 # but in these cases the user will just have to manually 
                 # specify which ones to use.
                 Key(ReagentConfig, 'antibiotics', cast=one),
         )
-        ori = appcli.param(
+        ori = byoc.param(
                 Key(ReagentConfig, 'ori'),
                 default=None,
         )
 
     class Strain(BindableReagent):
-        antibiotics = appcli.param(
+        antibiotics = byoc.param(
                 Key(ReagentConfig, 'resistance'),
                 Method(lambda self: [p.antibiotic for p in self.plasmids]),
         )
-        plasmids = appcli.param(
+        plasmids = byoc.param(
                 Key(ReagentConfig, 'plasmids', cast=lambda xs: [
                     Transform.Plasmid(x.tag)
                     for x in xs
@@ -318,99 +318,99 @@ Options:
                 for x in self.transformations
         )
 
-    preset_briefs = appcli.config_attr()
+    preset_briefs = byoc.config_attr()
 
-    presets = appcli.param(
+    presets = byoc.param(
             Key(StepwiseConfig, 'presets'),
             pick=list,
     )
-    preset = appcli.param(
+    preset = byoc.param(
             Key(DocoptConfig, '--preset'),
             Key(MakerConfig, 'preset'),
             Key(StepwiseConfig, 'default_preset'),
     )
-    transformations = appcli.param(
+    transformations = byoc.param(
             Key(DocoptConfig, parse_transformations_from_docopt),
             Key(ProductConfig, parse_transformations_from_freezerbox),
             get=bind,
     )
-    incompatibility_groups = appcli.param(
+    incompatibility_groups = byoc.param(
             Key(StepwiseConfig, 'incompatibility_groups'),
             pick=join_lists,
     )
-    skip_rest = appcli.param(
+    skip_rest = byoc.param(
             Key(DocoptConfig, '--fast'),
             Key(DocoptConfig, '--skip-rest'),
             Key(PresetConfig, 'skip_rest'),
             Method(_skip_rest_recovery),
     )
-    skip_heat_shock = appcli.param(
+    skip_heat_shock = byoc.param(
             Key(DocoptConfig, '--skip-heat-shock'),
             Key(PresetConfig, 'skip_heat_shock'),
             default=False,
     )
-    skip_recovery = appcli.param(
+    skip_recovery = byoc.param(
             Key(DocoptConfig, '--fast'),
             Key(DocoptConfig, '--skip-recovery'),
             Key(PresetConfig, 'skip_recovery'),
             Method(_skip_rest_recovery),
     )
-    skip_recovery_antibiotics = appcli.param(
+    skip_recovery_antibiotics = byoc.param(
             Key(StepwiseConfig, 'skip_recovery_antibiotics'),
     )
-    cell_volume_uL = appcli.param(
+    cell_volume_uL = byoc.param(
             Key(PresetConfig, 'cell_volume_uL'),
     )
-    rest_time_min = appcli.param(
+    rest_time_min = byoc.param(
             Key(PresetConfig, 'rest_time_min'),
     )
-    heat_shock_temp_C = appcli.param(
+    heat_shock_temp_C = byoc.param(
             Key(PresetConfig, 'heat_shock_temp_C'),
     )
-    heat_shock_time_sec = appcli.param(
+    heat_shock_time_sec = byoc.param(
             Key(PresetConfig, 'heat_shock_time_sec'),
     )
-    recovery_media = appcli.param(
+    recovery_media = byoc.param(
             Key(PresetConfig, 'recovery_media'),
     )
-    recovery_media_volume_uL = appcli.param(
+    recovery_media_volume_uL = byoc.param(
             Key(PresetConfig, 'recovery_media_volume_uL'),
     )
-    recovery_temp_C = appcli.param(
+    recovery_temp_C = byoc.param(
             Key(PresetConfig, 'recovery_temp_C'),
     )
-    recovery_time_min = appcli.param(
+    recovery_time_min = byoc.param(
             Key(PresetConfig, 'recovery_time_min'),
     )
-    concentrate = appcli.param(
+    concentrate = byoc.param(
             Key(PresetConfig, 'concentrate', cast=parse_bool),
             default=False,
     )
-    conc_spin_speed_g = appcli.param(
+    conc_spin_speed_g = byoc.param(
             Key(PresetConfig, 'conc_spin_speed_g'),
     )
-    conc_spin_time_min = appcli.param(
+    conc_spin_time_min = byoc.param(
             Key(PresetConfig, 'conc_spin_time_min'),
     )
-    conc_volume_uL = appcli.param(
+    conc_volume_uL = byoc.param(
             Key(PresetConfig, 'conc_volume_uL'),
     )
-    plate_dilution = appcli.param(
+    plate_dilution = byoc.param(
             Key(PresetConfig, 'plate_dilution'),
             default=1,
     )
-    plate_volume_uL = appcli.param(
+    plate_volume_uL = byoc.param(
             Key(PresetConfig, 'plate_volume_uL'),
             get=by_recovery,
     )
-    outgrowth_temp_C = appcli.param(
+    outgrowth_temp_C = byoc.param(
             Key(PresetConfig, 'outgrowth_temp_C'),
             Key(PresetConfig, 'recovery_temp_C'),
     )
-    outgrowth_time_h = appcli.param(
+    outgrowth_time_h = byoc.param(
             Key(PresetConfig, 'outgrowth_time_h'),
     )
-    footnotes = appcli.param(
+    footnotes = byoc.param(
             Key(PresetConfig, 'footnotes'),
             default_factory=list,
     )

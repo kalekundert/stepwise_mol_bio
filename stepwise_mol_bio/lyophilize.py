@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 from stepwise import Quantity
 from stepwise_mol_bio import Cleanup, UsageError
 from freezerbox import MakerConfig, group_by_identity, parse_volume, parse_conc
-from appcli import DocoptConfig, Key
+from byoc import DocoptConfig, Key
 from inform import plural
 
 @autoprop
@@ -42,12 +42,12 @@ Database:
             DocoptConfig,
             MakerConfig,
     ]
-    volume = appcli.param(
+    volume = byoc.param(
             Key(DocoptConfig, '--volume', cast=lambda x: parse_volume(x, default_unit='µL')),
             Key(MakerConfig, 'volume', cast=parse_volume),
             default=None,
     )
-    conc = appcli.param(
+    conc = byoc.param(
             Key(DocoptConfig, '--conc'),
             Key(MakerConfig, 'conc', cast=parse_conc),
             default=None,

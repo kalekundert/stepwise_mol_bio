@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import stepwise, appcli, autoprop
+import stepwise, byoc, autoprop
 
 from stepwise import StepwiseConfig, pl, ul
 from stepwise_mol_bio import (
@@ -11,7 +11,7 @@ from freezerbox import (
         ReagentConfig, MakerConfig, QueryError,
         parse_conc_uM, parse_volume_uL, group_by_identity, join_lists,
 )
-from appcli import Key, Method, DocoptConfig
+from byoc import Key, Method, DocoptConfig
 from inform import plural
 from more_itertools import all_equal, flatten
 from collections.abc import Sequence
@@ -118,37 +118,37 @@ FreezerBox:
     __config__ = [
             DocoptConfig,
             MakerConfig,
-            StepwiseConfig.setup('molbio.anneal')
+            StepwiseConfig.setup(('molbio', 'anneal'))
     ]
 
     class Oligo(BindableReagent, use_app_configs=True):
-        stock_uM = appcli.param(
+        stock_uM = byoc.param(
                 Key(DocoptConfig, '--oligo-stock', cast=parse_oligo_stock_docopt),
                 Key(ReagentConfig, 'conc_uM'),
                 Key(StepwiseConfig, 'stock_conc_uM'),
         )
 
-    oligo_pairs = appcli.param(
+    oligo_pairs = byoc.param(
             Key(DocoptConfig, '<oligo_1,oligo_2>', cast=parse_oligo_pairs_docopt),
             Key(MakerConfig, parse_oligo_pair_freezerbox),
             get=partial(bind, iter=flatten),
     )
-    num_reactions = appcli.param(
+    num_reactions = byoc.param(
             Key(DocoptConfig, '--num-reactions'),
             Method(lambda self: len(self.oligo_pairs)),
     )
-    volume_uL = appcli.param(
+    volume_uL = byoc.param(
             Key(DocoptConfig, '--volume'),
             Key(MakerConfig, 'volume', cast=parse_volume_uL),
             Key(StepwiseConfig, 'volume_uL'),
             cast=float,
     )
-    oligo_conc_uM = appcli.param(
+    oligo_conc_uM = byoc.param(
             Key(DocoptConfig, '--oligo-conc', cast=float),
             Key(MakerConfig, 'conc', cast=parse_conc_uM),
             default=None,
     )
-    config_paths = appcli.config_attr()
+    config_paths = byoc.config_attr()
 
     group_by = {
             'volume_uL': group_by_identity,
