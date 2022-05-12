@@ -1,0 +1,166 @@
+test_protocol:
+  -
+    id: base
+    app:
+      > app = Trizol()
+    expected:
+      - Lyse and homogenize samples in TRIzol reagent [1]:
+      - - Collect cells by centrifugation, discard supernatant.
+      - - Add 750 µL TRIzol reagent per 250 µL sample.
+      - - Pipet the lysate up and down several times to homogenize.
+      - - Incubate for 5 min at room temperature.
+      - Extract RNA from TRIzol reagent [1]:
+      - - Add 200 µL chloroform per 1 mL TRIzol reagent.
+      - - Vortex vigorously.
+      - - Incubate for 2-3 min at room temperature.
+      - - Centrifuge for 15 min at 12000g and 4°C.
+      - - Transfer the aqueous phase (top, not pink, ≈500 µL per 1 mL TRIzol reagent) for each sample to a clean tube, taking care to avoid transferring any of the organic phase.
+      - Concentrate and purify the RNA by isopropanol precipitation [1]:
+      - - Add 5-10 µg RNAse-free glycogen.
+      - - Add 500 µL isopropanol per 1 mL TRIzol reagent.
+      - - Incubate at 4°C for 10 min.
+      - - Centrifuge for 10 min at 12,000g and 4°C.
+      - - Carefully pipet off all supernatant.
+      - - Resuspend pellet in 1 mL 75% ethanol per 1 mL TRIzol reagent.
+      - - Vortex briefly.
+      - - Centrifuge for 5 min at 7,500g and 4°C.
+      - - Carefully pipet off all supernatant.
+      - - Air dry for 5-10 min.
+      - - Resuspend RNA in 20-50 µL water.
+      - - Incubate at 55-60°C for 10-15 min.
+      - Note:
+      - [1] https://tinyurl.com/yc6es8av
+  -
+    id: trizol-volume
+    app:
+      > app = Trizol(2)
+    expected:
+      - Lyse and homogenize samples in TRIzol reagent [1]:
+      - - Collect cells by centrifugation, discard supernatant.
+      - - Add 2 mL TRIzol reagent.
+      - - Pipet the lysate up and down several times to homogenize.
+      - - Incubate for 5 min at room temperature.
+
+      - Extract RNA from TRIzol reagent [1]:
+      - - Add 400 µL chloroform.
+      - - Vortex vigorously.
+      - - Incubate for 2-3 min at room temperature.
+      - - Centrifuge for 15 min at 12000g and 4°C.
+      - - Transfer the aqueous phase (top, not pink, ≈1000 µL) for each sample to a clean tube, taking care to avoid transferring any of the organic phase.
+
+      - Concentrate and purify the RNA by isopropanol precipitation [1]:
+      - - Add 5-10 µg RNAse-free glycogen.
+      - - Add 1000 µL isopropanol.
+      - - Incubate at 4°C for 10 min.
+      - - Centrifuge for 10 min at 12,000g and 4°C.
+      - - Carefully pipet off all supernatant.
+      - - Resuspend pellet in 2 mL 75% ethanol.
+      - - Vortex briefly.
+      - - Centrifuge for 5 min at 7,500g and 4°C.
+      - - Carefully pipet off all supernatant.
+      - - Air dry for 5-10 min.
+      - - Resuspend RNA in 20-50 µL water.
+      - - Incubate at 55-60°C for 10-15 min.
+  -
+    id: trizol-volume-tissue
+    app:
+      > app = Trizol(2)
+      > app.sample_type = 'tissue'
+    expected:
+      - Add 2 mL TRIzol reagent.
+  -
+    id: trizol-volume-monolayer
+    app:
+      > app = Trizol(2)
+      > app.sample_type = 'monolayer'
+    expected:
+      - Add 2 mL TRIzol reagent directly to the culture dish.
+  -
+    id: sample-type-tissue
+    app:
+      > app = Trizol()
+      > app.sample_type = 'tissue'
+    expected:
+      - - Add 1 mL TRIzol reagent per 50-100 mg tissue.
+      - - Homogenize using a homogenizer.
+  -
+    id: sample-type-monolayer
+    app:
+      > app = Trizol()
+      > app.sample_type = 'monolayer'
+    expected:
+      - - Remove growth media.
+      - - Add 300-400 µL TRIzol reagent per 10⁵-10⁷ cells directly to the culture dish.
+      - - Pipet the lysate up and down several times to homogenize.
+  -
+    id: sample-type-unknown
+    app:
+      > app = Trizol()
+      > app.sample_type = 'unknown'
+    error:
+      type: UsageError
+      message: unknown sample type: 'unknown'
+  -
+    id: high-fat-content
+    app:
+      > app = Trizol()
+      > app.high_fat_content = True
+    expected:
+      - - Centrifuge the lysate for 5 min at 12000g and 4-10°C.
+      - - Transfer the clear supernatant to a clean tube.
+  -
+    id: elution-volume
+    app:
+      > app = Trizol()
+      > app.elution_volume_uL = 10
+    expected:
+      - - Resuspend RNA in 10 µL water.
+
+test_cli:
+  -
+    cmd: sw trizol -v 1
+    stdout:
+      > {DATE}
+      > 
+      > \$ sw trizol -v 1
+      > 
+      > 1. Lyse and homogenize samples in TRIzol reagent \[1\]:
+      > 
+      >    - Collect cells by centrifugation, discard
+      >      supernatant.
+      >    - Add 1 mL TRIzol reagent.
+      >    - Pipet the lysate up and down several times to
+      >      homogenize.
+      >    - Incubate for 5 min at room temperature.
+      > 
+      > 2. Extract RNA from TRIzol reagent \[1\]:
+      > 
+      >    - Add 200 µL chloroform.
+      >    - Vortex vigorously.
+      >    - Incubate for 2-3 min at room temperature.
+      >    - Centrifuge for 15 min at 12000g and 4°C.
+      >    - Transfer the aqueous phase \(top, not pink, ≈500
+      >      µL\) for each sample to a clean tube, taking care
+      >      to avoid transferring any of the organic phase.
+      > 
+      > 3. Concentrate and purify the RNA by isopropanol
+      >    precipitation \[1\]:
+      > 
+      >    - Add 5-10 µg RNAse-free glycogen.
+      >    - Add 500 µL isopropanol.
+      >    - Incubate at 4°C for 10 min.
+      > 
+      >    - Centrifuge for 10 min at 12,000g and 4°C.
+      >    - Carefully pipet off all supernatant.
+      > 
+      >    - Resuspend pellet in 1 mL 75% ethanol.
+      >    - Vortex briefly.
+      >    - Centrifuge for 5 min at 7,500g and 4°C.
+      > 
+      >    - Carefully pipet off all supernatant.
+      >    - Air dry for 5-10 min.
+      >    - Resuspend RNA in 20-50 µL water.
+      >    - Incubate at 55-60°C for 10-15 min.
+      > 
+      > Note:
+      > \[1\] https://tinyurl.com/yc6es8av
