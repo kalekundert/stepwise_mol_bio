@@ -1,0 +1,280 @@
+test_protocol:
+  -
+    id: base
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+    expected:
+      - Grow overnight cultures:
+      - LB+Carb: s1
+      - Inoculate 1 mL sterile media.
+      - Incubate overnight at 37°C with shaking at 225 rpm.
+      - Grow day cultures:
+      - Inoculate 5 mL sterile media with 50 µL saturated overnight culture.
+      - Incubate at 37°C with shaking at 225 rpm for 4h.
+    forbidden:
+      - Use fresh colonies
+  -
+    id: 2-strains-1-antibiotic
+    app:
+      > app = Grow([
+      >     Grow.Strain('s1', antibiotics=['Carb']),
+      >     Grow.Strain('s2', antibiotics=['Carb']),
+      > ])
+      > app.volume_mL = 5
+      > app.time_h = 4
+    expected:
+      - LB+Carb: s1,s2
+  -
+    id: 2-strains-2-antibiotic
+    app:
+      > app = Grow([
+      >     Grow.Strain('s1', antibiotics=['Carb']),
+      >     Grow.Strain('s2', antibiotics=['Kan']),
+      > ])
+      > app.volume_mL = 5
+      > app.time_h = 4
+    expected:
+      - LB+Carb: s1
+      - LB+Kan: s2
+  -
+    id: fresh
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.fresh = True
+    expected:
+      - Use fresh colonies (i.e. either transformed or restreaked within 1 week).
+  -
+    id: media
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.media = 'SOB'
+    expected:
+      - SOB+Carb: s1
+  -
+    id: media-spaces
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.media = 'LB + IPTG'
+    expected:
+      - LB + IPTG + Carb: s1
+  -
+    id: media-diff-than-overnight
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.media = 'SOB'
+      > app.overnight_media = 'LB'
+    expected:
+      - Grow overnight cultures:
+      - LB+Carb: s1
+      - Grow day cultures:
+      - SOB+Carb: s1
+  -
+    id: inoculate-volume
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.inoculate_volume_uL = 5
+    expected:
+      - Inoculate 5 mL sterile media with 5 µL saturated overnight culture.
+  -
+    id: inoculate-volume-ratio
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.inoculate_volume_uL = Grow.Ratio(1000)
+    expected:
+      - Inoculate 5 mL sterile media with 5 µL saturated overnight culture.
+  -
+    id: temp
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.temp_C = 25
+    expected:
+      - Incubate overnight at 25°C with shaking at 225 rpm.
+      - Incubate at 25°C with shaking at 225 rpm for 4h.
+  -
+    id: shaking
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.shaking_rpm = 200
+    expected:
+      - Incubate overnight at 37°C with shaking at 200 rpm.
+      - Incubate at 37°C with shaking at 200 rpm for 4h.
+  -
+    id: target-phase
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_phase = 'early log'
+    expected:
+      - until the cells reach early log phase.
+  -
+    id: target-phase-od
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_phase = 'early log'
+      > app.target_od = 0.1
+    expected:
+      - until the cells reach early log phase, OD=0.1.
+  -
+    id: target-phase-od-time
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_phase = 'early log'
+      > app.target_od = 0.1
+      > app.time_h = 2
+    expected:
+      - until the cells reach early log phase, OD=0.1, ≈2h.
+  -
+    id: target-od
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_od = 0.1
+    expected:
+      - until the cells reach OD=0.1.
+  -
+    id: target-od-time
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_od = 0.1
+      > app.time_h = 2
+    expected:
+      - until the cells reach OD=0.1, ≈2h.
+  -
+    id: target-time
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_phase = None
+      > app.time_h = 2
+    expected:
+      - Incubate at 37°C with shaking at 225 rpm for 2h.
+  -
+    id: target-err
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.target_phase = None
+    error:
+      type: UsageError
+      message: must specify how long to grow the cells for
+  -
+    id: overnight-media
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.overnight_media = 'SOB'
+    expected:
+      - Grow overnight cultures:
+      - SOB+Carb: s1
+      - Grow day cultures:
+      - LB+Carb: s1
+  -
+    id: overnight-volume
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.overnight_volume_mL = 2
+    expected:
+      - Grow overnight cultures:
+      - Inoculate 2 mL sterile media.
+      - Grow day cultures:
+  -
+    id: overnight-temp
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.overnight_temp_C = 25
+    expected:
+      - Grow overnight cultures:
+      - Incubate overnight at 25°C with shaking at 225 rpm.
+      - Grow day cultures:
+      - Incubate at 37°C with shaking at 225 rpm for 4h.
+  -
+    id: overnight-shaking
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.overnight_shaking_rpm = 200
+    expected:
+      - Grow overnight cultures:
+      - Incubate overnight at 37°C with shaking at 200 rpm.
+      - Grow day cultures:
+      - Incubate at 37°C with shaking at 225 rpm for 4h.
+  -
+    id: skip-overnight
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.volume_mL = 5
+      > app.time_h = 4
+      > app.skip_overnight = True
+    expected:
+      - Grow day cultures:
+      - LB+Carb: s1
+      - Inoculate 5 mL sterile media with 50 µL saturated overnight culture.
+      - Incubate at 37°C with shaking at 225 rpm for 4h.
+    forbidden:
+      - Grow overnight cultures:
+      - Inoculate 1 mL sterile media.
+      - Incubate overnight at 37°C with shaking at 225 rpm.
+  -
+    id: only-overnight
+    app:
+      > app = Grow([Grow.Strain('s1', antibiotics=['Carb'])])
+      > app.only_overnight = True
+    expected:
+      - Grow overnight cultures:
+      - LB+Carb: s1
+      - Inoculate 1 mL sterile media.
+      - Incubate overnight at 37°C with shaking at 225 rpm.
+    forbidden:
+      - Grow day cultures:
+      - Inoculate 5 mL sterile media with 50 µL saturated overnight culture.
+      - Incubate at 37°C with shaking at 225 rpm for 4h.
+
+test_cli:
+  -
+    cmd: sw grow s1 -a Carb -v 5 -t 4
+    stdout:
+      > {DATE}
+      > 
+      > \$ sw grow s1 -a Carb -v 5 -t 4
+      > 
+      > 1. Grow overnight cultures:
+      > 
+      >    LB\+Carb: s1
+      > 
+      >    - Inoculate 1 mL sterile media.
+      >    - Incubate overnight at 37°C with shaking at 225
+      >      rpm.
+      > 
+      > 2. Grow day cultures:
+      > 
+      >    - Inoculate 5 mL sterile media with 50 µL
+      >      saturated overnight culture.
+      >    - Incubate at 37°C with shaking at 225 rpm for 4h.
+      

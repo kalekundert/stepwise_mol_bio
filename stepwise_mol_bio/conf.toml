@@ -30,6 +30,17 @@ outgrowth_temp_C = 37
 outgrowth_time_h = 16
 
 
+[molbio.grow]
+default_preset = 'lb'
+
+[molbio.grow.presets.lb]
+brief = 'grow at 37°C in LB'
+media = 'LB'
+temp_C = 37
+shaking_rpm = 225
+inoculate_ratio = 100
+
+
 [molbio.miniprep.yield_ng_uL]
 pUC = 200
 pSC101 = 50

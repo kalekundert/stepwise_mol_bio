@@ -93,6 +93,7 @@ scopes = [
   "gel",
   "gibson",
   "golden_gate",
+  "grow",
   "invpcr",
   "ivt",
   "ivtt",

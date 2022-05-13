@@ -20,6 +20,7 @@ from .gels.stain import Stain
 from .gels.transilluminator import Transilluminator
 from .gibson import Gibson
 from .golden_gate import GoldenGate
+from .grow import Grow
 from .ivt import Ivt
 from .ivtt import Ivtt
 from .kld import Kld
