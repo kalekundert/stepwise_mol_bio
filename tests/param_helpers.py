@@ -14,9 +14,12 @@ from difflib import Differ
 
 with_py = Namespace()
 with_math = Namespace('from math import *')
-with_swmb = Namespace(
+with_sw = Namespace(
         'import stepwise',
         'from stepwise import *',
+)
+with_swmb = Namespace(
+        with_sw,
         'from freezerbox import *',
         'from stepwise_mol_bio import *',
 )

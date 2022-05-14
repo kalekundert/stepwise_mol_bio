@@ -112,6 +112,7 @@ scopes = [
   "sequence",
   "spin_cleanup",
   "stain",
+  "thermocycler",
   "transform",
   "transilluminator",
   "trizol",

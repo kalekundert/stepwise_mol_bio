@@ -1,0 +1,177 @@
+test_protocol:
+  -
+    id: base
+    app:
+      > app = Thermocycler([
+      >     {'temp_C': 37, 'time_m': 15},
+      >     {'temp_C': 65, 'time_m': 10},
+      > ])
+    expected:
+      - Run the following thermocycler protocol:
+      - - 37°C for 15m
+      - - 65°C for 10m
+
+test_cli:
+  -
+    id: base
+    cmd: sw thermocycler 37/15m 65/10m
+    stdout:
+      > {DATE}
+      >
+      > \$ sw thermocycler 37/15m 65/10m
+      >
+      > 1\. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 15m
+      >    - 65°C for 10m
+
+test_parse_thermocycler_steps:
+  -
+    id: empty
+    given:
+      []
+    expected:
+      []
+  -
+    id: 1-step
+    given:
+      - 37/60
+    expected:
+      - {'temp_C': 37, 'time_s': 60}
+  -
+    id: 2-steps
+    given:
+      - 37/60
+      - 65/120
+    expected:
+      - {'temp_C': 37, 'time_s': 60}
+      - {'temp_C': 65, 'time_s': 120}
+  -
+    id: temp-unit
+    given:
+      - 37C/60
+    expected:
+      - {'temp_C': 37, 'time_s': 60}
+  -
+    id: temp-unit
+    given:
+      - 37°C/60
+    expected:
+      - {'temp_C': 37, 'time_s': 60}
+  -
+    id: time-unit-s
+    given:
+      - 37C/60s
+    expected:
+      - {'temp_C': 37, 'time_s': 60}
+  -
+    id: time-unit-m
+    given:
+      - 37C/2m
+    expected:
+      - {'temp_C': 37, 'time_s': 120}
+  -
+    id: time-unit-m
+    given:
+      - 37C/1m30
+    expected:
+      - {'temp_C': 37, 'time_s': 90}
+  -
+    id: err-too-few-fields
+    given:
+      - 37,60
+    error:
+      type: UsageError
+      message: expected 'temperature/time', not: '37,60'
+  -
+    id: err-too-many-fields
+    given:
+      - 37/60/10
+    error:
+      type: UsageError
+      message: expected 'temperature/time', not: '37/60/10'
+  -
+    id: err-cant-parse-temp
+    given:
+      - X/60
+    error: ParseError
+  -
+    id: err-cant-parse-time
+    given:
+      - 37/X
+    error: ParseError
+      
+test_format_thermocycler_steps:
+  -
+    id: empty
+    steps:
+      []
+    expected:
+      > ul()
+  -
+    id: incubate-time-m
+    steps:
+      -
+        temp_C: 72
+        time_m: 1
+    expected:
+      > ul('72°C for 1m')
+  -
+    id: incubate-time-s
+    steps:
+      -
+        temp_C: 72
+        time_s: 90
+    expected:
+      > ul('72°C for 1m30')
+  -
+    id: incubate-time
+    steps:
+      -
+        temp_C: 72
+        time: '1m30'
+    expected:
+      > ul('72°C for 1m30')
+  -
+    id: multiple-steps
+    steps:
+      -
+        temp_C: 95
+        time_s: 10
+      -
+        temp_C: 60
+        time_s: 20
+      -
+        temp_C: 72
+        time_s: 120
+    expected:
+      > ul(
+      >     '95°C for 10s',
+      >     '60°C for 20s',
+      >     '72°C for 2m',
+      > )
+  -
+    id: repeat
+    steps:
+      -
+        repeat: 10
+        steps:
+          -
+            temp_C: 72
+            time: '1m30'
+    expected:
+      > ul(
+      >   pl(
+      >       'Repeat 10x:',
+      >       ul('72°C for 1m30'),
+      >   )
+      > )
+  -
+    id: err
+    steps: 'unknown'
+    error:
+      type: UsageError
+      message: unexpected step in thermocycler protocol: 'unknown'
+
+
+

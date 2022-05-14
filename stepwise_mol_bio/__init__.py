@@ -31,6 +31,7 @@ from .pcr import Pcr
 from .serial_dilution import SerialDilution
 from .sequence import Sequence
 from .spin_cleanup import SpinCleanup
+from .thermocycler import Thermocycler
 from .transform import Transform
 from .trizol import Trizol
 
