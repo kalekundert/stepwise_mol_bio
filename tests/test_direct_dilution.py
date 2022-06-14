@@ -6,13 +6,14 @@ def test_dilution_table():
     assert app.dilution_table.rows == expected
 
 @parametrize_from_file(
-        schema=Schema({
-            'target_concs': [Int],
-            'max_dilution': Int,
-            **with_swmb.error_or({
-                'expected': {Int: Int}
-            }),
-        }),
+        schema=[
+            cast(
+                target_concs=Schema([Int]),
+                max_dilution=int,
+                expected=Schema({Int: Int}),
+            ),
+            with_swmb.error_or('expected'),
+        ],
 )
 def test_pick_stock_concs(target_concs, max_dilution, expected, error):
     with error:

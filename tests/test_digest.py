@@ -16,16 +16,10 @@ test_freezerbox_make()
 test_freezerbox_attrs()
 
 @parametrize_from_file(
-        schema=Schema({
-            'seq': with_py.eval,
-            'enzymes': with_py.eval,
-            'is_circular': with_py.eval,
-            'target_size': with_py.eval,
-            **with_swmb.error_or({
-                'product': with_py.eval,
-                'products': with_py.eval,
-            }),
-        }),
+        schema=[
+            with_swmb.error_or('product', 'products'),
+            with_py.eval,
+        ],
 )
 def test_calc_digest_products(seq, enzymes, is_circular, target_size, product, products, error):
     with error:
@@ -106,12 +100,7 @@ def test_neb_restriction_enzyme_database_offline(tmp_path):
     assert err.match("failed to download")
     assert err.match("URL: http://nebcloner.neb.com/data/reprop.json")
 
-@parametrize_from_file(
-        schema=Schema({
-            'enzymes': with_py.eval,
-            'expected': str,
-        }),
-)
+@parametrize_from_file(schema=cast(enzymes=with_py.eval))
 def test_pick_compatible_buffer(enzymes, expected):
     assert pick_compatible_buffer(enzymes) == expected
 
@@ -146,5 +135,5 @@ def test_protocol_product(db, tags, expected):
     app = RestrictionDigest.from_product(one(tags))
     app.db = eval_db(db)
 
-    assert match_protocol(app, expected)
+    assert match_protocol(app.protocol, expected)
 

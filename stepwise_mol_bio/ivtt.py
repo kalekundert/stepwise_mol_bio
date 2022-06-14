@@ -357,7 +357,7 @@ Options:
         if not self.use_template:
             del rxn[template]
         else:
-            rxn.fix_volumes(template)
+            rxn.repair_volumes(template)
 
         rxn.extra_percent = self.extra_percent
 

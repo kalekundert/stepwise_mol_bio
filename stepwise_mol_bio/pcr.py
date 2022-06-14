@@ -6,8 +6,8 @@ from numbers import Real
 from inform import plural, indent
 from byoc import Key, Method, DocoptConfig
 from stepwise import (
-        StepwiseConfig, PresetConfig, Quantity, UsageError,
-        pl, ul, pre
+        StepwiseConfig, PresetConfig, Quantity, To, UsageError,
+        pl, ul, pre, before,
 )
 from stepwise_mol_bio import (
         Main, Bindable, BindableReagent, ConfigError,
@@ -831,10 +831,6 @@ Options:
         if self.reaction_volume_uL:
             pcr.hold_ratios.volume = self.reaction_volume_uL, 'µL'
 
-        pcr['water'].order = 1
-
-        pcr['template DNA'].order = 2
-
         if x := self.template_volume_uL:
             pcr['template DNA'].volume = x, 'µL'
         if x := self.template_stock:
@@ -858,7 +854,6 @@ Options:
         use_primer_mix = []
 
         for (p, p_mm), primers in zip(primer_keys, zip(*self.primer_pairs)):
-            pcr[p].order = 3
             pcr[p].name = merge_names(x.tag for x in primers)
             pcr[p].hold_conc.stock_conc = min(x.stock_uM for x in primers), 'µM'
             pcr[p].master_mix = eval_master_mix(
@@ -876,7 +871,7 @@ Options:
                 use_primer_mix.append(p)
 
         if use_primer_mix:
-            pcr['primer mix'].order = 4
+            pcr.insert_reagent('primer mix', before('forward primer'))
             pcr['primer mix'].stock_conc = '10x'
             pcr['primer mix'].volume = pcr.volume / 10
             pcr['primer mix'].master_mix = all(
@@ -885,12 +880,10 @@ Options:
             )
 
             primer_mix = stepwise.MasterMix()
-            primer_mix.volume = pcr.volume
+            primer_mix['water'].volume = To(pcr.volume)
 
             for p in use_primer_mix:
-                primer_mix[p].name = pcr[p].name
-                primer_mix[p].stock_conc = pcr[p].stock_conc
-                primer_mix[p].volume = pcr[p].volume
+                primer_mix[p] = pcr[p]
                 primer_mix[p].hold_stock_conc.conc *= 10
                 del pcr[p]
 

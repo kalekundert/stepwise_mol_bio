@@ -10,13 +10,10 @@ SET_CONC_METHODS = [
 ]
 
 @parametrize_from_file(
-        schema=Schema({
-            'high_str': str,
-            'low_str': str,
-            **with_swmb.error_or({
-                'expected': {str: with_py.eval},
-            }),
-        }),
+        schema=[
+            cast(expected=with_py.eval),
+            with_swmb.error_or('expected'),
+        ],
 )
 def test_parse_high_low(high_str, low_str, expected, error):
     with error:
@@ -27,7 +24,7 @@ def test_parse_high_low(high_str, low_str, expected, error):
 
 @pytest.mark.parametrize('set_conc', SET_CONC_METHODS)
 @pytest.mark.parametrize('include_zero', [True, False])
-@parametrize_from_file(schema=Schema(with_math.eval))
+@parametrize_from_file(schema=with_math.eval)
 def test_concentrations(set_conc, high, low, factor, include_zero, expected):
     sd = SerialDilution(1, len(expected))
     sd.include_zero = include_zero

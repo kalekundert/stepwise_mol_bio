@@ -5,22 +5,11 @@ from param_helpers import *
 test_protocol()
 test_cli()
 
-@parametrize_from_file(
-        schema=Schema({
-            'name': str,
-            'expected': Int,
-        }),
-)
+@parametrize_from_file(schema=cast(expected=int))
 def test_parse_num_samples(name, expected):
     assert parse_num_samples(name) == expected
 
-@parametrize_from_file(
-        schema=Schema({
-            'ladder_str': str,
-            'name': str,
-            'volume_uL': with_py.eval,
-        }),
-)
+@parametrize_from_file(schema=cast(volume_uL=with_py.eval))
 def test_ladder_from_string(ladder_str, name, volume_uL):
     ladder = Ladder.from_string(ladder_str)
     assert ladder.name == name

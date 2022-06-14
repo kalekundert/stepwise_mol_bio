@@ -3,7 +3,7 @@
 import stepwise, byoc, autoprop
 from stepwise import (
         StepwiseConfig, PresetConfig, MasterMix,
-        paragraph_list, unordered_list,
+        paragraph_list, unordered_list, before,
 )
 from stepwise_mol_bio import (
         Main, BindableReagent, UsageError, bind, format_min,
@@ -440,7 +440,6 @@ Template Preparation:
             rntps = []
             
             for i, reagent in enumerate(rxn):
-                reagent.order = i
                 if 'rntp' in reagent.flags:
                     rntps.append(reagent)
 
@@ -450,10 +449,10 @@ Template Preparation:
                 err.hints += "you may need to add this information to the [molbio.ivt.{preset}] preset"
                 raise err
 
+            rxn.insert_reagent('rNTP mix', before(rntps[0].key))
             rxn['rNTP mix'].volume = sum(x.volume for x in rntps)
             rxn['rNTP mix'].stock_conc = sum(x.stock_conc for x in rntps) / len(rntps)
             rxn['rNTP mix'].master_mix = all(x.master_mix for x in rntps)
-            rxn['rNTP mix'].order = rntps[0].order
 
             for rntp in rntps:
                 del rxn[rntp.name]
@@ -478,7 +477,7 @@ Template Preparation:
             if self.template_mass_ng:
                 warn(f"template quantity ({self.template_mass_ng} ng) specified but overridden by volume ({self.template_volume_uL} µL)")
         
-        rxn.fix_volumes('template', rxn.solvent)
+        rxn.repair_volumes('template', rxn.solvent)
         return rxn
 
     def get_dnase_reaction(self):

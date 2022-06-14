@@ -11,10 +11,7 @@ def test_parse_reactions_docopt(given, expected):
     assert parse_reactions_docopt(given) == expected
 
 @parametrize_from_file(
-        schema=Schema({
-            'given': with_py.eval,
-            'expected': with_py.eval,
-        }),
+        schema=cast(given=with_py.eval, expected=with_py.eval),
 )
 def test_merge_reactions(given, expected):
     assert merge_reactions(given) == expected

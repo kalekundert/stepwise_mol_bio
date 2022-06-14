@@ -7,10 +7,7 @@ test_cli()
 test_freezerbox_make()
 
 @parametrize_from_file(
-        schema=Schema({
-            'volume_mL': Int,
-            'expected': Int,
-        }),
+        schema=cast(volume_mL=int, expected=int),
 )
 def test_calc_sterilization_time(volume_mL, expected):
     app = Autoclave()

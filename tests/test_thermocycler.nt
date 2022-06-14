@@ -162,8 +162,11 @@ test_format_thermocycler_steps:
     expected:
       > ul(
       >   pl(
-      >       'Repeat 10x:',
-      >       ul('72°C for 1m30'),
+      >     'Repeat 10x:',
+      >     ul(
+      >       '72°C for 1m30'
+      >     ),
+      >     br='\n',
       >   )
       > )
   -

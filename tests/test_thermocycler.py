@@ -5,24 +5,20 @@ test_protocol()
 test_cli()
 
 @parametrize_from_file(
-        schema=Schema({
-            'given': [str],
-            **with_swmb.error_or({
-                'expected': with_py.eval,
-            }),
-        }),
+        schema=[
+            cast(expected=with_py.eval),
+            with_swmb.error_or('expected'),
+        ],
 )
 def test_parse_thermocycler_steps(given, expected, error):
     with error:
         assert parse_thermocycler_steps(given) == expected
 
 @parametrize_from_file(
-        schema=Schema({
-            'steps': with_py.eval,
-            **with_swmb.error_or({
-                'expected': with_sw.eval,
-            }),
-        }),
+        schema=[
+            cast(steps=with_py.eval, expected=with_sw.eval),
+            with_swmb.error_or('expected'),
+        ],
 )
 def test_format_thermocycler_steps(steps, expected, error):
     with error:

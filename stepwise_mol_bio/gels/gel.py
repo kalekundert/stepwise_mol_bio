@@ -455,7 +455,7 @@ Configuration:
             mix.hold_ratios.volume = x, 'µL'
 
         if mix.solvent:
-            mix.fix_volumes('sample')
+            mix.repair_volumes('sample')
 
         return mix
 

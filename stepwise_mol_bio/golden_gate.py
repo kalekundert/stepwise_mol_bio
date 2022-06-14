@@ -61,7 +61,7 @@ Database:
 
     def get_reaction(self):
         rxn = stepwise.MasterMix()
-        rxn.volume = '20 µL'
+        rxn['water'].volume = 'to 20 µL'
 
         rxn['T4 ligase buffer'].volume = '2.0 μL'
         rxn['T4 ligase buffer'].stock_conc = '10x'

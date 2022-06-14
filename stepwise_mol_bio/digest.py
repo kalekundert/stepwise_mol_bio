@@ -295,10 +295,6 @@ Options:
         rxn['DNA'].hold_conc.stock_conc = min(
                 x.stock_ng_uL for x in self.templates), 'ng/µL'
 
-        if len(self.templates) > 1:
-            rxn['DNA'].order = -1
-            rxn['DNA'].master_mix = False
-        
         for enz in self.enzymes:
             key = enz['name']
             stock = enz['concentration'] / 1000
@@ -347,6 +343,13 @@ Options:
                     err.hints += "the restriction digest protocol needs updated"
                     err.hints += "please submit a bug report"
                     raise err
+        
+        # Move the template to the end of the reaction, if a master mix is 
+        # being set up.
+
+        if len(self.templates) > 1:
+            rxn.reorder_reagent('DNA', len(rxn))
+            rxn['DNA'].master_mix = False
         
         # Update the reaction volume.  This takes some care, because the 
         # reaction volume depends on the enzyme volume, which in turn depends 

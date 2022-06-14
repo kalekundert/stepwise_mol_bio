@@ -5,8 +5,9 @@ import pytest
 import parametrize_from_file
 
 from voluptuous import Schema, Invalid, Coerce, And, Or, Optional
-from parametrize_from_file.voluptuous import Namespace, empty_ok
+from parametrize_from_file import Namespace, error_or, defaults, cast
 from stepwise.testing import check_command, disable_capture
+from pytest import approx
 from freezerbox.stepwise import Make
 from more_itertools import always_iterable
 from contextlib import nullcontext
@@ -41,9 +42,8 @@ def eval_db(reagents):
 def exec_app(src):
     return with_swmb.exec(src, get='app')
 
-def match_protocol(app, expected, forbidden=[], *, capture=nullcontext()):
-    with capture:
-        actual = app.protocol.format_text()
+def match_protocol(protocol, expected, forbidden=[]):
+    actual = protocol.format_text()
 
     prev = None
     print(actual.strip() + '\n')
@@ -75,6 +75,9 @@ def match_protocol(app, expected, forbidden=[], *, capture=nullcontext()):
             return False
 
     return True
+
+def empty_ok(container):
+    return Or(container, And('', lambda y: type(container)()))
 
 def noop(x):
     return x
@@ -142,13 +145,10 @@ def test_reaction(app, expected):
     assert app.reaction.format_text() == expected
 
 @parametrize_from_file_factory(
-        schema=Schema({
-            'app': str,
-            **with_swmb.error_or({
-                'expected': Or(str, [str]),
-                'forbidden': Or(str, [str]),
-            }),
-        }),
+        schema=[
+            with_swmb.error_or('expected', 'forbidden'),
+            defaults(forbidden=[]),
+        ]
 )
 def test_protocol(app, expected, forbidden, error, request, disable_capture):
     app = exec_app(app)
@@ -157,38 +157,32 @@ def test_protocol(app, expected, forbidden, error, request, disable_capture):
         disable_capture = nullcontext()
 
     with error:
-        assert match_protocol(app, expected, forbidden, capture=disable_capture)
+        with disable_capture:
+            protocol = app.protocol
+        assert match_protocol(protocol, expected, forbidden)
 
 @parametrize_from_file_factory(
-        schema=Schema({
-            'cmd': str,
-            Optional('stdout', default='^$'): str,
-            Optional('stderr', default='^$'): str,
-        }),
+        schema=defaults(stdout='^$', stderr='^$'),
 )
 @pytest.mark.slow
 def test_cli(cmd, stdout, stderr):
     check_command(cmd, stdout=stdout, stderr=stderr)
 
 @parametrize_from_file_factory(
-        schema=Schema({
-            'db': {str: str},
-            Optional('tags', default=[]): [str],
-            'expected': [str],
-        }),
+        schema=defaults(tags=[], forbidden=[]),
 )
-def test_freezerbox_make(db, tags, expected, disable_capture):
+def test_freezerbox_make(db, tags, expected, forbidden, disable_capture):
     db = eval_db(db)
     tags = tags or list(db.keys())
     app = Make(db, tags)
-    assert match_protocol(app, expected, capture=disable_capture)
+
+    with disable_capture:
+        protocol = app.protocol
+
+    assert match_protocol(protocol, expected, forbidden)
 
 @parametrize_from_file_factory(
-        schema=Schema({
-            'db': {str: str},
-            'expected': {str: {str: str}},
-            Optional('errors', default={}): {str: {str: str}}
-        }),
+        schema=defaults(errors={}),
 )
 def test_freezerbox_attrs(db, expected, errors):
     db = eval_db(db)

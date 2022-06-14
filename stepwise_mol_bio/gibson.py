@@ -37,7 +37,7 @@ Database:
 
     def get_reaction(self):
         rxn = stepwise.MasterMix()
-        rxn.volume = '20 µL'
+        rxn['water'].volume = 'to 20 µL'
 
         rxn['Gibson master mix'].volume = rxn.volume / 2
         rxn['Gibson master mix'].stock_conc = "2x"
