@@ -7,6 +7,7 @@ Protocols relating to molecular biology, e.g. PCR.
 __version__ = '1.24.0'
 
 from ._utils import *
+from ._sample_utils import *
 from ._assembly import Assembly
 from .aliquot import Aliquot
 from .anneal import Anneal
@@ -39,6 +40,8 @@ from .trizol import Trizol
 from .invpcr import InversePcr
 from .qpcr import Qpcr
 from .page_purify import PagePurify
+from .dnase import Dnase
+from .reverse_transcribe import ReverseTranscribe
 
 import stepwise
 from pathlib import Path

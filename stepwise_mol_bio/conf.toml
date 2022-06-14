@@ -483,6 +483,281 @@ hour does not produce the desired results.
 '''
 
 
+[molbio.dnase]
+default_preset = 'neb/dnase-i'
+
+[molbio.dnase.presets.'neb/dnase-i']
+reaction = """
+Reagent                  Stock     Volume
+===================  =========  =========
+nuclease-free water             to 100 µL
+DNase I buffer             10x      10 µL
+DNase I                 2 U/µL       1 µL
+RNA                  500 ng/µL      20 µL
+"""
+incubation.time_m = 10
+incubation.temp_C = 37
+
+denature.additives = ['1 µL 500 mM EDTA']
+denature.incubation.time_m = 10
+denature.incubation.temp_C = 75
+
+protocol_link = 'https://tinyurl.com/jpau26cr'
+
+[molbio.dnase.presets.'thermo/ezdnase']
+reaction = """
+Reagent                  Stock    Volume
+===================  =========  ========
+nuclease-free water             to 10 µL
+ezDNase buffer             10x      1 µL
+ezDNase enzyme             10x      1 µL
+RNA                  500 ng/µL      5 µL
+"""
+incubation.time_m = 2
+incubation.temp_C = 37
+
+[molbio.dnase.presets.'thermo/ezdnase/3kb']
+inherit = 'thermo/ezdnase'
+denature.additives = ['1 µL 100 mM DTT']
+denature.incubation.time_m = 5
+denature.incubation.temp_C = 55
+
+
+[molbio.reverse_transcribe]
+default_preset = 'neb/protoscript-ii'
+
+[molbio.reverse_transcribe.presets.'neb/amv']
+reaction = """
+Reagent                Catalog #      Stock      Volume  Flags
+=====================  =========  =========  ==========  =============
+nuclease-free water                          to 20.0 µL
+d(T)₂₃VN                              50 µM      2.0 µL  anneal,primer
+random primer mix                     60 µM      2.0 µL  anneal,primer
+dNTP mix                              10 mM      1.0 µL  anneal
+template RNA                      500 ng/µL      2.0 µL  anneal
+AMV buffer                              10x      2.0 µL
+AMV RT                 M0277        10 U/µL      1.0 µL  RT
+RNase inhibitor                     40 U/µL      0.2 µL
+"""
+primers.dt = 'd(T)₂₃VN'
+primers.hex = 'random primer mix'
+
+anneal_incubation = [
+  {'temp_C' = 65, 'time_m' = 5},
+  {'hold_C' = 4},
+]
+incubation = [
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 80, 'time_m' = 5},
+]
+incubation_by_primer.hex = [
+  {'temp_C' = 25, 'time_m' = 5},
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 80, 'time_m' = 5},
+]
+protocol_link = 'https://tinyurl.com/faaktc56'
+
+[molbio.reverse_transcribe.presets.'neb/mmlv']
+reaction = """
+Reagent                Catalog #      Stock      Volume  Flags
+=====================  =========  =========  ==========  =============
+nuclease-free water                          to 20.0 µL
+d(T)₂₃VN                              50 µM      2.0 µL  anneal,primer
+random primer mix                     60 µM      2.0 µL  anneal,primer
+dNTP mix                              10 mM      1.0 µL  anneal
+template RNA                      500 ng/µL      2.0 µL  anneal
+M-MuLV buffer                           10x      2.0 µL
+M-MuLV RT              M0253       200 U/µL      1.0 µL  RT
+RNase inhibitor                     40 U/µL      0.2 µL
+"""
+primers.dt = 'd(T)₂₃VN'
+primers.hex = 'random primer mix'
+
+anneal_incubation = [
+  {'temp_C' = 65, 'time_m' = 5},
+  {'hold_C' = 4},
+]
+
+incubation = [
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 65, 'time_m' = 20},
+]
+incubation_by_primer.hex = [
+  {'temp_C' = 25, 'time_m' = 5},
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 65, 'time_m' = 20},
+]
+
+protocol_link = 'https://tinyurl.com/475ts7r2'
+
+[molbio.reverse_transcribe.presets.'neb/protoscript-ii']
+inherit = 'neb/mmlv'
+reaction = """
+Reagent                Catalog #      Stock      Volume  Flags
+=====================  =========  =========  ==========  =============
+nuclease-free water                          to 20.0 µL
+d(T)₂₃VN                              50 µM      2.0 µL  anneal,primer
+random primer mix                     60 µM      2.0 µL  anneal,primer
+dNTP mix                              10 mM      1.0 µL  anneal
+template RNA                      500 ng/µL      2.0 µL  anneal
+ProtoScript II buffer                    5x      4.0 µL
+DTT                                  100 mM      2.0 µL
+Protoscript II RT      M0368       200 U/µL      1.0 µL  RT
+RNase inhibitor                     40 U/µL      0.2 µL
+"""
+
+protocol_link = 'https://tinyurl.com/4pzmcz8m'
+
+[molbio.reverse_transcribe.presets.'thermo/superscript-iii']
+reaction = """
+Reagent                      Catalog #             Stock    Volume  Flags
+===========================  ================  =========  ========  =============
+water                                                     to 20 µL
+oligo(dT)₂₀                                        50 µM      1 µL  anneal,primer
+random hexamers                                250 ng/µL      1 µL  anneal,primer
+gene-specific primer                                2 µM      1 µL  anneal,primer
+template RNA                                   500 ng/µL      5 µL  anneal
+dNTP mix                                           10 mM      1 µL  anneal
+first-strand buffer                                   5x      4 µL
+DTT                                               100 mM      1 µL
+RNaseOUT                     Thermo 10777-019    40 U/µL      1 µL
+SuperScript III RT           Thermo 18080093    200 U/µL      1 µL  RT
+"""
+primers.dt = 'oligo(dT)₂₀'
+primers.hex = 'random hexamers'
+primers.custom = 'gene-specific primer'
+
+anneal_volume = 13
+anneal_incubation = [
+  {'temp_C' = 65, 'time_m' = 5},
+  {'temp_C' = 4,  'time_m' = 1},
+]
+
+incubation = [
+  {'temp_C' = 50, 'time_m' = 60},
+  {'temp_C' = 85, 'time_m' = 5},
+]
+incubation_by_primer.hex = [
+  {'temp_C' = 25, 'time_m' = 5},
+  {'temp_C' = 50, 'time_m' = 60},
+  {'temp_C' = 85, 'time_m' = 5},
+]
+incubation_by_primer.custom = [
+  {'temp_C' = 55, 'time_m' = 60},
+  {'temp_C' = 85, 'time_m' = 5},
+]
+
+protocol_link = 'https://tinyurl.com/2p99rypx'
+footnotes = [
+  "When using less than 50 ng starting RNA, the addition of RNaseOUT is essential",
+]
+
+[molbio.reverse_transcribe.presets.'thermo/superscript-iii/vilo']
+reaction = """
+Reagent                      Catalog #             Stock    Volume  Flags
+===========================  ================  =========  ========  ======
+DEPC-treated water                                        to 20 µL
+VILO reaction mix                                     5x      4 µL
+SuperScript enzyme mix       Thermo 11754050         10x      2 µL  RT
+template RNA                                   500 ng/µL      5 µL
+"""
+incubation = [
+  {'temp_C' = 25, 'time_m' = 10},
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 85, 'time_m' = 5},
+]
+
+protocol_link = 'https://tinyurl.com/2p8se836'
+
+[molbio.reverse_transcribe.presets.'thermo/superscript-iii/vilo/master-mix']
+reaction = """
+Reagent                          Stock    Volume  Flags
+===========================  =========  ========  =====
+DEPC-treated water                      to 20 µL
+SuperScript VILO master mix         5x      4 µL  RT
+template RNA                 500 ng/µL      5 µL
+"""
+
+incubation = [
+  {'temp_C' = 25, 'time_m' = 10},
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 85, 'time_m' = 5},
+]
+no_rt_denature = [
+  {'temp_C' = 65, 'time_m' = 10},
+]
+
+protocol_link = 'https://tinyurl.com/55uykykm'
+  
+[molbio.reverse_transcribe.presets.'thermo/superscript-iv']
+inherit = 'thermo/superscript-iii'
+reaction = """
+Reagent                      Catalog #             Stock    Volume  Flags
+===========================  ================  =========  ========  =============
+DEPC-treated water                                        to 20 µL
+oligo(dT)₂₀                  Thermo 18418-020      50 µM      1 µL  anneal,primer
+random hexamers              Thermo N8080127       50 µM      1 µL  anneal,primer
+gene-specific primer                                2 µM      1 µL  anneal,primer
+dNTP mix                                           10 mM      1 µL  anneal
+template RNA                                   500 ng/µL      5 µL  anneal
+SSIV buffer                                           5x      4 µL
+DTT                                               100 mM      1 µL
+RNaseOUT                     Thermo 10777-019    40 U/µL      1 µL
+SuperScript IV RT            Thermo 18090010    200 U/µL      1 µL  RT
+"""
+
+incubation = [
+  {'temp_C' = 50, 'time_m' = 10},
+  {'temp_C' = 80, 'time_m' = 10},
+]
+incubation_by_primer.hex = [
+  {'temp_C' = 23, 'time_m' = 10},
+  {'temp_C' = 50, 'time_m' = 10},
+  {'temp_C' = 80, 'time_m' = 10},
+]
+
+protocol_link = 'https://tinyurl.com/5n855cym'
+
+[molbio.reverse_transcribe.presets.'thermo/superscript-iv/first-strand']
+inherit = 'thermo/superscript-iv'
+dnase_preset = 'thermo/ezdnase'
+protocol_link = 'https://tinyurl.com/3urxvr6c'
+
+[molbio.reverse_transcribe.presets.'thermo/superscript-iv/vilo']
+reaction = """
+Reagent                      Catalog #             Stock    Volume  Flags
+===========================  ================  =========  ========  ======
+nuclease-free water                                       to 20 µL
+SuperScript IV VILO          Thermo 11766050          5x      4 µL  RT
+template RNA                                   500 ng/µL      5 µL
+"""
+incubation = [
+  {'temp_C' = 25, 'time_m' = 10},
+  {'temp_C' = 42, 'time_m' = 60},
+  {'temp_C' = 85, 'time_m' = 5},
+]
+dnase_preset = 'thermo/ezdnase'
+
+protocol_link = 'https://tinyurl.com/2k86jfh3'
+
+[molbio.reverse_transcribe.presets.'sigma/readyscript']
+reaction = """
+Reagent                Catalog #       Stock      Volume  Flags
+=====================  ==========  =========  ==========  =====
+PCR-grade water                               to 20.0 µL
+ReadyScript cDNA mix   Sigma RDRT         5x      4.0 µL  RT
+template RNA                       500 ng/µL      2.0 µL
+"""
+incubation = [
+  {'temp_C' = 25, 'time_m' = 5},
+  {'temp_C' = 42, 'time_m' = 30},
+  {'temp_C' = 85, 'time_m' = 5},
+  {'hold_C' = 4},
+]
+
+protocol_link = 'https://tinyurl.com/aypfw6t'
+
+
 [molbio.spin_cleanup]
 default_preset = 'qiagen'
 

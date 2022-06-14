@@ -1,0 +1,1209 @@
+test_make_combos:
+  -
+    id: base
+    group:
+      key:
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: 'o1'
+        -
+          template: 'f2'
+          primer: 'o2'
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent       Flags  Volume
+      > ============  =====  ======
+      > template RNA           1 µL
+      > primer                 1 µL
+      > enzyme        RT       2 µL
+      > """)
+    expected:
+      -
+        template RNA: 'f1'
+        primer: 'o1'
+      -
+        template RNA: 'f2'
+        primer: 'o2'
+  -
+    id: no-rt-control
+    group:
+      key:
+        no_rt_control: True
+      members:
+        -
+          template: 'f1'
+          primer: 'o1'
+        -
+          template: 'f2'
+          primer: 'o2'
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent       Flags  Volume
+      > ============  =====  ======
+      > template RNA           1 µL
+      > primer                 1 µL
+      > enzyme        RT       2 µL
+      > """)
+    expected:
+      -
+        template RNA: 'f1'
+        primer: 'o1'
+        enzyme: '+'
+      -
+        template RNA: 'f1'
+        primer: 'o1'
+        enzyme: '−'
+      -
+        template RNA: 'f2'
+        primer: 'o2'
+        enzyme: '+'
+      -
+        template RNA: 'f2'
+        primer: 'o2'
+        enzyme: '−'
+  -
+    id: no-rt-control-names
+    group:
+      key:
+        no_rt_control: True
+      members:
+        -
+          template: 'f1'
+          primer: 'o1'
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent       Flags  Volume
+      > ============  =====  ======
+      > template RNA           1 µL
+      > primer                 1 µL
+      > enzyme        RT       2 µL
+      > """)
+    kwargs:
+      rt_controls:
+        - 'denatured'
+        - 'active'
+    expected:
+      -
+        template RNA: 'f1'
+        primer: 'o1'
+        enzyme: 'denatured'
+      -
+        template RNA: 'f1'
+        primer: 'o1'
+        enzyme: 'active'
+  -
+    id: no-primers
+    group:
+      key:
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: 'o1'
+        -
+          template: 'f2'
+          primer: 'o1'
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent       Flags  Volume
+      > ============  =====  ======
+      > template RNA           1 µL
+      > enzyme        RT       2 µL
+      > """)
+    include_primers: False
+    expected:
+      -
+        template RNA: 'f1'
+      -
+        template RNA: 'f2'
+
+test_setup_template:
+  -
+    group:
+      members:
+        -
+          template_stock_ng_uL: 100
+        -
+          template_stock_ng_uL: 200
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent           Stock    Volume
+      > ============  =========  ========
+      > water                    to 10 µL
+      > template RNA  200 ng/µL      1 µL
+      > """)
+    expected: 
+      > Reaction.from_text("""\
+      > Reagent           Stock    Volume
+      > ============  =========  ========
+      > water                    to 10 µL
+      > template RNA  100 ng/µL      2 µL
+      > """)
+  -
+    group:
+      members:
+        -
+          template_stock_ng_uL: None
+        -
+          template_stock_ng_uL: None
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent           Stock    Volume
+      > ============  =========  ========
+      > water                    to 10 µL
+      > template RNA  200 ng/µL      1 µL
+      > """)
+    expected: 
+      > Reaction.from_text("""\
+      > Reagent           Stock    Volume
+      > ============  =========  ========
+      > water                    to 10 µL
+      > template RNA  200 ng/µL      1 µL
+      > """)
+
+test_setup_primer:
+  -
+    id: choose-hexamers
+    group:
+      key:
+        primer_type: 'random hexamers'
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent              Stock    Volume  Flags
+      > ===============  =========  ========  =======
+      > water                       to 10 µL
+      > template RNA     200 ng/µL      1 µL
+      > oligo dT             50 µM      1 µL  primer
+      > random hexamers  250 ng/µL      1 µL  primer
+      > """)
+    expected:
+      > Reaction.from_text("""\
+      > Reagent       Name                 Stock    Volume
+      > ============  ===============  =========  ========
+      > water                                     to 10 µL
+      > template RNA                   200 ng/µL      1 µL
+      > primer        random hexamers  250 ng/µL      1 µL
+      > """)
+  -
+    id: choose-default
+    group:
+      key:
+        primer_type: None
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent              Stock    Volume  Flags
+      > ===============  =========  ========  =======
+      > water                       to 10 µL
+      > template RNA     200 ng/µL      1 µL
+      > oligo dT             50 µM      1 µL  primer
+      > random hexamers  250 ng/µL      1 µL  primer
+      > """)
+    expected:
+      > Reaction.from_text("""\
+      > Reagent          Name          Stock    Volume
+      > ===============  ========  =========  ========
+      > water                                 to 10 µL
+      > template RNA               200 ng/µL      1 µL
+      > primer           oligo dT      50 µM      1 µL
+      > """)
+  -
+    id: adjust-stock
+    group:
+      key:
+        primer_type: 'gene-specific primer'
+      members:
+        -
+          primer_stock_uM: 2
+        -
+          primer_stock_uM: 1
+        -
+          primer_stock_uM: None
+    reaction:
+      > Reaction.from_text("""\
+      > Reagent                   Stock    Volume  Flags
+      > ====================  =========  ========  =======
+      > water                            to 10 µL
+      > template RNA          200 ng/µL      1 µL
+      > oligo dT                  50 µM      1 µL  primer
+      > random hexamers       250 ng/µL      1 µL  primer
+      > gene-specific primer       2 µM      1 µL  primer
+      > """)
+    expected:
+      > Reaction.from_text("""\
+      > Reagent       Name                      Stock    Volume
+      > ============  ====================  =========  ========
+      > water                                          to 10 µL
+      > template RNA                        200 ng/µL      1 µL
+      > primer        gene-specific primer       1 µM      2 µL
+      > """)
+          
+test_denature_protocol:
+  -
+    id: base
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =======
+          > water                            to 10 µL
+          > SuperScript VILO             5x      2 µL  RT
+          > template RNA          200 ng/µL      1 µL
+          > """)
+        template_stock_ng_uL: 200
+        anneal: False
+        no_rt_control: True
+        no_rt_denature:
+          -
+            temp_C: 65
+            time_m: 10
+      members:
+        -
+          template: 'f1'
+          primer: None
+          primer_type: None
+        -
+          template: 'f2'
+          primer: None
+          primer_type: None
+
+    expected:
+      - Prepare reverse transcriptase (RT) master mix:
+
+      - Reagent           Stock   Volume      2.2x
+      - ──────────────────────────────────────────
+      - water                    7.00 µL  15.40 µL
+      - SuperScript VILO     5x  2.00 µL   4.40 µL
+
+      - Denature half of the RT master mix:
+      - - Take 9.90 µL of the master mix.
+      - - Incubate at 65°C for 10m.
+
+      - Setup 4 reverse transcription reactions:
+      
+      - - Use all combinations of the following reagents:
+      -   RT master mix: denatured, non-denatured
+      -   template RNA: f1, f2
+
+      - - Mix the reactions:
+      -   Reagent            Stock    Volume
+      -   ──────────────────────────────────
+      -   RT master mix              9.00 µL
+      -   template RNA   200 ng/µL   1.00 µL
+      -   ──────────────────────────────────
+      -                             10.00 µL
+  -
+    id: err-anneal
+    group:
+      key:
+        anneal: True
+    error:
+      type: UsageError
+      message: requested both `denature` and `anneal`
+  -
+    id: err-primer
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =======
+          > water                            to 10 µL
+          > SuperScript VILO             5x      2 µL  RT
+          > template RNA          200 ng/µL      1 µL
+          > random hexamers       250 ng/µL      1 µL  primer
+          > """)
+        anneal: False
+    error:
+      type: UsageError
+      message: `denature` requested, but reaction includes primer
+
+test_quick_reactions:
+  -
+    id: plus-rt
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume  Flags
+          > ===========================  =========  ========  ======
+          > DEPC-treated water                      to 20 µL
+          > VILO reaction mix                   5x      4 µL
+          > SuperScript enzyme mix             10x      2 µL  RT
+          > template RNA                 500 ng/µL      5 µL
+          > """)
+        template_stock_ng_uL: 500
+        anneal: False
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: None
+          primer_type: None
+        -
+          template: 'f2'
+          primer: None
+          primer_type: None
+
+    expected:
+      - Setup 2 reverse transcription reactions:
+      
+      - - Use the following reagents:
+      -   template RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent                 Stock    Volume      2.2x
+      -   ─────────────────────────────────────────────────
+      -   DEPC-treated water              9.00 µL  19.80 µL
+      -   VILO reaction mix          5x   4.00 µL   8.80 µL
+      -   SuperScript enzyme mix    10x   2.00 µL   4.40 µL
+      -   ─────────────────────────────────────────────────
+      -                                  15.00 µL  33.00 µL
+
+      - Add the remaining reagents:
+      -   Reagent           Stock    Volume
+      -   ─────────────────────────────────
+      -   master mix               15.00 µL
+      -   template RNA  500 ng/µL   5.00 µL
+      -   ─────────────────────────────────
+      -                            20.00 µL
+  -
+    id: minus-rt
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume  Flags
+          > ===========================  =========  ========  ======
+          > DEPC-treated water                      to 20 µL
+          > VILO reaction mix                   5x      4 µL
+          > SuperScript enzyme mix             10x      2 µL  RT
+          > template RNA                 500 ng/µL      5 µL
+          > """)
+        template_stock_ng_uL: 500
+        anneal: False
+        no_rt_control: True
+      members:
+        -
+          template: 'f1'
+          primer: None
+          primer_type: None
+        -
+          template: 'f2'
+          primer: None
+          primer_type: None
+
+    expected:
+      - Setup 4 reverse transcription reactions:
+      
+      - - Use all combinations of the following reagents:
+      -   SuperScript enzyme mix: +, −
+      -   template RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent             Stock    Volume     ≈4.8x
+      -   ─────────────────────────────────────────────
+      -   DEPC-treated water          9.00 µL  43.56 µL
+      -   VILO reaction mix      5x   4.00 µL  19.36 µL
+      -   ─────────────────────────────────────────────
+      -                              13.00 µL  62.92 µL
+
+      - - Make 2 RT mixes:
+      -   Reagent                 Stock    Volume      2.2x
+      -   ─────────────────────────────────────────────────
+      -   master mix                     13.00 µL  28.60 µL
+      -   SuperScript enzyme mix    10x   2.00 µL   4.40 µL
+      -   ─────────────────────────────────────────────────
+      -                                  15.00 µL  33.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent           Stock    Volume
+      -   ─────────────────────────────────
+      -   RT mix                   15.00 µL
+      -   template RNA  500 ng/µL   5.00 µL
+      -   ─────────────────────────────────
+      -                            20.00 µL
+
+test_standard_protocol:
+  -
+    id: base
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =============
+          > water                            to 20 µL
+          > oligo(dT)₂₀               50 µM      1 µL  anneal,primer
+          > random hexamers       250 ng/µL      1 µL  anneal,primer
+          > gene-specific primer       2 µM      1 µL  anneal,primer
+          > template RNA          500 ng/µL      5 µL  anneal
+          > dNTP mix                  10 mM      1 µL  anneal
+          > first-strand buffer          5x      4 µL
+          > DTT                      100 mM      1 µL
+          > RNaseOUT                40 U/µL      1 µL
+          > SuperScript III RT     200 U/µL      1 µL  RT
+          > """)
+        template_stock_ng_uL: 500
+        primer_type: None
+        anneal: True
+        anneal_volume: None
+        anneal_incubation:
+          -
+            temp_C: 65
+            time_m: 5
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: None
+        -
+          template: 'f2'
+          primer: None
+
+    expected:
+      - Setup 2 primer-annealing reactions:
+      
+      - - Use the following reagents:
+      -   template RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent      Stock   Volume      2.2x
+      -   ─────────────────────────────────────
+      -   water               3.00 µL   6.60 µL
+      -   oligo(dT)₂₀  50 µM  1.00 µL   2.20 µL
+      -   dNTP mix     10 mM  1.00 µL   2.20 µL
+      -   ─────────────────────────────────────
+      -                       5.00 µL  11.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent           Stock    Volume
+      -   ─────────────────────────────────
+      -   master mix                5.00 µL
+      -   template RNA  500 ng/µL   5.00 µL
+      -   ─────────────────────────────────
+      -                            10.00 µL
+
+      - Run the following thermocycler protocol:
+      - - 65°C for 5m
+
+      - Setup 2 reverse transcription reactions:
+      -
+      - - Make master mix:
+      -   Reagent                 Stock    Volume      2.2x
+      -   ─────────────────────────────────────────────────
+      -   water                           3.00 µL   6.60 µL
+      -   first-strand buffer        5x   4.00 µL   8.80 µL
+      -   DTT                    100 mM   1.00 µL   2.20 µL
+      -   RNaseOUT              40 U/µL   1.00 µL   2.20 µL
+      -   SuperScript III RT   200 U/µL   1.00 µL   2.20 µL
+      -   ─────────────────────────────────────────────────
+      -                                  10.00 µL  22.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent                     Volume
+      -   ──────────────────────────────────
+      -   master mix                10.00 µL
+      -   annealed template/primer  10.00 µL
+      -   ──────────────────────────────────
+      -                             20.00 µL
+  -
+    id: anneal-volume
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =============
+          > water                            to 20 µL
+          > oligo(dT)₂₀               50 µM      1 µL  anneal,primer
+          > random hexamers       250 ng/µL      1 µL  anneal,primer
+          > gene-specific primer       2 µM      1 µL  anneal,primer
+          > template RNA          500 ng/µL      5 µL  anneal
+          > dNTP mix                  10 mM      1 µL  anneal
+          > first-strand buffer          5x      4 µL
+          > DTT                      100 mM      1 µL
+          > RNaseOUT                40 U/µL      1 µL
+          > SuperScript III RT     200 U/µL      1 µL  RT
+          > """)
+        template_stock_ng_uL: 500
+        primer_type: None
+        anneal: True
+        anneal_volume: 8
+        anneal_incubation:
+          -
+            temp_C: 65
+            time_m: 5
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: None
+        -
+          template: 'f2'
+          primer: None
+
+    expected:
+      - Setup 2 primer-annealing reactions:
+      
+      - - Use the following reagents:
+      -   template RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent      Stock   Volume     2.2x
+      -   ────────────────────────────────────
+      -   water               1.00 µL  2.20 µL
+      -   oligo(dT)₂₀  50 µM  1.00 µL  2.20 µL
+      -   dNTP mix     10 mM  1.00 µL  2.20 µL
+      -   ────────────────────────────────────
+      -                       3.00 µL  6.60 µL
+
+      - - Add the remaining reagents:
+      -   Reagent           Stock   Volume
+      -   ────────────────────────────────
+      -   master mix               3.00 µL
+      -   template RNA  500 ng/µL  5.00 µL
+      -   ────────────────────────────────
+      -                            8.00 µL
+
+      - Run the following thermocycler protocol:
+      - - 65°C for 5m
+
+      - Setup 2 reverse transcription reactions:
+      -
+      - - Make master mix:
+      -   Reagent                 Stock    Volume      2.2x
+      -   ─────────────────────────────────────────────────
+      -   water                           5.00 µL  11.00 µL
+      -   first-strand buffer        5x   4.00 µL   8.80 µL
+      -   DTT                    100 mM   1.00 µL   2.20 µL
+      -   RNaseOUT              40 U/µL   1.00 µL   2.20 µL
+      -   SuperScript III RT   200 U/µL   1.00 µL   2.20 µL
+      -   ─────────────────────────────────────────────────
+      -                                  12.00 µL  26.40 µL
+
+      - - Add the remaining reagents:
+      -   Reagent                     Volume
+      -   ──────────────────────────────────
+      -   master mix                12.00 µL
+      -   annealed template/primer   8.00 µL
+      -   ──────────────────────────────────
+      -                             20.00 µL
+  -
+    id: no-rt-control
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =============
+          > water                            to 20 µL
+          > oligo(dT)₂₀               50 µM      1 µL  anneal,primer
+          > random hexamers       250 ng/µL      1 µL  anneal,primer
+          > gene-specific primer       2 µM      1 µL  anneal,primer
+          > template RNA          500 ng/µL      5 µL  anneal
+          > dNTP mix                  10 mM      1 µL  anneal
+          > first-strand buffer          5x      4 µL
+          > DTT                      100 mM      1 µL
+          > RNaseOUT                40 U/µL      1 µL
+          > SuperScript III RT     200 U/µL      1 µL  RT
+          > """)
+        template_stock_ng_uL: 500
+        primer_type: None
+        anneal: True
+        anneal_volume: None
+        anneal_incubation:
+          -
+            temp_C: 65
+            time_m: 5
+        no_rt_control: True
+      members:
+        -
+          template: 'f1'
+          primer: None
+        -
+          template: 'f2'
+          primer: None
+
+    expected:
+      - Setup 2 primer-annealing reactions:
+      
+      - - Use the following reagents:
+      -   template RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent      Stock   Volume     ≈4.8x
+      -   ─────────────────────────────────────
+      -   water               3.00 µL  14.52 µL
+      -   oligo(dT)₂₀  50 µM  1.00 µL   4.84 µL
+      -   dNTP mix     10 mM  1.00 µL   4.84 µL
+      -   ─────────────────────────────────────
+      -                       5.00 µL  24.20 µL
+
+      - - Add the remaining reagents:
+      -   Reagent           Stock    Volume      2.2x
+      -   ───────────────────────────────────────────
+      -   master mix                5.00 µL  11.00 µL
+      -   template RNA  500 ng/µL   5.00 µL  11.00 µL
+      -   ───────────────────────────────────────────
+      -                            10.00 µL  22.00 µL
+
+      - Run the following thermocycler protocol:
+      - - 65°C for 5m
+
+      - Setup 4 reverse transcription reactions:
+
+      - - Setup each reaction with and without reverse transcriptase.
+
+      - - Make master mix:
+      -   Reagent                Stock   Volume     ≈4.8x
+      -   ───────────────────────────────────────────────
+      -   water                         3.00 µL  14.52 µL
+      -   first-strand buffer       5x  4.00 µL  19.36 µL
+      -   DTT                   100 mM  1.00 µL   4.84 µL
+      -   RNaseOUT             40 U/µL  1.00 µL   4.84 µL
+      -   ───────────────────────────────────────────────
+      -                                 9.00 µL  43.56 µL
+
+      - - Make 2 SuperScript III RT mixes:
+      -   Reagent                Stock    Volume      2.2x
+      -   ────────────────────────────────────────────────
+      -   master mix                     9.00 µL  19.80 µL
+      -   SuperScript III RT  200 U/µL   1.00 µL   2.20 µL
+      -   ────────────────────────────────────────────────
+      -                                 10.00 µL  22.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent                     Volume
+      -   ──────────────────────────────────
+      -   SuperScript III RT mix    10.00 µL
+      -   annealed template/primer  10.00 µL
+      -   ──────────────────────────────────
+      -                             20.00 µL
+  -
+    id: 2-primers-1-template
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =============
+          > water                            to 20 µL
+          > oligo(dT)₂₀               50 µM      1 µL  anneal,primer
+          > random hexamers       250 ng/µL      1 µL  anneal,primer
+          > gene-specific primer       2 µM      1 µL  anneal,primer
+          > template RNA          500 ng/µL      5 µL  anneal
+          > dNTP mix                  10 mM      1 µL  anneal
+          > first-strand buffer          5x      4 µL
+          > DTT                      100 mM      1 µL
+          > RNaseOUT                40 U/µL      1 µL
+          > SuperScript III RT     200 U/µL      1 µL  RT
+          > """)
+        template_stock_ng_uL: 500
+        primer_type: 'gene-specific primer'
+        anneal: True
+        anneal_volume: None
+        anneal_incubation:
+          -
+            temp_C: 65
+            time_m: 5
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: 'o1'
+          primer_stock_uM: None
+        -
+          template: 'f1'
+          primer: 'o2'
+          primer_stock_uM: None
+
+    expected:
+      - Setup 2 primer-annealing reactions:
+      
+      - - Use the following reagents:
+      -   gene-specific primer: o1, o2
+
+      - - Make master mix:
+      -   Reagent       Stock   Volume      2.2x
+      -   ──────────────────────────────────────
+      -   water                3.00 µL   6.60 µL
+      -   f1        500 ng/µL  5.00 µL  11.00 µL
+      -   dNTP mix      10 mM  1.00 µL   2.20 µL
+      -   ──────────────────────────────────────
+      -                        9.00 µL  19.80 µL
+
+      - - Add the remaining reagents:
+      -   Reagent               Stock    Volume
+      -   ─────────────────────────────────────
+      -   master mix                    9.00 µL
+      -   gene-specific primer   2 µM   1.00 µL
+      -   ─────────────────────────────────────
+      -                                10.00 µL
+
+      - Run the following thermocycler protocol:
+      - - 65°C for 5m
+
+      - Setup 2 reverse transcription reactions:
+      -
+      - - Make master mix:
+      -   Reagent                 Stock    Volume      2.2x
+      -   ─────────────────────────────────────────────────
+      -   water                           3.00 µL   6.60 µL
+      -   first-strand buffer        5x   4.00 µL   8.80 µL
+      -   DTT                    100 mM   1.00 µL   2.20 µL
+      -   RNaseOUT              40 U/µL   1.00 µL   2.20 µL
+      -   SuperScript III RT   200 U/µL   1.00 µL   2.20 µL
+      -   ─────────────────────────────────────────────────
+      -                                  10.00 µL  22.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent                     Volume
+      -   ──────────────────────────────────
+      -   master mix                10.00 µL
+      -   annealed template/primer  10.00 µL
+      -   ──────────────────────────────────
+      -                             20.00 µL
+  -
+    id: 2-primers-2-templates
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =============
+          > water                            to 20 µL
+          > oligo(dT)₂₀               50 µM      1 µL  anneal,primer
+          > random hexamers       250 ng/µL      1 µL  anneal,primer
+          > gene-specific primer       2 µM      1 µL  anneal,primer
+          > template RNA          500 ng/µL      5 µL  anneal
+          > dNTP mix                  10 mM      1 µL  anneal
+          > first-strand buffer          5x      4 µL
+          > DTT                      100 mM      1 µL
+          > RNaseOUT                40 U/µL      1 µL
+          > SuperScript III RT     200 U/µL      1 µL  RT
+          > """)
+        template_stock_ng_uL: 500
+        primer_type: 'gene-specific primer'
+        anneal: True
+        anneal_volume: None
+        anneal_incubation:
+          -
+            temp_C: 65
+            time_m: 5
+        no_rt_control: False
+      members:
+        -
+          template: 'f1'
+          primer: 'o1'
+          primer_stock_uM: None
+        -
+          template: 'f2'
+          primer: 'o1'
+          primer_stock_uM: None
+        -
+          template: 'f1'
+          primer: 'o2'
+          primer_stock_uM: None
+        -
+          template: 'f2'
+          primer: 'o2'
+          primer_stock_uM: None
+
+    expected:
+      - Setup 4 primer-annealing reactions:
+      
+      - - Use all combinations of the following reagents:
+      -   gene-specific primer: o1, o2
+      -   template RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent   Stock   Volume     ≈4.8x
+      -   ──────────────────────────────────
+      -   water            3.00 µL  14.52 µL
+      -   dNTP mix  10 mM  1.00 µL   4.84 µL
+      -   ──────────────────────────────────
+      -                    4.00 µL  19.36 µL
+
+      - - Make 2 gene-specific primer mixes:
+
+      -   Reagent               Stock   Volume      2.2x
+      -   ──────────────────────────────────────────────
+      -   master mix                   4.00 µL   8.80 µL
+      -   gene-specific primer   2 µM  1.00 µL   2.20 µL
+      -   ──────────────────────────────────────────────
+      -                                5.00 µL  11.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent                       Stock    Volume
+      -   ─────────────────────────────────────────────
+      -   gene-specific primer mix              5.00 µL
+      -   template RNA              500 ng/µL   5.00 µL
+      -   ─────────────────────────────────────────────
+      -                                        10.00 µL
+
+      - Run the following thermocycler protocol:
+      - - 65°C for 5m
+
+      - Setup 4 reverse transcription reactions:
+      -
+      - - Make master mix:
+      -   Reagent                 Stock    Volume      4.4x
+      -   ─────────────────────────────────────────────────
+      -   water                           3.00 µL  13.20 µL
+      -   first-strand buffer        5x   4.00 µL  17.60 µL
+      -   DTT                    100 mM   1.00 µL   4.40 µL
+      -   RNaseOUT              40 U/µL   1.00 µL   4.40 µL
+      -   SuperScript III RT   200 U/µL   1.00 µL   4.40 µL
+      -   ─────────────────────────────────────────────────
+      -                                  10.00 µL  44.00 µL
+
+      - - Add the remaining reagents:
+      -   Reagent                     Volume
+      -   ──────────────────────────────────
+      -   master mix                10.00 µL
+      -   annealed template/primer  10.00 µL
+      -   ──────────────────────────────────
+      -                             20.00 µL
+  -
+    id: err-no-flags
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =======
+          > water                            to 10 µL
+          > SuperScript VILO             5x      2 µL  RT
+          > template RNA          200 ng/µL      1 µL
+          > """)
+    error:
+      type: UsageError
+      message: `anneal` requested, but not supported for the chosen reaction
+
+test_incubation:
+  -
+    id: base
+    group:
+      key:
+        incubation:
+          -
+            temp_C: 25
+            time_m: 10
+          -
+            temp_C: 42
+            time_m: 60
+          -
+            temp_C: 85
+            time_m: 5
+    expected:
+      - Run the following thermocycler protocol:
+      - - 25°C for 10m
+      - - 42°C for 60m
+      - - 85°C for 5m
+  -
+    id: by-primer
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                   Stock    Volume  Flags
+          > ====================  =========  ========  =============
+          > water                            to 20 µL
+          > oligo(dT)₂₀               50 µM      1 µL  anneal,primer
+          > random hexamers       250 ng/µL      1 µL  anneal,primer
+          > gene-specific primer       2 µM      1 µL  anneal,primer
+          > template RNA          500 ng/µL      5 µL  anneal
+          > dNTP mix                  10 mM      1 µL  anneal
+          > first-strand buffer          5x      4 µL
+          > DTT                      100 mM      1 µL
+          > RNaseOUT                40 U/µL      1 µL
+          > SuperScript III RT     200 U/µL      1 µL  RT
+          > """)
+        primer_type: 'random hexamers'
+        primer_aliases:
+          dt: 'oligo(dT)₂₀'
+          hex: 'random hexamers'
+        incubation:
+          dt:
+            -
+              temp_C: 50
+              time_m: 60
+            -
+              temp_C: 85
+              time_m: 5
+          hex:
+            -
+              temp_C: 25
+              time_m: 10
+            -
+              temp_C: 42
+              time_m: 60
+            -
+              temp_C: 85
+              time_m: 5
+    expected:
+      > 1. Run the following thermocycler protocol:
+      >
+      >    - 25°C for 10m
+      >    - 42°C for 60m
+      >    - 85°C for 5m
+
+test_protocol:
+  -
+    id: incubation-by-primer
+    app:
+      > Sample = ReverseTranscribe.Sample.partial(
+      >     preset='thermo/superscript-iii',
+      >     primer='hex',
+      > )
+      > app = ReverseTranscribe([
+      >     Sample('f1'),
+      >     Sample('f2'),
+      > ])
+    expected:
+      - SuperScript III RT
+      - Run the following thermocycler protocol:
+      - 25°C for 5m
+      - 50°C for 60m
+      - 85°C for 5m
+  -
+    id: dnase
+    app:
+      > Sample = ReverseTranscribe.Sample.partial(
+      >     preset='thermo/superscript-iv/vilo'
+      > )
+      > app = ReverseTranscribe([
+      >     Sample('f1'),
+      >     Sample('f2'),
+      > ])
+    expected:
+      > 1. Setup 2 DNase reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      RNA: f1, f2
+      >
+      >    - Make master mix:
+      >
+      >      Reagent              Stock   Volume      2.2x
+      >      ─────────────────────────────────────────────
+      >      nuclease-free water         3.00 µL   6.60 µL
+      >      ezDNase buffer         10x  1.00 µL   2.20 µL
+      >      ezDNase enzyme         10x  1.00 µL   2.20 µL
+      >      ─────────────────────────────────────────────
+      >                                  5.00 µL  11.00 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent         Stock    Volume
+      >      ───────────────────────────────
+      >      master mix              5.00 µL
+      >      RNA         500 ng/µL   5.00 µL
+      >      ───────────────────────────────
+      >                             10.00 µL
+      >
+      > 2. Incubate at 37°C for 2m.
+      >
+      > 3. Setup 2 reverse transcription reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      DNase-treated template RNA: f1, f2
+      >
+      >    - Make master mix:
+      >
+      >      Reagent              Stock    Volume      2.2x
+      >      ──────────────────────────────────────────────
+      >      nuclease-free water          6.00 µL  13.20 µL
+      >      SuperScript IV VILO     5x   4.00 µL   8.80 µL
+      >      ──────────────────────────────────────────────
+      >                                  10.00 µL  22.00 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent                       Volume
+      >      ────────────────────────────────────
+      >      master mix                  10.00 µL
+      >      DNase-treated template RNA  10.00 µL
+      >      ────────────────────────────────────
+      >                                  20.00 µL
+      >
+      > 4. Run the following thermocycler protocol:
+      >
+      >    - 25°C for 10m
+      >    - 42°C for 60m
+      >    - 85°C for 5m
+
+test_cli:
+  -
+    id: base
+    cmd: sw reverse_transcribe a b c
+    stdout:
+      > {DATE}
+      >
+      > \$ sw reverse_transcribe a b c
+      >
+      > 1. Setup 3 reverse transcription reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      template RNA: a, b, c
+      >
+      >    - Make master mix:
+      >
+      >      Reagent                   Stock    Volume      3.3x
+      >      ───────────────────────────────────────────────────
+      >      nuclease-free water               7.80 µL  25.74 µL
+      >      d\(T\)₂₃VN                  50 µM   2.00 µL   6.60 µL
+      >      dNTP mix                  10 mM   1.00 µL   3.30 µL
+      >      ProtoScript II buffer        5x   4.00 µL  13.20 µL
+      >      DTT                      100 mM   2.00 µL   6.60 µL
+      >      Protoscript II RT      200 U/µL   1.00 µL   3.30 µL
+      >      RNase inhibitor         40 U/µL   0.20 µL   0.66 µL
+      >      ───────────────────────────────────────────────────
+      >                                       18.00 µL  59.40 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent           Stock    Volume
+      >      ─────────────────────────────────
+      >      master mix               18.00 µL
+      >      template RNA  500 ng/µL   2.00 µL
+      >      ─────────────────────────────────
+      >                               20.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 42°C for 60m
+      >    - 65°C for 20m
+  -
+    id: no-rt-control
+    cmd: sw reverse_transcribe a b c -R
+    stdout:
+      > {DATE}
+      >
+      > \$ sw reverse_transcribe a b c -R
+      >
+      > 1. Setup 6 reverse transcription reactions:
+      >
+      >    - Use all combinations of the following reagents:
+      >
+      >      Protoscript II RT: \+, −
+      >      template RNA: a, b, c
+      >
+      >    - Make master mix:
+      >
+      >      Reagent                  Stock    Volume      ≈7.3x
+      >      ───────────────────────────────────────────────────
+      >      nuclease-free water              7.80 µL   56.63 µL
+      >      d\(T\)₂₃VN                 50 µM   2.00 µL   14.52 µL
+      >      dNTP mix                 10 mM   1.00 µL    7.26 µL
+      >      ProtoScript II buffer       5x   4.00 µL   29.04 µL
+      >      DTT                     100 mM   2.00 µL   14.52 µL
+      >      RNase inhibitor        40 U/µL   0.20 µL    1.45 µL
+      >      ───────────────────────────────────────────────────
+      >                                      17.00 µL  123.42 µL
+      >
+      >    - Make 2 RT mixes:
+      >
+      >      Reagent               Stock    Volume      3.3x
+      >      ───────────────────────────────────────────────
+      >      master mix                   17.00 µL  56.10 µL
+      >      Protoscript II RT  200 U/µL   1.00 µL   3.30 µL
+      >      ───────────────────────────────────────────────
+      >                                   18.00 µL  59.40 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent           Stock    Volume
+      >      ─────────────────────────────────
+      >      RT mix                   18.00 µL
+      >      template RNA  500 ng/µL   2.00 µL
+      >      ─────────────────────────────────
+      >                               20.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 42°C for 60m
+      >    - 65°C for 20m
+  -
+    id: thermo-superscript-iii-vilo
+    cmd: sw reverse_transcribe a b c -p thermo/superscript-iii/vilo/master-mix
+    stdout:
+      > {DATE}
+      >
+      > \$ sw reverse_transcribe a b c -p thermo/superscript-iii/vilo/master-mix
+      >
+      > 1. Setup 3 reverse transcription reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      template RNA: a, b, c
+      >
+      >    - Make master mix:
+      >
+      >      Reagent                      Stock    Volume      3.3x
+      >      ──────────────────────────────────────────────────────
+      >      DEPC-treated water                  11.00 µL  36.30 µL
+      >      SuperScript VILO master mix     5x   4.00 µL  13.20 µL
+      >      ──────────────────────────────────────────────────────
+      >                                          15.00 µL  49.50 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent           Stock    Volume
+      >      ─────────────────────────────────
+      >      master mix               15.00 µL
+      >      template RNA  500 ng/µL   5.00 µL
+      >      ─────────────────────────────────
+      >                               20.00 µL
+      >
+      > 2. Run the following thermocycler protocol:
+      >
+      >    - 25°C for 10m
+      >    - 42°C for 60m
+      >    - 85°C for 5m
+  -
+    id: thermo-superscript-iii-vilo-no-rt-control
+    cmd: sw reverse_transcribe a b c -p thermo/superscript-iii/vilo/master-mix -R
+    stdout:
+      > {DATE}
+      >
+      > \$ sw reverse_transcribe a b c -p thermo/superscript-iii/vilo/master-mix -R
+      >
+      > 1. Prepare reverse transcriptase \(RT\) master mix:
+      >
+      >    Reagent                      Stock    Volume      3.3x
+      >    ──────────────────────────────────────────────────────
+      >    DEPC-treated water                  11.00 µL  36.30 µL
+      >    SuperScript VILO master mix     5x   4.00 µL  13.20 µL
+      >
+      > 2. Denature half of the RT master mix:
+      >
+      >    - Take 24.75 µL of the master mix.
+      >    - Incubate at 65°C for 10m.
+      >
+      > 3. Setup 6 reverse transcription reactions:
+      >
+      >    - Use all combinations of the following reagents:
+      >
+      >      RT master mix: denatured, non-denatured
+      >      template RNA: a, b, c
+      >
+      >    - Mix the reactions:
+      >
+      >      Reagent            Stock    Volume
+      >      ──────────────────────────────────
+      >      RT master mix             15.00 µL
+      >      template RNA   500 ng/µL   5.00 µL
+      >      ──────────────────────────────────
+      >                                20.00 µL
+      >
+      > 4. Run the following thermocycler protocol:
+      >
+      >    - 25°C for 10m
+      >    - 42°C for 60m
+      >    - 85°C for 5m

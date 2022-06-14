@@ -1,0 +1,338 @@
+test_plan_dnase_reactions:
+  -
+    id: base
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume
+          > ===========================  =========  ========
+          > water                                   to 10 µL
+          > DNase buffer                       10x      1 µL
+          > DNase                              10x      1 µL
+          > RNA                          500 ng/µL      5 µL
+          > """)
+        rna_volume: None
+      members:
+        -
+          rna_name: 'f1'
+          rna_stock_conc: None
+        -
+          rna_name: 'f2'
+          rna_stock_conc: None
+
+    expected:
+      - Setup 2 DNase reactions:
+
+      - - Use the following reagents:
+      -   RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent       Stock   Volume      2.2x
+      -   ──────────────────────────────────────
+      -   water                3.00 µL   6.60 µL
+      -   DNase buffer    10x  1.00 µL   2.20 µL
+      -   DNase           10x  1.00 µL   2.20 µL
+      -   ──────────────────────────────────────
+      -                        5.00 µL  11.00 µL
+
+      - Add the remaining reagents:
+      -   Reagent         Stock    Volume
+      -   ───────────────────────────────
+      -   master mix              5.00 µL
+      -   RNA         500 ng/µL   5.00 µL
+      -   ───────────────────────────────
+      -                          10.00 µL
+  -
+    id: volume
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume
+          > ===========================  =========  ========
+          > water                                   to 10 µL
+          > DNase buffer                       10x      1 µL
+          > DNase                              10x      1 µL
+          > RNA                          500 ng/µL      5 µL
+          > """)
+        rna_volume: 2
+      members:
+        -
+          rna_name: 'f1'
+          rna_stock_conc: None
+        -
+          rna_name: 'f2'
+          rna_stock_conc: None
+
+    expected:
+      - Setup 2 DNase reactions:
+
+      - - Use the following reagents:
+      -   RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent       Stock   Volume      2.2x
+      -   ──────────────────────────────────────
+      -   water                6.00 µL  13.20 µL
+      -   DNase buffer    10x  1.00 µL   2.20 µL
+      -   DNase           10x  1.00 µL   2.20 µL
+      -   ──────────────────────────────────────
+      -                        8.00 µL  17.60 µL
+
+      - Add the remaining reagents:
+      -   Reagent         Stock    Volume
+      -   ───────────────────────────────
+      -   master mix              8.00 µL
+      -   RNA         500 ng/µL   2.00 µL
+      -   ───────────────────────────────
+      -                          10.00 µL
+  -
+    id: stock-conc-same
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume
+          > ===========================  =========  ========
+          > water                                   to 10 µL
+          > DNase buffer                       10x      1 µL
+          > DNase                              10x      1 µL
+          > RNA                          500 ng/µL      5 µL
+          > """)
+        rna_volume: None
+      members:
+        -
+          rna_name: 'f1'
+          rna_stock_conc: '1 µM'
+        -
+          rna_name: 'f2'
+          rna_stock_conc: None
+
+    expected:
+      - Setup 2 DNase reactions:
+
+      - - Use the following reagents:
+      -   RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent       Stock   Volume      2.2x
+      -   ──────────────────────────────────────
+      -   water                3.00 µL   6.60 µL
+      -   DNase buffer    10x  1.00 µL   2.20 µL
+      -   DNase           10x  1.00 µL   2.20 µL
+      -   ──────────────────────────────────────
+      -                        5.00 µL  11.00 µL
+
+      - Add the remaining reagents:
+      -   Reagent     Stock    Volume
+      -   ───────────────────────────
+      -   master mix          5.00 µL
+      -   RNA          1 µM   5.00 µL
+      -   ───────────────────────────
+      -                      10.00 µL
+  -
+    id: stock-conc-differ
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume
+          > ===========================  =========  ========
+          > water                                   to 10 µL
+          > DNase buffer                       10x      1 µL
+          > DNase                              10x      1 µL
+          > RNA                          500 ng/µL      5 µL
+          > """)
+        rna_volume: None
+      members:
+        -
+          rna_name: 'f1'
+          rna_stock_conc: '1 µM'
+        -
+          rna_name: 'f2'
+          rna_stock_conc: '2 µM'
+
+    expected:
+      - Setup 2 DNase reactions:
+
+      - - Use the following reagents:
+      -   RNA: f1, f2
+
+      - - Make master mix:
+      -   Reagent       Stock   Volume      2.2x
+      -   ──────────────────────────────────────
+      -   water                3.00 µL   6.60 µL
+      -   DNase buffer    10x  1.00 µL   2.20 µL
+      -   DNase           10x  1.00 µL   2.20 µL
+      -   ──────────────────────────────────────
+      -                        5.00 µL  11.00 µL
+
+      - Add the remaining reagents:
+      -   Reagent       Volume
+      -   ────────────────────
+      -   master mix   5.00 µL
+      -   RNA          5.00 µL
+      -   ────────────────────
+      -               10.00 µL
+  -
+    id: err-no-rna
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume
+          > ===========================  =========  ========
+          > water                                   to 10 µL
+          > DNase buffer                       10x      1 µL
+          > DNase                              10x      1 µL
+          > """)
+    error:
+      type: UsageError
+      message: reaction missing required 'RNA' reagent
+
+test_plan_incubation_steps:
+  -
+    id: incubate-only
+    group:
+      key:
+        incubation:
+          time_m: 10
+          temp_C: 37
+        denature_additives: None
+        denature_incubation: None
+    expected:
+      > 1. Incubate at 37°C for 10m.
+  -
+    id: incubate-denature
+    group:
+      key:
+        incubation:
+          time_m: 10
+          temp_C: 37
+        denature_additives: None
+        denature_incubation:
+          time_m: 10
+          temp_C: 75
+    expected:
+      > 1. Run the following thermocycler protocol:
+      >
+      >    - 37°C for 10m
+      >    - 75°C for 10m
+  -
+    id: additives-1
+    group:
+      key:
+        incubation:
+          time_m: 10
+          temp_C: 37
+        denature_additives:
+          - '1 µL 500 mM EDTA'
+        denature_incubation:
+          time_m: 10
+          temp_C: 75
+    expected:
+      > 1. Incubate at 37°C for 10m.
+      >
+      > 2. Denature the DNase:
+      >
+      >    - Add 1 µL 500 mM EDTA.
+      >    - Incubate at 75°C for 10m.
+  -
+    id: additives-2
+    group:
+      key:
+        incubation:
+          time_m: 10
+          temp_C: 37
+        denature_additives:
+          - '1 µL 500 mM EDTA'
+          - '1 µL 100 mM DTT'
+        denature_incubation:
+          time_m: 10
+          temp_C: 75
+    expected:
+      > 1. Incubate at 37°C for 10m.
+      >
+      > 2. Denature the DNase:
+      >
+      >    - Add the following:
+      >      - 1 µL 500 mM EDTA
+      >      - 1 µL 100 mM DTT
+      >
+      >    - Incubate at 75°C for 10m.
+
+test_cli:
+  -
+    id: neb
+    cmd: sw dnase f1 f2 -p neb/dnase-i
+    stdout:
+      > {DATE}
+      >
+      > \$ sw dnase f1 f2 -p neb/dnase-i
+      >
+      > 1. Setup 2 DNase reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      RNA: f1, f2
+      >
+      >    - Make master mix:
+      >
+      >      Reagent               Stock    Volume       2.2x
+      >      ────────────────────────────────────────────────
+      >      nuclease-free water          69.00 µL  151.80 µL
+      >      DNase I buffer          10x  10.00 µL   22.00 µL
+      >      DNase I              2 U/µL   1.00 µL    2.20 µL
+      >      ────────────────────────────────────────────────
+      >                                   80.00 µL  176.00 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent         Stock     Volume
+      >      ────────────────────────────────
+      >      master mix              80.00 µL
+      >      RNA         500 ng/µL   20.00 µL
+      >      ────────────────────────────────
+      >                             100.00 µL
+      >
+      > 2. Incubate at 37°C for 10m.
+      >
+      > 3. Denature the DNase:
+      >
+      >    - Add 1 µL 500 mM EDTA.
+      >    - Incubate at 75°C for 10m.
+  -
+    id: thermo
+    cmd: sw dnase f1 f2 -p thermo/ezdnase
+    stdout:
+      > {DATE}
+      >
+      > \$ sw dnase f1 f2 -p thermo/ezdnase
+      >
+      > 1. Setup 2 DNase reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      RNA: f1, f2
+      >
+      >    - Make master mix:
+      >
+      >      Reagent              Stock   Volume      2.2x
+      >      ─────────────────────────────────────────────
+      >      nuclease-free water         3.00 µL   6.60 µL
+      >      ezDNase buffer         10x  1.00 µL   2.20 µL
+      >      ezDNase enzyme         10x  1.00 µL   2.20 µL
+      >      ─────────────────────────────────────────────
+      >                                  5.00 µL  11.00 µL
+      >
+      >    - Add the remaining reagents:
+      >
+      >      Reagent         Stock    Volume
+      >      ───────────────────────────────
+      >      master mix              5.00 µL
+      >      RNA         500 ng/µL   5.00 µL
+      >      ───────────────────────────────
+      >                             10.00 µL
+      >
+      > 2. Incubate at 37°C for 2m.

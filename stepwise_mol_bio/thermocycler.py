@@ -27,19 +27,32 @@ def parse_thermocycler_step(step_str):
             'time_s': parse_time_s(time_str, default_unit='s'),
     }
 
-def format_thermocycler_steps(given):
+def format_thermocycler_steps(given, *, incubate_prefix=False):
+
+    def format_incubation(step):
+        return f'Incubate at {step}.' if incubate_prefix else step
+
     match given:
         case list():
-            return ul(*map(format_thermocycler_steps, given))
+            return ul.from_iterable(
+                    format_thermocycler_steps(
+                        x,
+                        incubate_prefix=incubate_prefix,
+                    )
+                    for x in given
+            )
 
         case {'temp_C': temp_C, 'time_m': time_m}:
-            return f'{temp_C:g}°C for {format_time_s(int(60 * time_m))}'
+            return format_incubation(f'{temp_C:g}°C for {format_time_s(int(60 * time_m))}')
 
         case {'temp_C': temp_C, 'time_s': time_s}:
-            return f'{temp_C:g}°C for {format_time_s(int(time_s))}'
+            return format_incubation(f'{temp_C:g}°C for {format_time_s(int(time_s))}')
 
         case {'temp_C': temp_C, 'time': time_str}:
-            return f'{temp_C:g}°C for {time_str}'
+            return format_incubation(f'{temp_C:g}°C for {time_str}')
+
+        case {'hold_C': hold_C}:
+            return f'Hold at {hold_C:g}°C'
 
         case {'repeat': n, 'steps': steps}:
             return pl(

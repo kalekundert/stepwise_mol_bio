@@ -8,10 +8,12 @@ from voluptuous import Schema, Invalid, Coerce, And, Or, Optional
 from parametrize_from_file import Namespace, error_or, defaults, cast
 from stepwise.testing import check_command, disable_capture
 from pytest import approx
+from pytest_unordered import unordered
 from freezerbox.stepwise import Make
 from more_itertools import always_iterable
 from contextlib import nullcontext
 from difflib import Differ
+from types import SimpleNamespace
 
 with_py = Namespace()
 with_math = Namespace('from math import *')
@@ -41,6 +43,19 @@ def eval_db(reagents):
 
 def exec_app(src):
     return with_swmb.exec(src, get='app')
+
+def eval_sample_group(src):
+    schema = Schema({
+        Optional('key', default={}): {str: with_swmb.eval},
+        Optional('members', default=[]): [{str: with_swmb.eval}],
+    })
+    group = schema(src)
+    key = SimpleNamespace(**group['key'])
+    members = [
+            SimpleNamespace(**{**group['key'], **x})
+            for x in group['members'] or [group['key']]
+    ]
+    return stepwise_mol_bio.Group(key, members)
 
 def match_protocol(protocol, expected, forbidden=[]):
     actual = protocol.format_text()

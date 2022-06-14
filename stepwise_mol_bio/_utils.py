@@ -101,7 +101,7 @@ class Cleanup(Main):
 
 
 @autoprop
-class Bindable:
+class Bindable(metaclass=byoc.BareMeta):
     """
     Superclass for objects that can be bound to a Main/Cleanup instance, for 
     the purpose of gaining access to its FreezerBox database, BYOC config, 
@@ -111,6 +111,12 @@ class Bindable:
     """
     __config__ = []
     _use_app_configs = False
+
+    @classmethod
+    def partial(cls, **kwargs):
+        def factory(*args, **kwargs2):
+            return cls(*args, **{**kwargs, **kwargs2})
+        return factory
 
     def __init__(self, **kwargs):
         self._set_known_attrs(kwargs)

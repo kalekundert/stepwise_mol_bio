@@ -151,6 +151,13 @@ test_format_thermocycler_steps:
       >     '72°C for 2m',
       > )
   -
+    id: hold
+    steps:
+      -
+        hold_C: 4
+    expected:
+      > ul('Hold at 4°C')
+  -
     id: repeat
     steps:
       -
@@ -168,6 +175,44 @@ test_format_thermocycler_steps:
       >     ),
       >     br='\n',
       >   )
+      > )
+  -
+    id: pcr
+    steps:
+      -
+        temp_C: 98
+        time_s: 30
+      -
+        repeat: 35
+        steps:
+          -
+            temp_C: 98
+            time_s: 10
+          -
+            temp_C: 60
+            time_s: 20
+          -
+            temp_C: 72
+            time_m: 2
+      -
+        temp_C: 72
+        time_m: 2
+      -
+        hold_C: 4
+    expected:
+      > ul(
+      >   '98°C for 30s',
+      >   pl(
+      >     'Repeat 35x:',
+      >     ul(
+      >       '98°C for 10s',
+      >       '60°C for 20s',
+      >       '72°C for 2m',
+      >     ),
+      >     br='\n',
+      >   ),
+      >   '72°C for 2m',
+      >   'Hold at 4°C',
       > )
   -
     id: err
