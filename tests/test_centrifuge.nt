@@ -1,0 +1,68 @@
+test_plan_centrifuge_step:
+  -
+    id: base
+    params:
+      time: a while
+      speed: 1000g
+    expected: Centrifuge at 1000g for a while.
+  -
+    id: time-s
+    params:
+      time_s: 30
+      speed: 1000g
+    expected: Centrifuge at 1000g for 30s.
+  -
+    id: time-m
+    params:
+      time_m: 5
+      speed: 1000g
+    expected: Centrifuge at 1000g for 5 min.
+  -
+    id: time-h
+    params:
+      time_h: 1
+      speed: 1000g
+    expected: Centrifuge at 1000g for 1 hr.
+  -
+    id: speed-g
+    params:
+      time: a while
+      speed_g: 17000
+    expected: Centrifuge at 17,000g for a while.
+  -
+    id: speed-rpm
+    params:
+      time: a while
+      speed_rpm: 17000
+    expected: Centrifuge at 17,000 rpm for a while.
+  -
+    id: temp
+    params:
+      time: a while
+      speed: 1000g
+      temp: room temp
+    expected: Centrifuge at 1000g for a while at room temp.
+  -
+    id: temp-C
+    params:
+      time: a while
+      speed: 1000g
+      temp_C: 4
+    expected: Centrifuge at 1000g for a while at 4°C.
+  -
+    id: err-underspecified
+    params:
+      speed: 1000g
+    error:
+      type: UsageError
+      message: expected one of the following centrifugation parameters: 'time', 'time_s', 'time_m', 'time_h'
+  -
+    id: err-overspecified
+    params:
+      time: a while
+      time_s: 30
+      speed: 1000g
+    error:
+      type: UsageError
+      message: found multiple values for single centrifugation parameter: 'time', 'time_s'
+

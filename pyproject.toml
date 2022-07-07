@@ -88,6 +88,7 @@ scopes = [
   "anneal",
   "assembly",
   "autoclave",
+  "centrifuge",
   "digest",
   "direct_dilution",
   "dnase",
