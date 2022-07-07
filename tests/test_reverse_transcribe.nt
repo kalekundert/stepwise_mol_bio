@@ -270,15 +270,15 @@ test_denature_protocol:
           primer_type: None
 
     expected:
-      - Prepare reverse transcriptase (RT) master mix:
+      - Prepare enough reverse transcriptase (RT) master mix for 4 reactions:
 
-      - Reagent           Stock   Volume      2.2x
+      - Reagent           Stock   Volume      4.4x
       - ──────────────────────────────────────────
-      - water                    7.00 µL  15.40 µL
-      - SuperScript VILO     5x  2.00 µL   4.40 µL
+      - water                    7.00 µL  30.80 µL
+      - SuperScript VILO     5x  2.00 µL   8.80 µL
 
       - Denature half of the RT master mix:
-      - - Take 9.90 µL of the master mix.
+      - - Take 19.80 µL of the above mix.
       - - Incubate at 65°C for 10m.
 
       - Setup 4 reverse transcription reactions:
@@ -287,7 +287,7 @@ test_denature_protocol:
       -   RT master mix: denatured, non-denatured
       -   template RNA: f1, f2
 
-      - - Mix the reactions:
+      - - Setup the reactions:
       -   Reagent            Stock    Volume
       -   ──────────────────────────────────
       -   RT master mix              9.00 µL
@@ -362,7 +362,7 @@ test_quick_reactions:
       -   ─────────────────────────────────────────────────
       -                                  15.00 µL  33.00 µL
 
-      - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent           Stock    Volume
       -   ─────────────────────────────────
       -   master mix               15.00 µL
@@ -418,7 +418,7 @@ test_quick_reactions:
       -   ─────────────────────────────────────────────────
       -                                  15.00 µL  33.00 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent           Stock    Volume
       -   ─────────────────────────────────
       -   RT mix                   15.00 µL
@@ -469,7 +469,7 @@ test_standard_protocol:
       - - Use the following reagents:
       -   template RNA: f1, f2
 
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent      Stock   Volume      2.2x
       -   ─────────────────────────────────────
       -   water               3.00 µL   6.60 µL
@@ -478,10 +478,10 @@ test_standard_protocol:
       -   ─────────────────────────────────────
       -                       5.00 µL  11.00 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent           Stock    Volume
       -   ─────────────────────────────────
-      -   master mix                5.00 µL
+      -   master mix           2x   5.00 µL
       -   template RNA  500 ng/µL   5.00 µL
       -   ─────────────────────────────────
       -                            10.00 µL
@@ -491,7 +491,7 @@ test_standard_protocol:
 
       - Setup 2 reverse transcription reactions:
       -
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent                 Stock    Volume      2.2x
       -   ─────────────────────────────────────────────────
       -   water                           3.00 µL   6.60 µL
@@ -502,13 +502,13 @@ test_standard_protocol:
       -   ─────────────────────────────────────────────────
       -                                  10.00 µL  22.00 µL
 
-      - - Add the remaining reagents:
-      -   Reagent                     Volume
-      -   ──────────────────────────────────
-      -   master mix                10.00 µL
-      -   annealed template/primer  10.00 µL
-      -   ──────────────────────────────────
-      -                             20.00 µL
+      - - Setup the reactions:
+      -   Reagent                   Stock    Volume
+      -   ─────────────────────────────────────────
+      -   master mix                   2x  10.00 µL
+      -   annealed template/primer         10.00 µL
+      -   ─────────────────────────────────────────
+      -                                    20.00 µL
   -
     id: anneal-volume
     group:
@@ -560,7 +560,7 @@ test_standard_protocol:
       -   ────────────────────────────────────
       -                       3.00 µL  6.60 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent           Stock   Volume
       -   ────────────────────────────────
       -   master mix               3.00 µL
@@ -584,7 +584,7 @@ test_standard_protocol:
       -   ─────────────────────────────────────────────────
       -                                  12.00 µL  26.40 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent                     Volume
       -   ──────────────────────────────────
       -   master mix                12.00 µL
@@ -633,7 +633,7 @@ test_standard_protocol:
       - - Use the following reagents:
       -   template RNA: f1, f2
 
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent      Stock   Volume     ≈4.8x
       -   ─────────────────────────────────────
       -   water               3.00 µL  14.52 µL
@@ -642,10 +642,10 @@ test_standard_protocol:
       -   ─────────────────────────────────────
       -                       5.00 µL  24.20 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent           Stock    Volume      2.2x
       -   ───────────────────────────────────────────
-      -   master mix                5.00 µL  11.00 µL
+      -   master mix           2x   5.00 µL  11.00 µL
       -   template RNA  500 ng/µL   5.00 µL  11.00 µL
       -   ───────────────────────────────────────────
       -                            10.00 µL  22.00 µL
@@ -667,7 +667,7 @@ test_standard_protocol:
       -   ───────────────────────────────────────────────
       -                                 9.00 µL  43.56 µL
 
-      - - Make 2 SuperScript III RT mixes:
+      - - Make 2 2x SuperScript III RT mixes:
       -   Reagent                Stock    Volume      2.2x
       -   ────────────────────────────────────────────────
       -   master mix                     9.00 µL  19.80 µL
@@ -675,13 +675,13 @@ test_standard_protocol:
       -   ────────────────────────────────────────────────
       -                                 10.00 µL  22.00 µL
 
-      - - Add the remaining reagents:
-      -   Reagent                     Volume
-      -   ──────────────────────────────────
-      -   SuperScript III RT mix    10.00 µL
-      -   annealed template/primer  10.00 µL
-      -   ──────────────────────────────────
-      -                             20.00 µL
+      - - Setup the reactions:
+      -   Reagent                   Stock    Volume
+      -   ─────────────────────────────────────────
+      -   SuperScript III RT mix       2x  10.00 µL
+      -   annealed template/primer         10.00 µL
+      -   ─────────────────────────────────────────
+      -                                    20.00 µL
   -
     id: 2-primers-1-template
     group:
@@ -735,7 +735,7 @@ test_standard_protocol:
       -   ──────────────────────────────────────
       -                        9.00 µL  19.80 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent               Stock    Volume
       -   ─────────────────────────────────────
       -   master mix                    9.00 µL
@@ -748,7 +748,7 @@ test_standard_protocol:
 
       - Setup 2 reverse transcription reactions:
       -
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent                 Stock    Volume      2.2x
       -   ─────────────────────────────────────────────────
       -   water                           3.00 µL   6.60 µL
@@ -759,13 +759,13 @@ test_standard_protocol:
       -   ─────────────────────────────────────────────────
       -                                  10.00 µL  22.00 µL
 
-      - - Add the remaining reagents:
-      -   Reagent                     Volume
-      -   ──────────────────────────────────
-      -   master mix                10.00 µL
-      -   annealed template/primer  10.00 µL
-      -   ──────────────────────────────────
-      -                             20.00 µL
+      - - Setup the reactions:
+      -   Reagent                   Stock    Volume
+      -   ─────────────────────────────────────────
+      -   master mix                   2x  10.00 µL
+      -   annealed template/primer         10.00 µL
+      -   ─────────────────────────────────────────
+      -                                    20.00 µL
   -
     id: 2-primers-2-templates
     group:
@@ -827,7 +827,7 @@ test_standard_protocol:
       -   ──────────────────────────────────
       -                    4.00 µL  19.36 µL
 
-      - - Make 2 gene-specific primer mixes:
+      - - Make 2 2x gene-specific primer mixes:
 
       -   Reagent               Stock   Volume      2.2x
       -   ──────────────────────────────────────────────
@@ -836,10 +836,10 @@ test_standard_protocol:
       -   ──────────────────────────────────────────────
       -                                5.00 µL  11.00 µL
 
-      - - Add the remaining reagents:
+      - - Setup the reactions:
       -   Reagent                       Stock    Volume
       -   ─────────────────────────────────────────────
-      -   gene-specific primer mix              5.00 µL
+      -   gene-specific primer mix         2x   5.00 µL
       -   template RNA              500 ng/µL   5.00 µL
       -   ─────────────────────────────────────────────
       -                                        10.00 µL
@@ -849,7 +849,7 @@ test_standard_protocol:
 
       - Setup 4 reverse transcription reactions:
       -
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent                 Stock    Volume      4.4x
       -   ─────────────────────────────────────────────────
       -   water                           3.00 µL  13.20 µL
@@ -860,13 +860,13 @@ test_standard_protocol:
       -   ─────────────────────────────────────────────────
       -                                  10.00 µL  44.00 µL
 
-      - - Add the remaining reagents:
-      -   Reagent                     Volume
-      -   ──────────────────────────────────
-      -   master mix                10.00 µL
-      -   annealed template/primer  10.00 µL
-      -   ──────────────────────────────────
-      -                             20.00 µL
+      - - Setup the reactions:
+      -   Reagent                   Stock    Volume
+      -   ─────────────────────────────────────────
+      -   master mix                   2x  10.00 µL
+      -   annealed template/primer         10.00 µL
+      -   ─────────────────────────────────────────
+      -                                    20.00 µL
   -
     id: err-no-flags
     group:
@@ -986,7 +986,7 @@ test_protocol:
       >
       >      RNA: f1, f2
       >
-      >    - Make master mix:
+      >    - Make 2x master mix:
       >
       >      Reagent              Stock   Volume      2.2x
       >      ─────────────────────────────────────────────
@@ -996,11 +996,11 @@ test_protocol:
       >      ─────────────────────────────────────────────
       >                                  5.00 µL  11.00 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
       >      Reagent         Stock    Volume
       >      ───────────────────────────────
-      >      master mix              5.00 µL
+      >      master mix         2x   5.00 µL
       >      RNA         500 ng/µL   5.00 µL
       >      ───────────────────────────────
       >                             10.00 µL
@@ -1013,7 +1013,7 @@ test_protocol:
       >
       >      DNase-treated template RNA: f1, f2
       >
-      >    - Make master mix:
+      >    - Make 2x master mix:
       >
       >      Reagent              Stock    Volume      2.2x
       >      ──────────────────────────────────────────────
@@ -1022,14 +1022,14 @@ test_protocol:
       >      ──────────────────────────────────────────────
       >                                  10.00 µL  22.00 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
-      >      Reagent                       Volume
-      >      ────────────────────────────────────
-      >      master mix                  10.00 µL
-      >      DNase-treated template RNA  10.00 µL
-      >      ────────────────────────────────────
-      >                                  20.00 µL
+      >      Reagent                     Stock    Volume
+      >      ───────────────────────────────────────────
+      >      master mix                     2x  10.00 µL
+      >      DNase-treated template RNA         10.00 µL
+      >      ───────────────────────────────────────────
+      >                                         20.00 µL
       >
       > 4. Run the following thermocycler protocol:
       >
@@ -1061,12 +1061,12 @@ test_cli:
       >      dNTP mix                  10 mM   1.00 µL   3.30 µL
       >      ProtoScript II buffer        5x   4.00 µL  13.20 µL
       >      DTT                      100 mM   2.00 µL   6.60 µL
-      >      Protoscript II RT      200 U/µL   1.00 µL   3.30 µL
+      >      ProtoScript II RT      200 U/µL   1.00 µL   3.30 µL
       >      RNase inhibitor         40 U/µL   0.20 µL   0.66 µL
       >      ───────────────────────────────────────────────────
       >                                       18.00 µL  59.40 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
       >      Reagent           Stock    Volume
       >      ─────────────────────────────────
@@ -1091,8 +1091,8 @@ test_cli:
       >
       >    - Use all combinations of the following reagents:
       >
-      >      Protoscript II RT: \+, −
       >      template RNA: a, b, c
+      >      ProtoScript II RT: \+, −
       >
       >    - Make master mix:
       >
@@ -1112,11 +1112,11 @@ test_cli:
       >      Reagent               Stock    Volume      3.3x
       >      ───────────────────────────────────────────────
       >      master mix                   17.00 µL  56.10 µL
-      >      Protoscript II RT  200 U/µL   1.00 µL   3.30 µL
+      >      ProtoScript II RT  200 U/µL   1.00 µL   3.30 µL
       >      ───────────────────────────────────────────────
       >                                   18.00 µL  59.40 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
       >      Reagent           Stock    Volume
       >      ─────────────────────────────────
@@ -1152,7 +1152,7 @@ test_cli:
       >      ──────────────────────────────────────────────────────
       >                                          15.00 µL  49.50 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
       >      Reagent           Stock    Volume
       >      ─────────────────────────────────
@@ -1174,16 +1174,17 @@ test_cli:
       >
       > \$ sw reverse_transcribe a b c -p thermo/superscript-iii/vilo/master-mix -R
       >
-      > 1. Prepare reverse transcriptase \(RT\) master mix:
+      > 1. Prepare enough reverse transcriptase \(RT\) master
+      >    mix for 6 reactions:
       >
-      >    Reagent                      Stock    Volume      3.3x
+      >    Reagent                      Stock    Volume      6.6x
       >    ──────────────────────────────────────────────────────
-      >    DEPC-treated water                  11.00 µL  36.30 µL
-      >    SuperScript VILO master mix     5x   4.00 µL  13.20 µL
+      >    DEPC-treated water                  11.00 µL  72.60 µL
+      >    SuperScript VILO master mix     5x   4.00 µL  26.40 µL
       >
       > 2. Denature half of the RT master mix:
       >
-      >    - Take 24.75 µL of the master mix.
+      >    - Take 49.50 µL of the above mix.
       >    - Incubate at 65°C for 10m.
       >
       > 3. Setup 6 reverse transcription reactions:
@@ -1193,7 +1194,7 @@ test_cli:
       >      RT master mix: denatured, non-denatured
       >      template RNA: a, b, c
       >
-      >    - Mix the reactions:
+      >    - Setup the reactions:
       >
       >      Reagent            Stock    Volume
       >      ──────────────────────────────────

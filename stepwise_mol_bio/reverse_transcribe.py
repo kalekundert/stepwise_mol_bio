@@ -6,7 +6,7 @@ import autoprop
 
 from stepwise import (
         StepwiseConfig, PresetConfig, Reaction, Reactions,
-        format_reaction, pl, ul,
+        iter_all_mixes, format_reaction, pl, ul,
 )
 from stepwise_mol_bio import (
         App, Bindable, UsageError,
@@ -21,11 +21,11 @@ from byoc import Key, Method, DocoptConfig
 from operator import attrgetter
 from functools import partial
 from more_itertools import first
+from inform import plural
 
 def reverse_transcribe(samples):
-    return stepwise.Protocol.merge(
-            *plan_reverse_transcription_protocol.for_group_in(samples)
-    )
+    return plan_dnase_protocol.concat(samples) + \
+            plan_reverse_transcription_protocol.concat(samples)
     
 @group_samples(
         'reaction_prototype',
@@ -41,8 +41,6 @@ def reverse_transcribe(samples):
 def plan_reverse_transcription_protocol(group):
     p = stepwise.Protocol()
 
-    p += plan_dnase_protocol(group)
-
     if group.no_rt_control and group.no_rt_denature:
         p += plan_denature_protocol(group)
 
@@ -56,12 +54,10 @@ def plan_reverse_transcription_protocol(group):
 
     return p
 
-@group_samples(
-        'reaction_prototype',
-)
+@group_samples
 def plan_dnase_protocol(group):
-    samples = [x.dnase for x in group if x.dnase]
-    if not samples:
+    dnase_samples = [x.dnase for x in group if x.dnase]
+    if not dnase_samples:
         return stepwise.Protocol()
 
     # This method modifies the reaction prototype of group object it's given.  
@@ -69,13 +65,18 @@ def plan_dnase_protocol(group):
     # way to get the behavior I want.  I might have to think more about how to 
     # communicate between these `@group_samples` functions, though...
 
-    group.reaction_prototype['template RNA'].name = "DNase-treated template RNA"
-    group.reaction_prototype['template RNA'].volume = max(
+    dnase_volume = max(
             x.reaction_prototype.volume
-            for x in samples
+            for x in dnase_samples
     )
-    group.reaction_prototype['template RNA'].stock_conc = None
-    return dnase_digest(samples)
+
+    for rt_sample in group:
+        if rt_sample.dnase:
+            rt_sample.reaction_prototype['template RNA'].name = "DNase-treated template RNA"
+            rt_sample.reaction_prototype['template RNA'].volume = dnase_volume
+            rt_sample.reaction_prototype['template RNA'].stock_conc = None
+
+    return dnase_digest(dnase_samples)
 
 @group_samples
 def plan_denature_protocol(group):
@@ -100,6 +101,7 @@ def plan_denature_protocol(group):
             group, rt_rxn,
             rt_controls=('denatured', 'non-denatured'),
     )
+    n = len(combos)
 
     rt_rxns = Reactions(rt_rxn, combos)
     rt_rxns.step_kind = 'reverse transcription'
@@ -114,17 +116,17 @@ def plan_denature_protocol(group):
     # We calculate how to scale the reaction using the extra object from 
     # `rt_rxns` object, because the user can configure the default behavior of 
     # that object, and we want to use the users configuration.
-    enz_scale = rt_rxns.extra.increase_scale(len(combos) / 2, enz_rxn)
+    enz_scale = rt_rxns.extra.increase_scale(n, enz_rxn)
 
     p = stepwise.Protocol()
     p += pl(
-            "Prepare reverse transcriptase (RT) master mix:",
+            f"Prepare enough reverse transcriptase (RT) master mix for {plural(n):# reaction/s}:",
             format_reaction(enz_rxn, scale=enz_scale, show_totals=False),
     )
     p += pl(
             "Denature half of the RT master mix:",
             ul(
-                f"Take {enz_rxn.volume * enz_scale / 2:.2f} of the master mix.",
+                f"Take {enz_rxn.volume * enz_scale / 2:.2f} of the above mix.",
                 *format_thermocycler_steps(group.no_rt_denature, incubate_prefix=True),
             ),
     )
@@ -203,9 +205,9 @@ def plan_standard_reactions(group):
     rt_rxns.step_kind = 'reverse transcription'
 
     if group.no_rt_control:
-        rt_rxns.combo_step = "Setup each reaction with and without reverse transcriptase."
+        rt_rxns.combos_step = "Setup each reaction with and without reverse transcriptase."
     else:
-        rt_rxns.combo_step = None
+        rt_rxns.combos_step = None
 
     return anneal_rxns, rt_rxns
 
@@ -315,10 +317,12 @@ def rename_rt_mix(rxns):
             for x in rxns.base_reaction
             if 'RT' in x.flags
     }
-    for mix in rxns.unprocessed_mixes:
+    for mix in iter_all_mixes(rxns.mix):
         if rt_keys == mix.reagents:
             mix.name = 'RT'
+            rxns.refresh_names()
             break
+
 
 def samples_from_docopt(args):
     primer = args.get('--primer')
