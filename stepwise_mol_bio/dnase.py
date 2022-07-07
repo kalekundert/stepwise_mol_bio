@@ -29,6 +29,7 @@ from stepwise_mol_bio import (
         App, Bindable, Thermocycler, UsageError, bind, group_samples
 )
 from stepwise_mol_bio.thermocycler import format_thermocycler_steps
+from stepwise_mol_bio.centrifuge import plan_centrifuge_step
 from byoc import Key, DocoptConfig
 
 def dnase_digest(samples):
@@ -42,11 +43,14 @@ def dnase_digest(samples):
         'incubation',
         'denature_additives',
         'denature_incubation',
+        'precipitate_additives',
+        'precipitate_spin',
 )
 def plan_dnase_protocol(group):
     p = stepwise.Protocol()
     p += plan_dnase_reactions(group)
     p += plan_incubation_steps(group)
+    p += plan_precipitation_steps(group)
     return p
 
 @group_samples(
@@ -134,6 +138,39 @@ def plan_incubation_steps(group):
         p += pl("Denature the DNase:", steps)
 
         return p
+
+@group_samples(
+        'precipitate_additives',
+        'precipitate_spin',
+)
+def plan_precipitation_steps(group):
+    if not group.precipitate_additives:
+        return stepwise.Protocol()
+
+    p = stepwise.Protocol()
+    p += pl("Remove the DNase:")
+    
+    centrifuge_steps = ul(
+            plan_centrifuge_step(group.precipitate_spin),
+            "Transfer the supernatant to a clean tube.",
+    )
+
+    if len(group.precipitate_additives) == 1:
+        p.steps[-1] += ul(
+                f"Add {group.precipitate_additives[0]}.",
+                *centrifuge_steps,
+        )
+    else:
+        p.steps[-1] += ul(
+                pl(
+                    "Add the following:",
+                    ul(*group.precipitate_additives),
+                    br='\n',
+                ),
+        )
+        p.steps[-1] += centrifuge_steps
+
+    return p
 
 def samples_from_docopt(args):
     return [Dnase.Sample(x) for x in args['<samples>']]
@@ -247,8 +284,20 @@ Configuration:
                 Key(PresetConfig, ('denature', 'incubation')),
                 default=None,
         )
+        precipitate_additives = byoc.param(
+                Key(PresetConfig, ('precipitate', 'additives')),
+                default_factory=list,
+        )
+        precipitate_spin = byoc.param(
+                Key(PresetConfig, ('precipitate', 'spin')),
+                default=None
+        )
+
         config_paths = byoc.config_attr()
         preset_briefs = byoc.config_attr()
+
+    def __init__(self, samples):
+        self.samples = samples
 
     def get_protocol(self):
         return dnase_digest(self.samples)

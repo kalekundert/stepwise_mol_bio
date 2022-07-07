@@ -27,7 +27,7 @@ test_plan_dnase_reactions:
       - - Use the following reagents:
       -   RNA: f1, f2
 
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent       Stock   Volume      2.2x
       -   ──────────────────────────────────────
       -   water                3.00 µL   6.60 µL
@@ -36,10 +36,10 @@ test_plan_dnase_reactions:
       -   ──────────────────────────────────────
       -                        5.00 µL  11.00 µL
 
-      - Add the remaining reagents:
+      - Setup the reactions:
       -   Reagent         Stock    Volume
       -   ───────────────────────────────
-      -   master mix              5.00 µL
+      -   master mix         2x   5.00 µL
       -   RNA         500 ng/µL   5.00 µL
       -   ───────────────────────────────
       -                          10.00 µL
@@ -80,7 +80,7 @@ test_plan_dnase_reactions:
       -   ──────────────────────────────────────
       -                        8.00 µL  17.60 µL
 
-      - Add the remaining reagents:
+      - Setup the reactions:
       -   Reagent         Stock    Volume
       -   ───────────────────────────────
       -   master mix              8.00 µL
@@ -115,7 +115,7 @@ test_plan_dnase_reactions:
       - - Use the following reagents:
       -   RNA: f1, f2
 
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent       Stock   Volume      2.2x
       -   ──────────────────────────────────────
       -   water                3.00 µL   6.60 µL
@@ -124,10 +124,10 @@ test_plan_dnase_reactions:
       -   ──────────────────────────────────────
       -                        5.00 µL  11.00 µL
 
-      - Add the remaining reagents:
+      - Setup the reactions:
       -   Reagent     Stock    Volume
       -   ───────────────────────────
-      -   master mix          5.00 µL
+      -   master mix     2x   5.00 µL
       -   RNA          1 µM   5.00 µL
       -   ───────────────────────────
       -                      10.00 µL
@@ -159,7 +159,7 @@ test_plan_dnase_reactions:
       - - Use the following reagents:
       -   RNA: f1, f2
 
-      - - Make master mix:
+      - - Make 2x master mix:
       -   Reagent       Stock   Volume      2.2x
       -   ──────────────────────────────────────
       -   water                3.00 µL   6.60 µL
@@ -168,13 +168,13 @@ test_plan_dnase_reactions:
       -   ──────────────────────────────────────
       -                        5.00 µL  11.00 µL
 
-      - Add the remaining reagents:
-      -   Reagent       Volume
-      -   ────────────────────
-      -   master mix   5.00 µL
-      -   RNA          5.00 µL
-      -   ────────────────────
-      -               10.00 µL
+      - Setup the reactions:
+      -   Reagent     Stock    Volume
+      -   ───────────────────────────
+      -   master mix     2x   5.00 µL
+      -   RNA                 5.00 µL
+      -   ───────────────────────────
+      -                      10.00 µL
   -
     id: err-no-rna
     group:
@@ -262,6 +262,40 @@ test_plan_incubation_steps:
       >
       >    - Incubate at 75°C for 10m.
 
+test_plan_precipitation_steps:
+  -
+    id: additives-1
+    group:
+      key:
+        precipitate_additives:
+          - '1 µL DNase inactivation reagent'
+        precipitate_spin:
+          speed_g: 10000
+          time_s: 90
+    expected:
+      > 1. Remove the DNase:
+      >
+      >    - Add 1 µL DNase inactivation reagent.
+      >    - Centrifuge at 10,000g for 90s.
+  -
+    id: additives-2
+    group:
+      key:
+        precipitate_additives:
+          - '1 µL DNase inactivation reagent'
+          - '1 µL some other reagent'
+        precipitate_spin:
+          speed_g: 10000
+          time_s: 90
+    expected:
+      > 1. Remove the DNase:
+      >
+      >    - Add the following:
+      >      - 1 µL DNase inactivation reagent
+      >      - 1 µL some other reagent
+      >
+      >    - Centrifuge at 10,000g for 90s.
+
 test_cli:
   -
     id: neb
@@ -287,7 +321,7 @@ test_cli:
       >      ────────────────────────────────────────────────
       >                                   80.00 µL  176.00 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
       >      Reagent         Stock     Volume
       >      ────────────────────────────────
@@ -303,7 +337,7 @@ test_cli:
       >    - Add 1 µL 500 mM EDTA.
       >    - Incubate at 75°C for 10m.
   -
-    id: thermo
+    id: thermo-ezdnase
     cmd: sw dnase f1 f2 -p thermo/ezdnase
     stdout:
       > {DATE}
@@ -316,7 +350,7 @@ test_cli:
       >
       >      RNA: f1, f2
       >
-      >    - Make master mix:
+      >    - Make 2x master mix:
       >
       >      Reagent              Stock   Volume      2.2x
       >      ─────────────────────────────────────────────
@@ -326,13 +360,46 @@ test_cli:
       >      ─────────────────────────────────────────────
       >                                  5.00 µL  11.00 µL
       >
-      >    - Add the remaining reagents:
+      >    - Setup the reactions:
       >
       >      Reagent         Stock    Volume
       >      ───────────────────────────────
-      >      master mix              5.00 µL
+      >      master mix         2x   5.00 µL
       >      RNA         500 ng/µL   5.00 µL
       >      ───────────────────────────────
       >                             10.00 µL
       >
       > 2. Incubate at 37°C for 2m.
+  -
+    id: thermo-dna-free
+    cmd: sw dnase f1 f2 -p thermo/dna-free
+    stdout:
+      > {DATE}
+      >
+      > \$ sw dnase f1 f2 -p thermo/dna-free
+      >
+      > 1. Setup 2 DNase reactions:
+      >
+      >    - Use the following reagents:
+      >
+      >      RNA: f1, f2
+      >
+      >    - Make master mix:
+      >
+      >      Reagent          Stock   Volume      2.2x
+      >      ─────────────────────────────────────────
+      >      DNase I buffer     10x  5.00 µL  11.00 µL
+      >      rDNase I        2 U/µL  1.00 µL   2.20 µL
+      >      ─────────────────────────────────────────
+      >                              6.00 µL  13.20 µL
+      >
+      >    - Setup the reactions:
+      >
+      >      Reagent         Stock    Volume
+      >      ───────────────────────────────
+      >      master mix              6.00 µL
+      >      RNA         200 ng/µL  44.00 µL
+      >      ───────────────────────────────
+      >                             50.00 µL
+      >
+      > 2. Incubate at 37°C for 30m.

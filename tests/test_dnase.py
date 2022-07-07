@@ -22,4 +22,12 @@ def test_plan_incubation_steps(group, expected):
     p += dnase.plan_incubation_steps(group)
     assert match_protocol(p, expected)
 
+@parametrize_from_file
+def test_plan_precipitation_steps(group, expected):
+    group = eval_sample_group(group)
+
+    p = stepwise.Protocol()
+    p += dnase.plan_precipitation_steps(group)
+    assert match_protocol(p, expected)
+
 test_cli()

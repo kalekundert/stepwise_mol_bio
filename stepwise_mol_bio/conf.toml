@@ -522,6 +522,23 @@ denature.additives = ['1 µL 100 mM DTT']
 denature.incubation.time_m = 5
 denature.incubation.temp_C = 55
 
+[molbio.dnase.presets.'thermo/dna-free']
+reaction = """
+Reagent                  Stock    Volume
+===================  =========  ========
+DNase I buffer             10x      5 µL
+rDNase I                2 U/µL      1 µL
+RNA                  200 ng/µL     44 µL
+"""
+incubation.temp_C = 37
+incubation.time_m = 30
+
+precipitate.additives = ['DNase inactivation reagent']
+precipitate.spin.speed_g = 10000
+precipitate.spin.time = '1m30'
+
+protocol_link = 'https://tinyurl.com/mpsk9e78'
+
 
 [molbio.reverse_transcribe]
 default_preset = 'neb/protoscript-ii'
