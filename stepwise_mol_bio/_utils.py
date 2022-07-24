@@ -10,7 +10,7 @@ from freezerbox import ReagentConfig, BaseProductConfig, iter_combo_makers
 from byoc import Method, DocoptConfig
 from appdirs import AppDirs
 from inform import format_range, error
-from more_itertools import all_equal, always_iterable, first
+from more_itertools import all_equal, always_iterable, first, unique_everseen
 from functools import partial
 from pathlib import Path
 
@@ -113,12 +113,13 @@ class Bindable(metaclass=byoc.BareMeta):
     _use_app_configs = False
 
     @classmethod
-    def partial(cls, **kwargs):
-        def factory(*args, **kwargs2):
-            return cls(*args, **{**kwargs, **kwargs2})
+    def partial(cls, *args, **kwargs):
+        def factory(*args2, **kwargs2):
+            return cls(*args, *args2, **{**kwargs, **kwargs2})
         return factory
 
-    def __init__(self, **kwargs):
+    def __init__(self, *, db=None, **kwargs):
+        self._db = db
         self._set_known_attrs(kwargs)
 
     def __init_subclass__(cls, **kwargs):
@@ -135,7 +136,10 @@ class Bindable(metaclass=byoc.BareMeta):
             byoc.share_configs(app, self)
 
     def get_db(self):
-        return self.app.db
+        return self._db or self.app.db
+
+    def set_db(self, db):
+        self._db = db
 
     def _set_known_attrs(self, attrs):
         for attr, value in attrs.items():
@@ -155,7 +159,7 @@ class BindableReagent(Bindable):
         return self.tag
 
     def __repr__(self):
-        return f'{self.__class__.__qualname__}({self.tag})'
+        return f'{self.__class__.__qualname__}({self.tag!r})'
 
     def __eq__(self, other):
         try:
@@ -257,8 +261,15 @@ def merge_names(names):
     names = list(names)
     if all_equal(names):
         return names[0]
-    else:
-        return ','.join(names)
+
+    name_str = ','.join(names)
+
+    if len(name_str) > 30:
+        name_str = ','.join(unique_everseen(names))
+    if len(name_str) > 30:
+        name_str = name_str[:29] + '…'
+
+    return name_str
 
 def match_len(x, n):
     # Something more generic than this might fit well in `more_itertools`.

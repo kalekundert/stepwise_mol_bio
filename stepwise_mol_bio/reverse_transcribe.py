@@ -6,7 +6,7 @@ import autoprop
 
 from stepwise import (
         StepwiseConfig, PresetConfig, Reaction, Reactions,
-        iter_all_mixes, format_reaction, pl, ul,
+        iter_all_mixes, format_reaction, pl, ul, before,
 )
 from stepwise_mol_bio import (
         App, Bindable, UsageError,
@@ -16,11 +16,12 @@ from stepwise_mol_bio.dnase import Dnase, dnase_digest
 from stepwise_mol_bio.thermocycler import (
         Thermocycler, format_thermocycler_steps
 )
-from freezerbox import ReagentConfig
+from freezerbox import ReagentConfig, unanimous
 from byoc import Key, Method, DocoptConfig
 from operator import attrgetter
 from functools import partial
-from more_itertools import first
+from collections import Counter
+from more_itertools import one, first, unique_everseen as unique
 from inform import plural
 
 def reverse_transcribe(samples):
@@ -29,19 +30,17 @@ def reverse_transcribe(samples):
     
 @group_samples(
         'reaction_prototype',
-        'primer_type',
-        'primer_aliases',
         'anneal',
         'anneal_volume',
         'anneal_incubation',
-        'no_rt_control',
-        'no_rt_denature',
+        'denature_rt',
         'incubation',
+        'incubation_by_primer',
 )
 def plan_reverse_transcription_protocol(group):
     p = stepwise.Protocol()
 
-    if group.no_rt_control and group.no_rt_denature:
+    if group.denature_rt and not all(x.include_rt for x in group):
         p += plan_denature_protocol(group)
 
     elif group.anneal:
@@ -117,6 +116,7 @@ def plan_denature_protocol(group):
     # `rt_rxns` object, because the user can configure the default behavior of 
     # that object, and we want to use the users configuration.
     enz_scale = rt_rxns.extra.increase_scale(n, enz_rxn)
+    denature_frac = sum(not x.include_rt for x in group) / n
 
     p = stepwise.Protocol()
     p += pl(
@@ -124,10 +124,9 @@ def plan_denature_protocol(group):
             format_reaction(enz_rxn, scale=enz_scale, show_totals=False),
     )
     p += pl(
-            "Denature half of the RT master mix:",
+            f"Denature {enz_rxn.volume * enz_scale * denature_frac:.2f} of the RT master mix:",
             ul(
-                f"Take {enz_rxn.volume * enz_scale / 2:.2f} of the above mix.",
-                *format_thermocycler_steps(group.no_rt_denature, incubate_prefix=True),
+                *format_thermocycler_steps(group.denature_rt, incubate_prefix=True),
             ),
     )
     p += rt_rxns
@@ -159,9 +158,7 @@ def plan_standard_protocol(group):
 
 @group_samples(
         'anneal_volume',
-        'no_rt_control',
         'reaction_prototype',
-        'primer_type',
 )
 def plan_standard_reactions(group):
     if not list(group.reaction_prototype.iter_reagents_by_flag('anneal')):
@@ -204,35 +201,54 @@ def plan_standard_reactions(group):
     rt_rxns = Reactions(rt_rxn, rt_combos)
     rt_rxns.step_kind = 'reverse transcription'
 
-    if group.no_rt_control:
+    if not all(x.include_rt for x in group):
         rt_rxns.combos_step = "Setup each reaction with and without reverse transcriptase."
     else:
         rt_rxns.combos_step = None
 
     return anneal_rxns, rt_rxns
 
-@group_samples
+@group_samples(
+        'reaction_prototype',
+        'incubation',
+        'incubation_by_primer',
+)
 def plan_incubation(group):
-    incubation = group.incubation
+    default = group.incubation
 
-    if isinstance(group.incubation, dict):
-        primer = choose_primer(group.primer_type, group.reaction_prototype)
+    if group.incubation_by_primer:
+        rxn = group.reaction_prototype
         incubations = {
-                group.primer_aliases.get(k, k): v
-                for k, v in incubation.items()
+                get_primer_key(k, rxn): v
+                for k, v in group.incubation_by_primer.items()
         }
-        incubation = incubations[primer]
+        primer_keys = Counter(x.primer_key for x in group)
 
-    return Thermocycler(incubation)
+        if len(primer_keys) == 1:
+            key = one(primer_keys)
+            return Thermocycler(incubations.get(key, default))
+
+        else:
+            step = pl(
+                    "Run the following thermocycler protocols:",
+            )
+            for k in primer_keys:
+                step += f"For the {rxn[k].name} {plural(primer_keys[k]):reaction/s}:"
+                step += format_thermocycler_steps(incubations.get(k, default))
+
+            return stepwise.Protocol(steps=[step])
+
+    else:
+        return Thermocycler(default)
 
 @group_samples(
         'reaction_prototype',
-        'primer_type',
 )
 def make_reaction(group):
     rxn = group.reaction_prototype.copy()
     setup_template(group, rxn)
     setup_primer(group, rxn)
+    setup_enzyme(rxn)
     return rxn
 
 @group_samples
@@ -248,88 +264,185 @@ def setup_template(group, rxn):
 
         rxn.repair_volumes('template RNA')
 
-@group_samples('primer_type')
+@group_samples
 def setup_primer(group, rxn):
     primers = [x.key for x in rxn.iter_reagents_by_flag('primer')]
     if not primers:
         return
 
-    chosen_primer = choose_primer(group.primer_type, rxn)
+    primer_keys = {x.primer_key for x in group}
 
-    for primer in primers:
-        if primer != chosen_primer:
-            del rxn[primer]
+    rxn.insert_reagent('primer', before(*primers))
 
-    rxn[chosen_primer].key = 'primer'
-    rxn['primer'].flags.discard('primer')
-    rxn['primer'].make_combos = False
+    # Name:
 
-    if chosen_primer == 'gene-specific primer':
-        rxn['primer'].make_combos = True
+    try:
+        rxn['primer'].name = unanimous(rxn[k].name for k in primer_keys)
+    except:
+        pass
 
+    # Stock concentration:
+
+    if 'gene-specific primer' in rxn:
         primer_stocks_uM = [
                 x.primer_stock_uM
                 for x in group
                 if x.primer_stock_uM
         ]
         if primer_stocks_uM:
-            rxn['primer'].hold_conc.stock_conc = \
+            rxn['gene-specific primer'].hold_conc.stock_conc = \
                     min(primer_stocks_uM), 'µM'
 
-def choose_primer(choice, rxn):
-    if choice:
-        return choice
-    else:
-        return first(
-                (x.key for x in rxn.iter_reagents_by_flag('primer')),
-                default=None,
+    try:
+        rxn['primer'].stock_conc = unanimous(
+                rxn[k].stock_conc
+                for k in primer_keys
         )
+    except ValueError:
+        pass
 
-@group_samples('no_rt_control')
+    # Volume:
+
+    rxn['primer'].volume = max(rxn[k].volume for k in primer_keys)
+
+    # Flags:
+
+    flags = (rxn[k].flags for k in primer_keys)
+    rxn['primer'].flags = set.intersection(*flags)
+    rxn['primer'].flags.discard('primer')
+
+    # Remove user-provided primer prototypes:
+
+    for k in primers:
+        del rxn[k]
+
+def setup_enzyme(rxn):
+    for reagent in rxn.iter_reagents_by_flag('RT'):
+        reagent.flags.add('careful')
+
+@group_samples
 def make_combos(group, rxn, rt_controls=('+', '−')):
 
     def make_combo(sample):
-        combo = {'template RNA': sample.template}
-        if 'primer' in rxn and rxn['primer'].make_combos:
-            combo['primer'] = sample.primer
+        combo = {
+                'template RNA': sample.template,
+                **make_primer_combo(sample),
+        }
+        for k in rt_keys:
+            combo |= make_rt_combo(k, rt_controls[not sample.include_rt])
+
         return combo
 
-    combos = [make_combo(x) for x in group]
+    def make_primer_combo(sample):
+        if 'primer' not in rxn:
+            return {}
 
-    if group.no_rt_control and rt_controls:
-        rt_reagents = [
-                x.key
-                for x in rxn
-                if 'RT' in x.flags
-        ]
-        combos, base_combos = [], combos
-        for combo in base_combos:
-            combos += [
-                    {**combo, **{k: control for k in rt_reagents}}
-                    for control in rt_controls
-            ]
+        key = sample.primer_key
+        rxn0 = sample.reaction_prototype
+        gene_specific_primer = get_primer_key(
+                'gene-specific primer', rxn0,
+                required=False,
+        )
 
-    return combos
+        if gene_specific_primer and key == gene_specific_primer:
+            name = sample.primer
+        else:
+            name = rxn0[key].name
+
+        if rxn['primer'].stock_conc or not rxn0[key].stock_conc:
+            return {'primer': name}
+
+        stock = rxn0[key].stock_conc
+        dilution = rxn['primer'].volume / rxn0[key].volume
+
+        if dilution == 1:
+            return {'primer': f'{stock} {name}'}
+
+        try:
+            stock = stock / dilution
+        except TypeError:
+            return {'primer': f'{stock} {name} (diluted {dilution:g}x)'}
+        else:
+            return {'primer': f'{stock} {name}'}
+
+    rt_keys = get_rt_keys(rxn)
+    include_rt = {x.include_rt for x in group}
+
+    if all(include_rt):
+        make_rt_combo = lambda k, v: {}
+    elif not any(include_rt):
+        make_rt_combo = lambda k, v: {k: f'{k} ({v})'}
+    else:
+        make_rt_combo = lambda k, v: {k: v}
+
+    return [make_combo(x) for x in group]
 
 def rename_rt_mix(rxns):
-    rt_keys = {
-            x.key
-            for x in rxns.base_reaction
-            if 'RT' in x.flags
-    }
+    rt_keys = get_rt_keys(rxns.base_reaction)
     for mix in iter_all_mixes(rxns.mix):
         if rt_keys == mix.reagents:
             mix.name = 'RT'
             rxns.refresh_names()
             break
 
+def get_rt_keys(rxn):
+    return {x.key for x in rxn.iter_reagents_by_flag('RT')}
+
+def get_primer_key(key_or_name, rxn, required=True):
+    """
+    Given either the key or the name of a primer, return the corresponding key.
+
+    If no matching primer can be found in the given reaction, an error will be 
+    raised.
+    """
+    primer_keys = {x.key for x in rxn.iter_reagents_by_flag('primer')}
+
+    if key_or_name in primer_keys:
+        return key_or_name
+
+    primer_names = {rxn[k].name: k for k in primer_keys}
+
+    try:
+        return primer_names[key_or_name]
+
+    except KeyError:
+        if not required:
+            return None
+
+        def format_primers(rxn):
+            primer_strs = []
+
+            for reagent in rxn.iter_reagents_by_flag('primer'):
+                key, name = reagent.key, reagent.name
+
+                if key != name:
+                    primer_strs.append(key)
+                else:
+                    primer_strs.append(f'{key}, {name}')
+
+            return '\n'.join(primer_strs)
+
+        err = UsageError(primer=key_or_name, rxn=rxn)
+        err.brief = "RT reaction has no primer named {key_or_name!r}"
+        err.info += lambda e: "known primers:\n" + format_primers(e)
+        err.hint += "different RT presets can have different primers, are you using the right preset?"
+        raise err
+
 
 def samples_from_docopt(args):
+    rxns = []
     primer = args.get('--primer')
-    return [
-        ReverseTranscribe.Sample(template, primer)
-        for template in args['<templates>']
-    ]
+
+    for template in args['<templates>']:
+        rxn = ReverseTranscribe(template, primer)
+        rxns.append(rxn)
+
+        if args.get('--no-rt-control'):
+            rxn = ReverseTranscribe(template, primer)
+            rxn.include_rt = False
+            rxns.append(rxn)
+
+    return rxns
 
 def dnase_factory_from_preset(preset):
     def factory(rt):
@@ -349,12 +462,134 @@ class PrimerConfig(ReagentConfig):
     tag_getter = attrgetter('primer')
 
 @autoprop
-class ReverseTranscribe(App):
+class ReverseTranscribe(Bindable, use_app_configs=True):
+
+    @classmethod
+    def make(cls, samples):
+        return reverse_transcribe(samples)
+
+
+    def __init__(self, template, primer=None, **kwargs):
+        super().__init__(**kwargs)
+        self.template = template
+        if primer: self.primer = primer
+
+    __config__ = [
+            PresetConfig,
+            TemplateConfig,
+            PrimerConfig,
+            StepwiseConfig.setup(('molbio', 'reverse_transcribe')),
+    ]
+    presets = byoc.param(
+            Key(StepwiseConfig, 'presets'),
+            pick=list,
+    )
+    preset = byoc.param(
+            Key(DocoptConfig, '--preset'),
+            Key(StepwiseConfig, 'default_preset'),
+    )
+    reaction_prototype = byoc.param(
+            Key(PresetConfig, 'reaction', cast=Reaction.from_text),
+    )
+    template_stock_ng_uL = byoc.param(
+            Key(DocoptConfig, '--template-stock'),
+            Key(TemplateConfig, 'conc_ng_uL'),
+            default=None,
+    )
+    primer = byoc.param(
+            Key(DocoptConfig, '--primer'),
+            default=None,
+    )
+    primer_stock_uM = byoc.param(
+            Key(PrimerConfig, 'conc_uM'),
+            default=None,
+    )
+    gene_specific_primer = byoc.param(
+            Key(DocoptConfig, '--gene-specific-primer'),
+            default=False,
+    )
+    include_rt = byoc.param(
+            default=True,
+    )
+    denature_rt = byoc.param(
+            Key(PresetConfig, 'no_rt_denature'),
+            default=None,
+    )
+    dnase = byoc.param(
+            Key(DocoptConfig, '--no-dnase', cast=lambda x: None),
+            Method(lambda self: self._dnase_factory(self)),
+            default=None,
+    )
+    _dnase_factory = byoc.param(
+            Key(PresetConfig, 'dnase_preset', cast=dnase_factory_from_preset),
+    )
+    anneal = byoc.param(
+            Key(DocoptConfig, '--anneal'),
+            Key(PresetConfig, 'anneal'),
+            default=False,
+    )
+    anneal_volume = byoc.param(
+            Key(PresetConfig, 'anneal_volume'),
+            default=None,
+    )
+    anneal_incubation = byoc.param(
+            Key(PresetConfig, 'anneal_incubation'),
+            default=None,
+    )
+    incubation = byoc.param(
+            Key(PresetConfig, 'incubation'),
+    )
+    incubation_by_primer = byoc.param(
+            Key(PresetConfig, 'incubation_by_primer'),
+            default_factory=dict,
+    )
+    config_paths = byoc.config_attr()
+    preset_briefs = byoc.config_attr()
+
+    def get_primer_key(self):
+        """
+        Get the key for looking up the primer in the reaction table.
+
+        The `primer` attribute is directly set by the user, which makes it hard 
+        to use directly:
+
+        - It may be either the name or the key of a primer reagent in the 
+          prototype reaction.  (Names are displayed and are typically long, 
+          keys are used internally and are typically short.)
+
+        - It may refer to a gene-specific primer, in which case it won't match 
+          any of the reagents in the prototype reaction.  In this case, the 
+          special key "gene-specific primer" should be used.
+
+        - It may not be specified, indicating that the default primer should be 
+          chosen.
+
+        This property handles all this and either returns a valid key or raises 
+        an error.
+        """
+        rxn = self.reaction_prototype
+
+        if self.gene_specific_primer:
+            key_or_name = 'gene-specific primer'
+        else:
+            key_or_name = self.primer
+
+        if key_or_name:
+            return get_primer_key(key_or_name, rxn)
+        else:
+            return first(
+                    (x.key for x in rxn.iter_reagents_by_flag('primer')),
+                    default=None,
+            )
+
+@autoprop
+class ReverseTranscribeCli(App):
     """
 Synthesize DNA from a RNA template.
 
 Usage:
-    reverse_transcribe <templates>... [-p <preset>] [-P primer] [-gaRD]
+    reverse_transcribe <templates>... [-p <preset>] [-C <stock>] [-P <primer>] 
+        [-gaRD]
 
 <%! from stepwise_mol_bio import hanging_indent %>\
 Options:
@@ -373,7 +608,7 @@ Options:
 
     -P --primer <name>
         The name of the primer to use.  The names that are allowed depend on 
-        the preset, although 'dt' and 'hex' are common names for oligo-dT and 
+        the preset, although 'dt' and 'hex' are common aliases for oligo-dT and 
         random hexamers, respectively.  Some presets (e.g. those representing 
         master mixes with primers included) don't allow any primers to be 
         specified at all.  Some presets allow "gene-specific primers", in which 
@@ -440,13 +675,6 @@ Configuration:
         'RT': Use this flag to label the reagents that should be left out when 
         setting up the −RT control.
 
-    molbio.reverse_transcribe.presets.<name>.primer:
-        Specify short names for each primer in the reaction.  For example, it 
-        is conventional the define 'dt' and 'hex' as aliases for whatever 
-        longer names are used in the reaction table for oligo-dT primers and 
-        random hexamers, respectively.  This allows users to be more succinct 
-        when using the `--primer` option.
-
     molbio.reverse_transcribe.presets.<name>.anneal:
         The default value for the `--anneal` flag.
 
@@ -469,125 +697,23 @@ Configuration:
 
     molbio.reverse_transcribe.presets.<name>.incubation:
         Describe the thermocycler protocol to use for the reverse transcription 
-        reaction, in the format expected by `format_thermocycler_steps`.  This 
-        option can also be a dictionary mapping primer names to thermocycler 
-        protocols, in the even that you want to use different incubation steps 
-        for different primers.
+        reaction, in the format expected by `format_thermocycler_steps`.  See 
+        also the `incubation_by_primer` setting, which allows different 
+        protocols to be chosen based on the primer being used.
+
+    molbio.reverse_transcribe.presets.<name>.incubation_by_primer:
+        A dictionary mapping primer names to thermocycler protocols, in the 
+        event that you want to use different incubation steps for different 
+        primers.  This setting supersedes the `incubation` setting if the 
+        primer being used is present in the dictionary.
 """
-
-    @autoprop
-    class Sample(Bindable, use_app_configs=True):
-
-        def __init__(self, template, primer=None, **kwargs):
-            super().__init__(**kwargs)
-            self.template = template
-            if primer: self.primer = primer
-
-        def _lookup_incubation(self):
-            reverse_aliases = {v: k for k, v in self.primer_aliases.items()}
-            key = choose_primer(self.primer_type, self.reaction_prototype)
-            key = reverse_aliases.get(key, key)
-            return self.incubation_by_primer[key]
-
-        __config__ = [
-                PresetConfig,
-                TemplateConfig,
-                PrimerConfig,
-                StepwiseConfig.setup(('molbio', 'reverse_transcribe')),
-        ]
-        presets = byoc.param(
-                Key(StepwiseConfig, 'presets'),
-                pick=list,
-        )
-        preset = byoc.param(
-                Key(DocoptConfig, '--preset'),
-                Key(StepwiseConfig, 'default_preset'),
-        )
-        reaction_prototype = byoc.param(
-                Key(PresetConfig, 'reaction', cast=Reaction.from_text),
-        )
-        template_stock_ng_uL = byoc.param(
-                Key(DocoptConfig, '--template-stock'),
-                Key(TemplateConfig, 'conc_ng_uL'),
-                default=None,
-        )
-        primer = byoc.param(
-                Key(DocoptConfig, '--primer'),
-                default=None,
-        )
-        primer_stock_uM = byoc.param(
-                Key(PrimerConfig, 'conc_uM'),
-                default=None,
-        )
-        primer_aliases = byoc.param(
-                Key(PresetConfig, 'primers'),
-                default_factory=dict,
-        )
-        gene_specific_primer = byoc.param(
-                Key(DocoptConfig, '--gene-specific-primer'),
-                default=False,
-        )
-        dnase = byoc.param(
-                Key(DocoptConfig, '--no-dnase', cast=lambda x: None),
-                Method(lambda self: self._dnase_factory(self)),
-                default=None,
-        )
-        _dnase_factory = byoc.param(
-                Key(PresetConfig, 'dnase_preset', cast=dnase_factory_from_preset),
-        )
-        anneal = byoc.param(
-                Key(DocoptConfig, '--anneal'),
-                Key(PresetConfig, 'anneal'),
-                default=False,
-        )
-        anneal_volume = byoc.param(
-                Key(PresetConfig, 'anneal_volume'),
-                default=None,
-        )
-        anneal_incubation = byoc.param(
-                Key(PresetConfig, 'anneal_incubation'),
-                default=None,
-        )
-        no_rt_control = byoc.param(
-                Key(DocoptConfig, '--no-rt-control'),
-                default=False,
-        )
-        no_rt_denature = byoc.param(
-                Key(PresetConfig, 'no_rt_denature'),
-                default=None,
-        )
-        incubation = byoc.param(
-                Method(
-                    _lookup_incubation,
-                    skip=(KeyError, byoc.NoValueFound),
-                ),
-                Key(PresetConfig, 'incubation'),
-        )
-        incubation_by_primer = byoc.param(
-                Key(PresetConfig, 'incubation_by_primer'),
-        )
-        config_paths = byoc.config_attr()
-        preset_briefs = byoc.config_attr()
-
-        def get_primer_type(self):
-            if self.gene_specific_primer:
-                return 'gene-specific primer'
-            else:
-                return self.primer_aliases.get(self.primer, self.primer)
-
-    def __init__(self, samples):
-        self.samples = samples
-
-    def get_protocol(self):
-        return reverse_transcribe(self.samples)
-
-    __config__ = [
-            DocoptConfig,
-    ]
+    Sample = ReverseTranscribe
     samples = byoc.param(
             Key(DocoptConfig, samples_from_docopt),
             get=bind,
     )
 
 if __name__ == '__main__':
-    ReverseTranscribe.entry_point()
+    ReverseTranscribeCli.entry_point()
+
+

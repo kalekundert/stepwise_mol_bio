@@ -1,3 +1,4 @@
+import stepwise
 import stepwise_mol_bio.reverse_transcribe as rt
 from param_helpers import *
 
@@ -7,7 +8,6 @@ from param_helpers import *
 def test_make_combos(group, reaction, include_primers, kwargs, expected):
     group = eval_sample_group(group)
     rxn = with_swmb.eval(reaction)
-    rxn['primer'].make_combos = with_py.eval(include_primers)
     kwargs = with_swmb.eval(kwargs)
     expected = with_py.eval(expected)
 
@@ -59,7 +59,8 @@ def test_standard_protocol(group, expected, error):
 def test_incubation(group, expected):
     group = eval_sample_group(group)
     thermocycler = rt.plan_incubation(group)
-    assert match_protocol(thermocycler.protocol, expected)
+    protocol = stepwise.Protocol() + thermocycler
+    assert match_protocol(protocol, expected)
 
 test_protocol()
 test_cli()

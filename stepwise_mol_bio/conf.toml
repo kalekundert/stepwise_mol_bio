@@ -541,23 +541,26 @@ protocol_link = 'https://tinyurl.com/mpsk9e78'
 
 
 [molbio.reverse_transcribe]
-default_preset = 'neb/protoscript-ii'
+default_preset = 'thermo/superscript-iv'
 
 [molbio.reverse_transcribe.presets.'neb/amv']
+# The gene-specific primer concentration is from the ProtoScript II protocol.  
+# I couldn't find a recommendation for AMV specifically, but since the other 
+# primers have the same concentrations in both reactions, I figure that this 
+# makes sense.
 reaction = """
-Reagent                Catalog #      Stock      Volume  Flags
-=====================  =========  =========  ==========  =============
-nuclease-free water                          to 20.0 µL
-d(T)₂₃VN                              50 µM      2.0 µL  anneal,primer
-random primer mix                     60 µM      2.0 µL  anneal,primer
-dNTP mix                              10 mM      1.0 µL  anneal
-template RNA                      500 ng/µL      2.0 µL  anneal
-AMV buffer                              10x      2.0 µL
-AMV RT                 M0277        10 U/µL      1.0 µL  RT
-RNase inhibitor                     40 U/µL      0.2 µL
+Reagent                Key   Catalog #      Stock      Volume  Flags
+=====================  ====  =========  =========  ==========  =============
+nuclease-free water                                to 20.0 µL
+d(T)₂₃VN               dt                   50 µM      2.0 µL  anneal,primer
+random primer mix      hex                  60 µM      2.0 µL  anneal,primer
+gene-specific primer   gene                 10 µM      2.0 µL  anneal,primer
+dNTP mix                                    10 mM      1.0 µL  anneal
+template RNA                            500 ng/µL      2.0 µL  anneal
+AMV buffer                                    10x      2.0 µL
+AMV RT                       M0277        10 U/µL      1.0 µL  RT
+RNase inhibitor                           40 U/µL      0.2 µL
 """
-primers.dt = 'd(T)₂₃VN'
-primers.hex = 'random primer mix'
 
 anneal_incubation = [
   {'temp_C' = 65, 'time_m' = 5},
@@ -575,26 +578,28 @@ incubation_by_primer.hex = [
 protocol_link = 'https://tinyurl.com/faaktc56'
 
 [molbio.reverse_transcribe.presets.'neb/mmlv']
+# The gene-specific primer concentration is from the ProtoScript II protocol.  
+# I couldn't find a recommendation for MMLV specifically, but since the other 
+# primers have the same concentrations in both reactions, I figure that this 
+# makes sense.
 reaction = """
-Reagent                Catalog #      Stock      Volume  Flags
-=====================  =========  =========  ==========  =============
-nuclease-free water                          to 20.0 µL
-d(T)₂₃VN                              50 µM      2.0 µL  anneal,primer
-random primer mix                     60 µM      2.0 µL  anneal,primer
-dNTP mix                              10 mM      1.0 µL  anneal
-template RNA                      500 ng/µL      2.0 µL  anneal
-M-MuLV buffer                           10x      2.0 µL
-M-MuLV RT              M0253       200 U/µL      1.0 µL  RT
-RNase inhibitor                     40 U/µL      0.2 µL
+Reagent                Key   Catalog #      Stock      Volume  Flags
+=====================  ====  =========  =========  ==========  =============
+nuclease-free water                                to 20.0 µL
+d(T)₂₃VN               dt                   50 µM      2.0 µL  anneal,primer
+random primer mix      hex                  60 µM      2.0 µL  anneal,primer
+gene-specific primer   gene                 10 µM      2.0 µL  anneal,primer
+dNTP mix                                    10 mM      1.0 µL  anneal
+template RNA                            500 ng/µL      2.0 µL  anneal
+M-MuLV buffer                                 10x      2.0 µL
+M-MuLV RT                    M0253       200 U/µL      1.0 µL  RT
+RNase inhibitor                           40 U/µL      0.2 µL
 """
-primers.dt = 'd(T)₂₃VN'
-primers.hex = 'random primer mix'
 
 anneal_incubation = [
   {'temp_C' = 65, 'time_m' = 5},
   {'hold_C' = 4},
 ]
-
 incubation = [
   {'temp_C' = 42, 'time_m' = 60},
   {'temp_C' = 65, 'time_m' = 20},
@@ -610,39 +615,39 @@ protocol_link = 'https://tinyurl.com/475ts7r2'
 [molbio.reverse_transcribe.presets.'neb/protoscript-ii']
 inherit = 'neb/mmlv'
 reaction = """
-Reagent                Catalog #      Stock      Volume  Flags
-=====================  =========  =========  ==========  =============
-nuclease-free water                          to 20.0 µL
-d(T)₂₃VN                              50 µM      2.0 µL  anneal,primer
-random primer mix                     60 µM      2.0 µL  anneal,primer
-dNTP mix                              10 mM      1.0 µL  anneal
-template RNA                      500 ng/µL      2.0 µL  anneal
-ProtoScript II buffer                    5x      4.0 µL
-DTT                                  100 mM      2.0 µL
-Protoscript II RT      M0368       200 U/µL      1.0 µL  RT
-RNase inhibitor                     40 U/µL      0.2 µL
+Reagent                Key   Catalog #      Stock      Volume  Flags
+=====================  ====  =========  =========  ==========  =============
+nuclease-free water                                to 20.0 µL
+d(T)₂₃VN               dt                   50 µM      2.0 µL  anneal,primer
+random primer mix      hex                  60 µM      2.0 µL  anneal,primer
+gene-specific primer   gene                 10 µM      2.0 µL  anneal,primer
+dNTP mix                                    10 mM      1.0 µL  anneal
+template RNA                            500 ng/µL      2.0 µL  anneal
+ProtoScript II buffer                          5x      4.0 µL
+DTT                                        100 mM      2.0 µL
+ProtoScript II RT            M0368       200 U/µL      1.0 µL  RT
+RNase inhibitor                           40 U/µL      0.2 µL
 """
 
+# The recommended gene-specific primer concentration is given on the "Product 
+# Information" page.  It's not mentioned in the protocol linked below.
 protocol_link = 'https://tinyurl.com/4pzmcz8m'
 
 [molbio.reverse_transcribe.presets.'thermo/superscript-iii']
 reaction = """
-Reagent                      Catalog #             Stock    Volume  Flags
-===========================  ================  =========  ========  =============
-water                                                     to 20 µL
-oligo(dT)₂₀                                        50 µM      1 µL  anneal,primer
-random hexamers                                250 ng/µL      1 µL  anneal,primer
-gene-specific primer                                2 µM      1 µL  anneal,primer
-template RNA                                   500 ng/µL      5 µL  anneal
-dNTP mix                                           10 mM      1 µL  anneal
-first-strand buffer                                   5x      4 µL
-DTT                                               100 mM      1 µL
-RNaseOUT                     Thermo 10777-019    40 U/µL      1 µL
-SuperScript III RT           Thermo 18080093    200 U/µL      1 µL  RT
+Reagent               Key   Catalog #             Stock    Volume  Flags
+====================  ====  ================  =========  ========  =============
+water                                                    to 20 µL
+oligo(dT)₂₀           dt                          50 µM      1 µL  anneal,primer
+random hexamers       hex                     250 ng/µL      1 µL  anneal,primer
+gene-specific primer  gene                         2 µM      1 µL  anneal,primer
+template RNA                                  500 ng/µL      5 µL  anneal
+dNTP mix                                          10 mM      1 µL  anneal
+first-strand buffer                                  5x      4 µL
+DTT                                              100 mM      1 µL
+RNaseOUT                    Thermo 10777-019    40 U/µL      1 µL
+SuperScript III RT          Thermo 18080093    200 U/µL      1 µL  RT
 """
-primers.dt = 'oligo(dT)₂₀'
-primers.hex = 'random hexamers'
-primers.custom = 'gene-specific primer'
 
 anneal_volume = 13
 anneal_incubation = [
@@ -659,7 +664,7 @@ incubation_by_primer.hex = [
   {'temp_C' = 50, 'time_m' = 60},
   {'temp_C' = 85, 'time_m' = 5},
 ]
-incubation_by_primer.custom = [
+incubation_by_primer.gene = [
   {'temp_C' = 55, 'time_m' = 60},
   {'temp_C' = 85, 'time_m' = 5},
 ]
@@ -709,18 +714,18 @@ protocol_link = 'https://tinyurl.com/55uykykm'
 [molbio.reverse_transcribe.presets.'thermo/superscript-iv']
 inherit = 'thermo/superscript-iii'
 reaction = """
-Reagent                      Catalog #             Stock    Volume  Flags
-===========================  ================  =========  ========  =============
-DEPC-treated water                                        to 20 µL
-oligo(dT)₂₀                  Thermo 18418-020      50 µM      1 µL  anneal,primer
-random hexamers              Thermo N8080127       50 µM      1 µL  anneal,primer
-gene-specific primer                                2 µM      1 µL  anneal,primer
-dNTP mix                                           10 mM      1 µL  anneal
-template RNA                                   500 ng/µL      5 µL  anneal
-SSIV buffer                                           5x      4 µL
-DTT                                               100 mM      1 µL
-RNaseOUT                     Thermo 10777-019    40 U/µL      1 µL
-SuperScript IV RT            Thermo 18090010    200 U/µL      1 µL  RT
+Reagent               Key   Catalog #             Stock    Volume  Flags
+====================  ====  ================  =========  ========  =============
+DEPC-treated water                                       to 20 µL
+oligo(dT)₂₀           dt    Thermo 18418-020      50 µM      1 µL  anneal,primer
+random hexamers       hex   Thermo N8080127       50 µM      1 µL  anneal,primer
+gene-specific primer  gene                         2 µM      1 µL  anneal,primer
+dNTP mix                                          10 mM      1 µL  anneal
+template RNA                                  500 ng/µL      5 µL  anneal
+SSIV buffer                                          5x      4 µL
+DTT                                              100 mM      1 µL
+RNaseOUT                    Thermo 10777-019    40 U/µL      1 µL
+SuperScript IV RT           Thermo 18090010    200 U/µL      1 µL  RT
 """
 
 incubation = [
@@ -735,7 +740,14 @@ incubation_by_primer.hex = [
 
 protocol_link = 'https://tinyurl.com/5n855cym'
 
-[molbio.reverse_transcribe.presets.'thermo/superscript-iv/first-strand']
+[molbio.reverse_transcribe.presets.'thermo/superscript-iv/ezdnase']
+# This preset is based on the protocol for the "SuperScript IV First-Strand 
+# Synthesis System" (Thermo 18091200).  This is just a kit that includes 
+# SuperScript IV, dNTPs, RNase inhibitor, RNase H, primers, and some controls.  
+# Note that this kit doesn't include ezDNase, even though the protocol calls 
+# for it.  To get ezDNase, you have to order either the "SuperScript IV 
+# First-Strand Synthesis System with ezDNase Enzyme" kit (Thermo 18091150) or 
+# the à la carte enzyme (Thermo 11766051).
 inherit = 'thermo/superscript-iv'
 dnase_preset = 'thermo/ezdnase'
 protocol_link = 'https://tinyurl.com/3urxvr6c'
@@ -756,6 +768,35 @@ incubation = [
 dnase_preset = 'thermo/ezdnase'
 
 protocol_link = 'https://tinyurl.com/2k86jfh3'
+
+[molbio.reverse_transcribe.presets.'takara/smartscribe']
+reaction = """
+Reagent                Key   Catalog #           Stock      Volume  Flags
+=====================  ====  =============   =========  ==========  =============
+nuclease-free water                                     to 10.0 µL
+oligo(dT)₁₂₋₁₈         dt                        20 µM      1.0 µL  anneal,primer
+random hexamers        hex                       20 µM      1.0 µL  anneal,primer
+gene-specific primer   gene                      20 µM      1.0 µL  anneal,primer
+template RNA                                 500 ng/µL      4.0 µL  anneal
+first-strand buffer                                 5x      2.0 µL
+dNTP mix                     Takara 639125       10 mM      1.0 µL
+DTT                                              20 mM      1.0 µL
+SMARTScribe RT               Takara 639536    100 U/µL      1.0 µL  RT
+
+AMV buffer                                         10x      2.0 µL
+AMV RT                       M0277             10 U/µL      1.0 µL  RT
+RNase inhibitor                                40 U/µL      0.2 µL
+"""
+
+anneal_incubation = [
+  {'temp_C' = 73, 'time_m' = 3},
+  {'hold_C' = 4},
+]
+incubation = [
+  {'temp_C' = 42, 'time_m' = 90},
+  {'temp_C' = 70, 'time_m' = 15},
+]
+protocol_link = 'https://tinyurl.com/2p8dscr2'
 
 [molbio.reverse_transcribe.presets.'sigma/readyscript']
 reaction = """

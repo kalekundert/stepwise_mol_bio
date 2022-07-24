@@ -6,6 +6,7 @@ import parametrize_from_file
 
 from voluptuous import Schema, Invalid, Coerce, And, Or, Optional
 from parametrize_from_file import Namespace, error_or, defaults, cast
+from stepwise_mol_bio import make_namespace_recursive
 from stepwise.testing import check_command, disable_capture
 from pytest import approx
 from pytest_unordered import unordered
@@ -44,15 +45,26 @@ def eval_db(reagents):
 def exec_app(src):
     return with_swmb.exec(src, get='app')
 
-def eval_sample_group(src):
+def eval_samples(src):
+    return [
+            make_namespace_recursive(x)
+            for x in with_py.eval(src)
+    ]
+
+def eval_sample_group(src, default_key=None, default_member=None):
+    default_key = default_key or {}
+    default_member = default_member or {}
+
     schema = Schema({
         Optional('key', default={}): {str: with_swmb.eval},
         Optional('members', default=[]): [{str: with_swmb.eval}],
     })
     group = schema(src)
-    key = SimpleNamespace(**group['key'])
+    group['key'] = {**default_key, **group['key']}
+
+    key = make_namespace_recursive(group['key'])
     members = [
-            SimpleNamespace(**{**group['key'], **x})
+            make_namespace_recursive({**group['key'], **default_member, **x})
             for x in group['members'] or [group['key']]
     ]
     return stepwise_mol_bio.Group(key, members)
@@ -93,6 +105,15 @@ def match_protocol(protocol, expected, forbidden=[]):
 
 def empty_ok(container):
     return Or(container, And('', lambda y: type(container)()))
+
+def walk(f):
+    def schema(xs):
+        if isinstance(xs, list):
+            return [f(x) for x in xs]
+        if isinstance(xs, dict):
+            return {k: f(v) for k, v in xs.items()}
+        raise TypeError(f"expected list of dict, not {type(xs)}")
+    return schema
 
 def noop(x):
     return x

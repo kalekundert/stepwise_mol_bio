@@ -41,7 +41,7 @@ from .invpcr import InversePcr
 from .qpcr import Qpcr
 from .page_purify import PagePurify
 from .dnase import Dnase
-from .reverse_transcribe import ReverseTranscribe
+from .reverse_transcribe import ReverseTranscribe, ReverseTranscribeCli
 
 import stepwise
 from pathlib import Path
