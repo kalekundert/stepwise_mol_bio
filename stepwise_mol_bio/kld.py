@@ -23,7 +23,7 @@ Arguments:
 
 <%! from stepwise_mol_bio import hanging_indent %>\
 Options:
-    -p -preset <name>
+    -p --preset <name>
         What default reaction parameters to use.  The following parameters are 
         currently available:
 
