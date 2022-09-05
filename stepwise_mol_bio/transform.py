@@ -383,7 +383,7 @@ Options:
             Key(PresetConfig, 'recovery_time_min'),
     )
     concentrate = byoc.param(
-            Key(PresetConfig, 'concentrate', cast=parse_bool),
+            Key(PresetConfig, 'concentrate'),
             default=False,
     )
     conc_spin_speed_g = byoc.param(
