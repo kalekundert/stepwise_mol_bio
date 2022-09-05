@@ -8,6 +8,21 @@ from stepwise import pl, ul
 from stepwise_mol_bio import Main, UsageError
 from freezerbox import parse_temp_C, parse_time_s, format_time_s
 from byoc import Key, DocoptConfig
+from more_itertools import first
+
+# I thought of a way for this code to accommodate arbitrary user-configured 
+# thermocycler protocols in the context of PCR.  This issue is that the PCR 
+# protocol needs to tweak certain parts of the thermocycler protocol, e.g. 
+# setting the annealing temperature and extension time.  That would be hard to 
+# do now, but easy to do if a name could be associated with each step.  Here's 
+# specifically what I'm thinking:
+#
+# - Allow each step dictionary to have a name.
+# - Replace the dictionaries with actual objects, than abstract the process of 
+#   setting temperatures etc.  This is important because there's no point 
+#   accessing individual steps if you can't easily mutate them.  The API can 
+#   stay the same: just convert the dicts into these objects on intake.
+# - Save a mapping between names and these objects.
 
 def parse_thermocycler_steps(step_strs):
     # The command-line interface only supports "regular" incubation steps.
@@ -17,6 +32,15 @@ def parse_thermocycler_steps(step_strs):
     ]
 
 def parse_thermocycler_step(step_str):
+    # Syntax to support repeat:
+    #
+    #   "35x 98/10 60/20 72/2m"
+    #
+    # - This would allow PCR thermocycler protocols to be specified on the 
+    #   command-line, which could be very useful.
+    # - Parsing: Look for \d+x, then interpret all space-separated fields to 
+    #   follow as incubation steps.  Recursive repeating not allowed.
+
     fields = step_str.split('/')
     if len(fields) != 2:
         raise UsageError(f"expected 'temperature/time', not: {step_str!r}")
@@ -28,9 +52,7 @@ def parse_thermocycler_step(step_str):
     }
 
 def format_thermocycler_steps(given, *, incubate_prefix=False):
-
-    def format_incubation(step):
-        return f'Incubate at {step}.' if incubate_prefix else step
+    normalize_temp_time(given)
 
     match given:
         case list():
@@ -39,17 +61,12 @@ def format_thermocycler_steps(given, *, incubate_prefix=False):
                         x,
                         incubate_prefix=incubate_prefix,
                     )
-                    for x in given
+                    for x in given if x is not None
             )
 
-        case {'temp_C': temp_C, 'time_m': time_m}:
-            return format_incubation(f'{temp_C:g}°C for {format_time_s(int(60 * time_m))}')
-
-        case {'temp_C': temp_C, 'time_s': time_s}:
-            return format_incubation(f'{temp_C:g}°C for {format_time_s(int(time_s))}')
-
-        case {'temp_C': temp_C, 'time': time_str}:
-            return format_incubation(f'{temp_C:g}°C for {time_str}')
+        case {'temp': temp_str, 'time': time_str}:
+            step = f'{temp_str} for {time_str}'
+            return f'Incubate at {step}.' if incubate_prefix else step
 
         case {'hold_C': hold_C}:
             return f'Hold at {hold_C:g}°C'
@@ -60,8 +77,42 @@ def format_thermocycler_steps(given, *, incubate_prefix=False):
                     format_thermocycler_steps(steps),
                     br='\n',
             )
+        # Melt curves...
+        case 'fluorescence':
+            return "Measure fluorescence"
+
         case err:
-            raise UsageError(f"unexpected step in thermocycler protocol: {err!r}")
+            raise UsageError("unexpected step in thermocycler protocol: {err!r}", err=err)
+
+def normalize_temp_time(given):
+    if not isinstance(given, dict):
+        return
+
+    time_formatters = {
+            'time': lambda x: x,
+            'time_s': lambda x: format_time_s(int(x)),
+            'time_m': lambda x: format_time_s(int(60 * x)),
+            'time_h': lambda x: format_time_m(int(60 * x)),
+    }
+    temp_formatters = {
+            'temp': lambda x: x,
+            'temp_C': lambda x: f'{x:g}°C'
+    }
+
+    def normalize(given, formatters):
+        keys = set(given) & set(formatters)
+
+        if not keys:
+            return
+        if len(keys) > 1:
+            raise UsageError(f"found multiple values for single thermocycler parameter: {repr_join(k for k in formatters if k in params)}")
+
+        key = keys.pop()
+        normalized_key = first(formatters)
+        given[normalized_key] = formatters[key](given.pop(key))
+    
+    normalize(given, time_formatters)
+    normalize(given, temp_formatters)
 
 @autoprop
 class Thermocycler(Main):
@@ -91,10 +142,13 @@ Arguments:
 
     def get_protocol(self):
         p = stepwise.Protocol()
-        p += pl(
-                'Run the following thermocycler protocol:',
-                format_thermocycler_steps(self.steps),
-        )
+        if len(self.steps) == 1:
+            p += format_thermocycler_steps(self.steps[0], incubate_prefix=True)
+        else:
+            p += pl(
+                    'Run the following thermocycler protocol:',
+                    format_thermocycler_steps(self.steps),
+            )
         return p
 
     __config__ = [DocoptConfig]

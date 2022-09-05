@@ -689,8 +689,7 @@ test_standard_protocol:
       -   ─────────────────────────────────
       -                            10.00 µL
 
-      - Run the following thermocycler protocol:
-      - - 65°C for 5m
+      - Incubate at 65°C for 5m.
 
       - Setup 2 reverse transcription reactions:
       -
@@ -775,8 +774,7 @@ test_standard_protocol:
       -   ────────────────────────────────
       -                            8.00 µL
 
-      - Run the following thermocycler protocol:
-      - - 65°C for 5m
+      - Incubate at 65°C for 5m.
 
       - Setup 2 reverse transcription reactions:
       -
@@ -873,8 +871,7 @@ test_standard_protocol:
       -   ───────────────────────────────────────────
       -                            10.00 µL  22.00 µL
 
-      - Run the following thermocycler protocol:
-      - - 65°C for 5m
+      - Incubate at 65°C for 5m.
 
       - Setup 4 reverse transcription reactions:
 
@@ -968,8 +965,7 @@ test_standard_protocol:
       -   ─────────────────────────────────────
       -                                10.00 µL
 
-      - Run the following thermocycler protocol:
-      - - 65°C for 5m
+      - Incubate at 65°C for 5m.
 
       - Setup 2 reverse transcription reactions:
       -
@@ -1075,8 +1071,7 @@ test_standard_protocol:
       -   ─────────────────────────────────────────────
       -                                        10.00 µL
 
-      - Run the following thermocycler protocol:
-      - - 65°C for 5m
+      - Incubate at 65°C for 5m.
 
       - Setup 4 reverse transcription reactions:
       -

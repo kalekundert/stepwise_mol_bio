@@ -1,6 +1,14 @@
 test_protocol:
   -
-    id: base
+    id: 1-step
+    app:
+      > app = Thermocycler([
+      >     {'temp_C': 37, 'time_m': 15},
+      > ])
+    expected:
+      - Incubate at 37°C for 15m.
+  -
+    id: 2-steps
     app:
       > app = Thermocycler([
       >     {'temp_C': 37, 'time_m': 15},
