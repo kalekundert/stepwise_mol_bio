@@ -19,6 +19,7 @@ from freezerbox import (
 )
 from byoc import Key, Method, DocoptConfig
 from inform import Error, plural, did_you_mean
+from more_itertools import one
 from functools import partial
 from pathlib import Path
 
@@ -457,15 +458,15 @@ the DNA will be purified before use.
     def get_dependencies(self):
         return {x.tag for x in self.templates}
 
-    def get_product_seqs(self):
-        for template in self.templates:
-            with ConfigError.add_info("tag: {tag}", tag=template.tag):
-                yield calc_digest_product(
-                        seq=template.seq,
-                        enzymes=self.enzyme_names,
-                        target_size=template.target_size_bp,
-                        is_circular=template.is_circular,
-                )
+    def get_product_seq(self):
+        template = one(self.templates)
+        with ConfigError.add_info("tag: {tag}", tag=template.tag):
+            return calc_digest_product(
+                    seq=template.seq,
+                    enzymes=self.enzyme_names,
+                    target_size=template.target_size_bp,
+                    is_circular=template.is_circular,
+            )
 
     def get_product_conc(self):
         return self.reaction['DNA'].conc

@@ -55,14 +55,13 @@ def test_reactions(app, expected):
 
 @parametrize_from_file(
         schema=[
-            cast(expected=with_py.eval),
             with_swmb.error_or('expected'),
         ],
 )
-def test_product_seqs(app, expected, error):
+def test_product_seq(app, expected, error):
     app = exec_app(app)
     with error:
-        assert app.product_seqs == [x.upper() for x in expected]
+        assert app.product_seq == expected.upper()
 
 @parametrize_from_file(schema=cast(expected=with_py.eval))
 def test_anneal_temp_C(app, expected):

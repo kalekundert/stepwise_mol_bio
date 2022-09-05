@@ -48,6 +48,22 @@ class Main(byoc.App):
                 merge_by=merge_by,
         )
 
+    @classmethod
+    def maker_from_reagent(cls, db, product):
+        return cls._solo_maker_factory(product)
+
+    @classmethod
+    def protocols_from_makers(cls, makers):
+        db = first(makers).db
+        for maker in iter_combo_makers(
+                    partial(cls._combo_maker_factory, db),
+                    makers,
+                    group_by=cls.group_by,
+                    merge_by=cls.merge_by,
+            ):
+            yield maker.makers, maker.protocol
+
+
     def refresh(self):
         autoprop.clear_cache(self)
 
@@ -91,14 +107,19 @@ class Cleanup(Main):
         self.show_product_tags = False
 
     @classmethod
-    def make(cls, db, products):
-        makers = list(super().make(db, products))
-        show_product_tags = (len(makers) != 1)
+    def protocols_from_makers(cls, makers):
+        db = first(makers).db
+        combo_makers = list(iter_combo_makers(
+                partial(cls._combo_maker_factory, db),
+                makers,
+                group_by=cls.group_by,
+                merge_by=cls.merge_by,
+        ))
+        show_product_tags = (len(combo_makers) != 1)
 
-        for maker in makers:
+        for maker in combo_makers:
             maker.show_product_tags = show_product_tags
-            yield maker
-
+            yield maker.makers, maker.protocol
 
 @autoprop
 class Bindable(metaclass=byoc.BareMeta):
@@ -238,8 +259,11 @@ def merge_dicts(dicts):
 def comma_list(x):
     return [x.strip() for x in x.split(',')]
 
+def comma_tuple(x):
+    return tuple(comma_list(x))
+
 def comma_set(x):
-    return {x.strip() for x in x.split(',')}
+    return set(comma_list(x))
 
 def int_or_expr(x):
     return type_or_expr(int, x)

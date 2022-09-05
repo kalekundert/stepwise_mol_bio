@@ -14,6 +14,7 @@ from freezerbox import (
         unanimous, group_by_identity, normalize_seq, join_lists,
 )
 from byoc import DocoptConfig, Key, Method
+from more_itertools import one
 from inform import plural, warn
 
 def parse_reaction(reaction_input):
@@ -494,8 +495,9 @@ Template Preparation:
     def get_dependencies(self):
         return {x.tag for x in self.templates}
 
-    def get_product_seqs(self):
-        return [transcribe(x.seq) for x in self.templates]
+    def get_product_seq(self):
+        template = one(self.templates)
+        return transcribe(template.seq)
 
     def get_product_molecule(self):
         return 'ssRNA'

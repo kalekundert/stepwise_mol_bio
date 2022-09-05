@@ -19,7 +19,9 @@ from freezerbox import (
         parse_volume_uL, parse_temp_C, parse_time_s, parse_size_bp,
         group_by_identity, join_lists,
 )
-from more_itertools import first_true, flatten, chunked, all_equal, always_iterable
+from more_itertools import (
+        one, first_true, flatten, chunked, all_equal, always_iterable,
+)
 from statistics import mean
 from collections.abc import Iterable
 from copy import deepcopy
@@ -894,14 +896,12 @@ Options:
     def get_templates(self):
         return [x.template for x in self.amplicons]
 
-    def get_template_tags(self):
-        return [x.tag for x in self.templates]
-
     def get_primer_pairs(self):
         return [(x.fwd, x.rev) for x in self.amplicons]
 
-    def get_product_seqs(self):
-        return [x.seq for x in self.amplicons]
+    def get_product_seq(self):
+        amplicon = one(self.amplicons)
+        return amplicon.seq
 
     def get_product_conc(self):
         return Quantity(self.product_conc_ng_uL, 'ng/µL')

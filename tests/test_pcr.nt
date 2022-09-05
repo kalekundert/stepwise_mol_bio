@@ -763,7 +763,7 @@ test_protocol:
     expected:
       - Split into 2 identical 20 µL reactions.
 
-test_product_seqs:
+test_product_seq:
   -
     id: seqs-linear
     app:
@@ -775,7 +775,7 @@ test_product_seqs:
       >     ),
       > ])
     expected:
-      > ['tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga']
+      > tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
   -
     id: seqs-circular
     app:
@@ -787,7 +787,7 @@ test_product_seqs:
       >     ),
       > ])
     expected:
-      > ['tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga']
+      > tataacaggctgctgagaccGATTACAcctccggtgatagtcctaga
   -
     id: seqs-err
     app:
