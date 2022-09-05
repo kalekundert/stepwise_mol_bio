@@ -147,7 +147,7 @@ Configuration:
     molbio.grow.presets.<name>.target_density
         The default value for the `--density` option.
 
-    molbio.grow.presets.<name>.time_hr
+    molbio.grow.presets.<name>.time_h
         The default value for the `--time` option.
 
     molbio.grow.presets.<name>.overnight.media
@@ -324,7 +324,7 @@ Configuration:
     )
     time_h = byoc.param(
             Key(DocoptConfig, '--time', cast=float),
-            Key(PresetConfig, 'target_time_h'),
+            Key(PresetConfig, 'time_h'),
             default=None,
     )
     overnight_media = byoc.param(
