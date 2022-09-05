@@ -66,7 +66,7 @@ def plan_dnase_reactions(group):
     # The concentration of RNA in this reaction doesn't really matter, since 
     # it's the trace DNA (in unknown quantity) that's being acted on.  The 
     # protocols I've found just call for the quantity of RNA to be between 1 pg 
-    # and 10 µg of RNA, which is a huge range.
+    # and 10 µg, which is a huge range.
     #
     # Normally I would hold concentration while changing volume or stock 
     # concentration, but in this case that wouldn't make sense.  In fact, if 
@@ -85,8 +85,17 @@ def plan_dnase_reactions(group):
         else:
             del rxn['RNA'].stock_conc
 
+    if all(x.include_dnase for x in group):
+        def dnase_combos(sample):
+            return {}
+    else:
+        dnase_keys = [x.key for x in rxn.iter_reagents_by_flag('dnase')]
+        def dnase_combos(sample):
+            label = '+' if sample.include_dnase else '−'
+            return {k: label for k in dnase_keys}
+
     combos = [
-            {'RNA': x.rna_name}
+            {'RNA': x.rna_name, **dnase_combos(x)}
             for x in group
     ]
 
@@ -272,6 +281,9 @@ Configuration:
         rna_stock_conc = byoc.param(
                 Key(DocoptConfig, '--rna-stock'),
                 default=None,
+        )
+        include_dnase = byoc.param(
+                default=True,
         )
         incubation = byoc.param(
                 Key(PresetConfig, 'incubation'),

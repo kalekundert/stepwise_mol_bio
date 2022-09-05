@@ -17,9 +17,11 @@ test_plan_dnase_reactions:
         -
           rna_name: 'f1'
           rna_stock_conc: None
+          include_dnase: True
         -
           rna_name: 'f2'
           rna_stock_conc: None
+          include_dnase: True
 
     expected:
       - Setup 2 DNase reactions:
@@ -61,9 +63,11 @@ test_plan_dnase_reactions:
         -
           rna_name: 'f1'
           rna_stock_conc: None
+          include_dnase: True
         -
           rna_name: 'f2'
           rna_stock_conc: None
+          include_dnase: True
 
     expected:
       - Setup 2 DNase reactions:
@@ -105,9 +109,11 @@ test_plan_dnase_reactions:
         -
           rna_name: 'f1'
           rna_stock_conc: '1 µM'
+          include_dnase: True
         -
           rna_name: 'f2'
           rna_stock_conc: None
+          include_dnase: True
 
     expected:
       - Setup 2 DNase reactions:
@@ -149,9 +155,11 @@ test_plan_dnase_reactions:
         -
           rna_name: 'f1'
           rna_stock_conc: '1 µM'
+          include_dnase: True
         -
           rna_name: 'f2'
           rna_stock_conc: '2 µM'
+          include_dnase: True
 
     expected:
       - Setup 2 DNase reactions:
@@ -173,6 +181,51 @@ test_plan_dnase_reactions:
       -   ───────────────────────────
       -   master mix     2x   5.00 µL
       -   RNA                 5.00 µL
+      -   ───────────────────────────
+      -                      10.00 µL
+  -
+    id: no-dnase
+    group:
+      key:
+        reaction_prototype:
+          > Reaction.from_text("""\
+          > Reagent                          Stock    Volume  Flags
+          > ===========================  =========  ========  =====
+          > water                                   to 10 µL
+          > DNase buffer                       10x      1 µL
+          > DNase                              10x      1 µL  dnase
+          > RNA                          500 ng/µL      5 µL
+          > """)
+        rna_volume: None
+      members:
+        -
+          rna_name: 'f1'
+          rna_stock_conc: None
+          include_dnase: True
+        -
+          rna_name: 'f1'
+          rna_stock_conc: None
+          include_dnase: False
+    expected:
+      - Setup 2 DNase reactions:
+
+      - - Use the following reagents:
+      -   DNase: +, −
+
+      - - Make master mix:
+      -   Reagent           Stock   Volume      2.2x
+      -   ──────────────────────────────────────────
+      -   water                    3.00 µL   6.60 µL
+      -   DNase buffer        10x  1.00 µL   2.20 µL
+      -   f1            500 ng/µL  5.00 µL  11.00 µL
+      -   ──────────────────────────────────────────
+      -                            9.00 µL  19.80 µL
+
+      - Setup the reactions:
+      -   Reagent     Stock    Volume
+      -   ───────────────────────────
+      -   master mix          9.00 µL
+      -   DNase         10x   1.00 µL
       -   ───────────────────────────
       -                      10.00 µL
   -

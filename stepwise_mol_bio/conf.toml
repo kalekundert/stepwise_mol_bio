@@ -488,11 +488,11 @@ default_preset = 'neb/dnase-i'
 
 [molbio.dnase.presets.'neb/dnase-i']
 reaction = """
-Reagent                  Stock     Volume
-===================  =========  =========
+Reagent                  Stock     Volume  Flags
+===================  =========  =========  =====
 nuclease-free water             to 100 µL
 DNase I buffer             10x      10 µL
-DNase I                 2 U/µL       1 µL
+DNase I                 2 U/µL       1 µL  dnase
 RNA                  500 ng/µL      20 µL
 """
 incubation.time_m = 10
@@ -506,11 +506,11 @@ protocol_link = 'https://tinyurl.com/jpau26cr'
 
 [molbio.dnase.presets.'thermo/ezdnase']
 reaction = """
-Reagent                  Stock    Volume
-===================  =========  ========
+Reagent                  Stock    Volume  Flags
+===================  =========  ========  =====
 nuclease-free water             to 10 µL
 ezDNase buffer             10x      1 µL
-ezDNase enzyme             10x      1 µL
+ezDNase enzyme             10x      1 µL  dnase
 RNA                  500 ng/µL      5 µL
 """
 incubation.time_m = 2
@@ -524,10 +524,10 @@ denature.incubation.temp_C = 55
 
 [molbio.dnase.presets.'thermo/dna-free']
 reaction = """
-Reagent                  Stock    Volume
-===================  =========  ========
+Reagent                  Stock    Volume  Flags
+===================  =========  ========  =====
 DNase I buffer             10x      5 µL
-rDNase I                2 U/µL      1 µL
+rDNase I                2 U/µL      1 µL  dnase
 RNA                  200 ng/µL     44 µL
 """
 incubation.temp_C = 37
