@@ -83,6 +83,7 @@ Options:
 
         num_tubes = self.num_dilutions if self.include_zero else self.num_dilutions - 1
         each_tube = 'each tube *except the last*' if self.include_zero else 'each tube'
+        neg_control = ' and 1 negative control' if self.include_zero else ''
 
         protocol = stepwise.Protocol()
         protocol += pl(
@@ -90,7 +91,7 @@ Options:
                 ul(
                     f"Put {initial_volume:.2f} {self.volume_unit} {material_str} in a tube.",
                     f"Put {self.volume:.2f} {self.volume_unit} {self.diluent} in {plural(num_tubes):# adjacent tube/s}.",
-                    f"Transfer {transfer:.2f} {self.volume_unit} between {each_tube} to make {self.num_dilutions} {self.factor:.2g}-fold dilutions.",
+                    f"Transfer {transfer:.2f} {self.volume_unit} between {each_tube} to make {self.num_dilutions} {self.factor:.2g}-fold dilutions{neg_control}.",
                 ),
         )
 

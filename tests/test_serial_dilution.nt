@@ -107,7 +107,7 @@ test_protocol:
       > app.include_zero = True
     expected:
       - Put 10.00 µL water in 6 adjacent tubes.
-      - Transfer 10.00 µL between each tube *except the last* to make 6 2-fold dilutions.
+      - Transfer 10.00 µL between each tube *except the last* to make 6 2-fold dilutions and 1 negative control.
   -
     id: material
     app:
@@ -235,7 +235,8 @@ test_cli:
       >    - Put 20\.00 µL 32 nM material in a tube\.
       >    - Put 10\.00 µL water in 6 adjacent tubes\.
       >    - Transfer 10\.00 µL between each tube \*except the
-      >      last\* to make 6 2-fold dilutions\.
+      >      last\* to make 6 2-fold dilutions and 1 negative
+      >      control\.
       >
       > Note:
       > \[1\] The final concentrations will be:
