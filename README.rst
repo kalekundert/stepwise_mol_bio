@@ -15,7 +15,7 @@ Stepwise — Molecular Biology
      :alt: Documentation
      :target: https://stepwise_mol_bio.readthedocs.io/en/latest/?badge=latest
 
-.. image:: https://img.shields.io/github/workflow/status/kalekundert/stepwise_mol_bio/Test%20and%20release/master
+.. image:: https://img.shields.io/github/actions/workflow/status/kalekundert/stepwise_mol_bio/test_and_release.yml?branch=master
    :alt: Test status
    :target: https://github.com/kalekundert/stepwise_mol_bio/actions
 
